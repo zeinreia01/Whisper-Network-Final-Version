@@ -207,6 +207,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search public messages
+  app.get("/api/messages/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      const query = typeof q === 'string' ? q : '';
+      const messages = await storage.searchPublicMessages(query);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error searching messages:", error);
+      res.status(500).json({ message: "Failed to search messages" });
+    }
+  });
+
   app.get("/api/messages/:id", async (req, res) => {
     try {
       const { id } = req.params;

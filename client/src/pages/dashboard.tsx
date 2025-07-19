@@ -1,19 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCard } from "@/components/message-card";
 import { CategoryFilter } from "@/components/category-filter";
+import { SearchBar } from "@/components/search-bar";
 import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 import type { MessageWithReplies } from "@shared/schema";
 
 export default function Dashboard() {
   const [activeCategory, setActiveCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<MessageWithReplies[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const { data: messages = [], isLoading } = useQuery<MessageWithReplies[]>({
     queryKey: ["/api/messages/public"],
   });
 
-  const filteredMessages = activeCategory === "all" 
-    ? messages 
-    : messages.filter(message => message.category === activeCategory);
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/messages/search?q=${encodeURIComponent(query)}`);
+      const results = await response.json();
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Reset category when searching
+  useEffect(() => {
+    if (searchQuery) {
+      setActiveCategory("all");
+    }
+  }, [searchQuery]);
+
+  const displayMessages = searchQuery 
+    ? searchResults 
+    : (activeCategory === "all" 
+        ? messages 
+        : messages.filter(message => message.category === activeCategory));
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -25,27 +60,53 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <CategoryFilter 
-          activeCategory={activeCategory} 
-          onCategoryChange={setActiveCategory} 
-        />
+        {/* Search Bar */}
+        <div className="mb-8">
+          <SearchBar 
+            onSearch={handleSearch}
+            placeholder="Search messages by content, category, or sender..."
+            className="max-w-2xl mx-auto"
+          />
+          {searchQuery && (
+            <div className="text-center mt-4">
+              <Badge variant="secondary" className="text-sm">
+                {isSearching 
+                  ? "Searching..." 
+                  : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}"`
+                }
+              </Badge>
+            </div>
+          )}
+        </div>
 
-        {isLoading ? (
+        {/* Category Filter - only show when not searching */}
+        {!searchQuery && (
+          <CategoryFilter 
+            activeCategory={activeCategory} 
+            onCategoryChange={setActiveCategory} 
+          />
+        )}
+
+        {isLoading || isSearching ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading messages...</p>
+            <p className="mt-4 text-gray-600">
+              {isSearching ? "Searching messages..." : "Loading messages..."}
+            </p>
           </div>
-        ) : filteredMessages.length === 0 ? (
+        ) : displayMessages.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600">
-              {activeCategory === "all" 
-                ? "No messages yet. Be the first to share!" 
-                : "No messages in this category yet."}
+              {searchQuery 
+                ? `No messages found for "${searchQuery}". Try different keywords.`
+                : (activeCategory === "all" 
+                    ? "No messages yet. Be the first to share!" 
+                    : "No messages in this category yet.")}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMessages.map((message) => (
+            {displayMessages.map((message) => (
               <MessageCard key={message.id} message={message} showReplies={true} />
             ))}
           </div>

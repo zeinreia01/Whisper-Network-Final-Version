@@ -1,6 +1,6 @@
 import { messages, replies, admins, users, type Message, type Reply, type Admin, type User, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type MessageWithReplies } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, ilike, or, and } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -17,6 +17,7 @@ export interface IStorage {
   getMessagesByCategory(category: string): Promise<MessageWithReplies[]>;
   getMessagesByRecipient(recipient: string): Promise<MessageWithReplies[]>;
   getMessageById(id: number): Promise<MessageWithReplies | null>;
+  searchPublicMessages(query: string): Promise<MessageWithReplies[]>;
   updateMessageVisibility(messageId: number, isPublic: boolean): Promise<Message>;
   deleteMessage(messageId: number): Promise<void>;
   
@@ -194,6 +195,57 @@ export class DatabaseStorage implements IStorage {
       },
     });
     return result;
+  }
+
+  async searchPublicMessages(query: string): Promise<MessageWithReplies[]> {
+    if (!query.trim()) {
+      return this.getPublicMessages();
+    }
+    
+    const searchTerm = `%${query.toLowerCase()}%`;
+    try {
+      const result = await db.query.messages.findMany({
+        where: and(
+          eq(messages.isPublic, true),
+          or(
+            ilike(messages.content, searchTerm),
+            ilike(messages.category, searchTerm),
+            ilike(messages.senderName || '', searchTerm)
+          )
+        ),
+        orderBy: desc(messages.createdAt),
+        with: {
+          replies: {
+            orderBy: desc(replies.createdAt),
+            with: {
+              user: true,
+            },
+          },
+          user: true,
+        },
+      });
+      return result;
+    } catch (error) {
+      console.error('Search error:', error);
+      // Fallback to simple content search if complex query fails
+      const result = await db.query.messages.findMany({
+        where: and(
+          eq(messages.isPublic, true),
+          ilike(messages.content, searchTerm)
+        ),
+        orderBy: desc(messages.createdAt),
+        with: {
+          replies: {
+            orderBy: desc(replies.createdAt),
+            with: {
+              user: true,
+            },
+          },
+          user: true,
+        },
+      });
+      return result;
+    }
   }
 
   async updateMessageVisibility(messageId: number, isPublic: boolean): Promise<Message> {
