@@ -219,7 +219,7 @@ export function AdminManagement() {
                   <div className="flex items-center gap-2">
                     {getRoleIcon(admin.role)}
                     <div>
-                      <p className="font-medium">{admin.nickname}</p>
+                      <p className="font-medium">{admin.displayName}</p>
                       <p className="text-sm text-gray-600">@{admin.username}</p>
                     </div>
                   </div>
@@ -231,7 +231,7 @@ export function AdminManagement() {
                   </Badge>
                 </div>
                 <Button
-                  onClick={() => handleToggleStatus(admin.id, admin.isActive)}
+                  onClick={() => handleToggleStatus(admin.id, admin.isActive ?? true)}
                   variant={admin.isActive ? "destructive" : "default"}
                   size="sm"
                   disabled={toggleAdminStatusMutation.isPending}

@@ -157,7 +157,7 @@ export default function MessageThread() {
                 <div className="flex items-center text-sm text-gray-500 gap-4">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    {new Date(message.createdAt).toLocaleDateString()}
+                    {message.createdAt ? new Date(message.createdAt).toLocaleDateString() : "Unknown date"}
                   </span>
                   {message.spotifyLink && (
                     <span className="flex items-center gap-1">
@@ -257,7 +257,7 @@ export default function MessageThread() {
                       <div className="flex items-center gap-3">
                         <span className="font-medium text-gray-900">{reply.nickname}</span>
                         <span className="text-sm text-gray-500">
-                          {new Date(reply.createdAt).toLocaleDateString()}
+                          {reply.createdAt ? new Date(reply.createdAt).toLocaleDateString() : "Unknown date"}
                         </span>
                       </div>
                       {admin && (
