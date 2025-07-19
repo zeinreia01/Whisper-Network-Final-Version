@@ -25,10 +25,11 @@ export function MessageCard({ message, showReplies = true }: MessageCardProps) {
   
   const createReplyMutation = useMutation({
     mutationFn: async (data: { messageId: number; content: string; nickname: string }) => {
-      return await apiRequest("POST", "/api/replies", data);
+      const response = await apiRequest("POST", "/api/replies", data);
+      return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
       setReplyText("");
       setNickname("");
       setShowReplyForm(false);

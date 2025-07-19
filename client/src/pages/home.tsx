@@ -33,10 +33,11 @@ export default function Home() {
 
   const createMessageMutation = useMutation({
     mutationFn: async (data: { content: string; category: string; spotifyLink?: string; isPublic: boolean; recipient?: string; senderName?: string }) => {
-      return await apiRequest("POST", "/api/messages", data);
+      const response = await apiRequest("POST", "/api/messages", data);
+      return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
       setContent("");
       setSpotifyLink("");
       setRecipient("");
@@ -128,7 +129,7 @@ export default function Home() {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
+                      <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
                       </SelectItem>
                     ))}
