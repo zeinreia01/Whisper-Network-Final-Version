@@ -24,14 +24,46 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication routes for users
+  // Check username availability
+  app.get("/api/auth/check-username/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      
+      // Check if username exists in users table
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        res.json({ available: false, message: "Username already taken by a Silent Messenger" });
+        return;
+      }
+      
+      // Check if username exists in admins table
+      const existingAdmin = await storage.getAdminByUsername(username);
+      if (existingAdmin) {
+        res.json({ available: false, message: "Username already taken by a Whisper Listener" });
+        return;
+      }
+      
+      res.json({ available: true, message: "Username is available" });
+    } catch (error) {
+      console.error("Username check error:", error);
+      res.status(500).json({ message: "Failed to check username" });
+    }
+  });
+
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { username, password } = req.body;
       
-      // Check if username already exists
+      // Check if username already exists in both tables
       const existingUser = await storage.getUserByUsername(username);
+      const existingAdmin = await storage.getAdminByUsername(username);
+      
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        return res.status(400).json({ message: "Username already exists as Silent Messenger" });
+      }
+      
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Username already exists as Whisper Listener" });
       }
       
       // Hash password and create user

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, User, UserPlus } from "lucide-react";
+import { Loader2, User, UserPlus, CheckCircle, XCircle } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,7 +16,42 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [registerForm, setRegisterForm] = useState({ username: "", password: "", confirmPassword: "" });
   const [activeTab, setActiveTab] = useState("login");
+  const [usernameAvailability, setUsernameAvailability] = useState<{ available: boolean; message: string } | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const { login, register, isLoading } = useAuth();
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username) {
+      setUsernameAvailability(null);
+      return;
+    }
+    
+    setIsCheckingUsername(true);
+    try {
+      const response = await fetch(`/api/auth/check-username/${username}`);
+      const result = await response.json();
+      setUsernameAvailability(result);
+    } catch (error) {
+      setUsernameAvailability({ available: false, message: "Error checking username" });
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "register" && registerForm.username) {
+      const timeoutId = setTimeout(() => {
+        checkUsernameAvailability(registerForm.username);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [registerForm.username, activeTab]);
+  
+  // Reset username availability when changing tabs
+  useEffect(() => {
+    setUsernameAvailability(null);
+    setIsCheckingUsername(false);
+  }, [activeTab]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +83,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoginForm({ username: "", password: "" });
     setRegisterForm({ username: "", password: "", confirmPassword: "" });
     setActiveTab("login");
+    setUsernameAvailability(null);
+    setIsCheckingUsername(false);
   };
 
   return (
@@ -104,13 +141,35 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="register-username">Username</Label>
-                <Input
-                  id="register-username"
-                  value={registerForm.username}
-                  onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                  placeholder="Choose a username"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="register-username"
+                    value={registerForm.username}
+                    onChange={(e) => {
+                      setRegisterForm({ ...registerForm, username: e.target.value });
+                      setUsernameAvailability(null);
+                    }}
+                    placeholder="Choose a username"
+                    required
+                  />
+                  {isCheckingUsername && (
+                    <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-3 text-gray-400" />
+                  )}
+                  {usernameAvailability && !isCheckingUsername && (
+                    <div className="absolute right-3 top-3">
+                      {usernameAvailability.available ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      )}
+                    </div>
+                  )}
+                </div>
+                {usernameAvailability && !isCheckingUsername && (
+                  <p className={`text-xs ${usernameAvailability.available ? 'text-green-600' : 'text-red-600'}`}>
+                    {usernameAvailability.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="register-password">Password</Label>
@@ -140,7 +199,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isLoading || registerForm.password !== registerForm.confirmPassword}
+                disabled={
+                  isLoading || 
+                  registerForm.password !== registerForm.confirmPassword ||
+                  (usernameAvailability && !usernameAvailability.available) ||
+                  isCheckingUsername
+                }
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

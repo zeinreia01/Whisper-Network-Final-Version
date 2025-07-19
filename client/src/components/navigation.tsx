@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AuthModal } from "@/components/auth-modal";
 import { AdminAuthModal } from "@/components/admin-auth-modal";
+import { InfoDialog } from "@/components/info-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { User, Shield, LogOut, Settings, Home, BarChart3, Menu } from "lucide-react";
 
@@ -98,6 +99,9 @@ export function Navigation() {
                   </Link>
                 )}
               </div>
+              
+              {/* Info button */}
+              <InfoDialog />
               
               {/* User authentication section */}
               {user ? (

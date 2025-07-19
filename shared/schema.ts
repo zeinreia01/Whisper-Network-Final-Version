@@ -30,6 +30,7 @@ export const replies = pgTable("replies", {
   content: text("content").notNull(),
   nickname: text("nickname").notNull(),
   userId: integer("user_id").references(() => users.id), // Link to user account (optional)
+  adminId: integer("admin_id").references(() => admins.id), // Link to admin account (optional)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

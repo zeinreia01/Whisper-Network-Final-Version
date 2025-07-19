@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,11 +30,26 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   const queryClient = useQueryClient();
   const { admin, user } = useAuth();
 
+  // Auto-fill nickname for logged-in users
+  const defaultNickname = user ? user.username : admin ? admin.displayName : "";
+  
+  // Initialize nickname when component mounts
+  useEffect(() => {
+    if (defaultNickname && !nickname) {
+      setNickname(defaultNickname);
+    }
+  }, [defaultNickname, nickname]);
+
   const category = categories.find(c => c.id === message.category);
   
   const createReplyMutation = useMutation({
     mutationFn: async (data: { messageId: number; content: string; nickname: string }) => {
-      const response = await apiRequest("POST", "/api/replies", data);
+      const replyData = {
+        ...data,
+        userId: user?.id,
+        adminId: admin?.id,
+      };
+      const response = await apiRequest("POST", "/api/replies", replyData);
       return await response.json();
     },
     onSuccess: () => {
@@ -288,9 +303,10 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         <div className="border-t pt-4 mb-4">
           <div className="space-y-3">
             <Input
-              placeholder="Your nickname..."
+              placeholder={defaultNickname ? "Your nickname (auto-filled)" : "Your nickname..."}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
+              disabled={!!defaultNickname}
             />
             <Input
               placeholder="Write your reply..."
@@ -328,6 +344,13 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-gray-900">{reply.nickname}</span>
+                      {/* Show admin permission tag */}
+                      {reply.adminId && (
+                        <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 text-purple-700 border-purple-200">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Whisper Listener
+                        </Badge>
+                      )}
                       <span className="text-xs text-gray-500">
                         {formatTimeAgo(reply.createdAt!)}
                       </span>
