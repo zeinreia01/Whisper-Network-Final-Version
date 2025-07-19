@@ -18,6 +18,7 @@ export interface IStorage {
   getMessagesByRecipient(recipient: string): Promise<MessageWithReplies[]>;
   getMessageById(id: number): Promise<MessageWithReplies | null>;
   updateMessageVisibility(messageId: number, isPublic: boolean): Promise<Message>;
+  deleteMessage(messageId: number): Promise<void>;
   
   // Reply operations
   createReply(reply: InsertReply): Promise<Reply>;
@@ -202,6 +203,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(messages.id, messageId))
       .returning();
     return message;
+  }
+
+  async deleteMessage(messageId: number): Promise<void> {
+    // First delete all replies to the message
+    await db
+      .delete(replies)
+      .where(eq(replies.messageId, messageId));
+    
+    // Then delete the message itself
+    await db
+      .delete(messages)
+      .where(eq(messages.id, messageId));
   }
 
   // Admin operations

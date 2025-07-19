@@ -1,25 +1,34 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield } from "lucide-react";
 import { categories } from "@/lib/categories";
 import type { MessageWithReplies } from "@shared/schema";
 
 interface MessageCardProps {
   message: MessageWithReplies;
   showReplies?: boolean;
+  showAdminControls?: boolean;
 }
 
-export function MessageCard({ message, showReplies = true }: MessageCardProps) {
+export function MessageCard({ message, showReplies = true, showAdminControls = false }: MessageCardProps) {
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const [warningReason, setWarningReason] = useState("");
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [selectedReplyId, setSelectedReplyId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { admin, user } = useAuth();
 
   const category = categories.find(c => c.id === message.category);
   
@@ -42,6 +51,72 @@ export function MessageCard({ message, showReplies = true }: MessageCardProps) {
       toast({
         title: "Error",
         description: "Failed to send reply. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      const response = await apiRequest("DELETE", `/api/messages/${messageId}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/private"] });
+      toast({
+        title: "Message deleted",
+        description: "The message has been permanently removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete message.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteReplyMutation = useMutation({
+    mutationFn: async (replyId: number) => {
+      const response = await apiRequest("DELETE", `/api/replies/${replyId}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      toast({
+        title: "Reply deleted",
+        description: "The reply has been removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete reply.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendWarningMutation = useMutation({
+    mutationFn: async (data: { replyId?: number; messageId?: number; reason: string; userId?: number }) => {
+      const response = await apiRequest("POST", "/api/warnings", data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      setWarningReason("");
+      setShowWarningDialog(false);
+      setSelectedReplyId(null);
+      toast({
+        title: "Warning sent",
+        description: "The user has been notified about the content policy.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send warning.",
         variant: "destructive",
       });
     },
@@ -131,12 +206,82 @@ export function MessageCard({ message, showReplies = true }: MessageCardProps) {
           </button>
           <span>{message.replies.length} replies</span>
         </div>
-        <Link href={`/message/${message.id}`}>
-          <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary">
-            <ExternalLink className="w-3 h-3 mr-1" />
-            View Thread
-          </Button>
-        </Link>
+        <div className="flex items-center space-x-2">
+          <Link href={`/message/${message.id}`}>
+            <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary">
+              <ExternalLink className="w-3 h-3 mr-1" />
+              View Thread
+            </Button>
+          </Link>
+          
+          {/* Admin Controls */}
+          {admin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedReplyId(null);
+                    setShowWarningDialog(true);
+                  }}
+                  className="text-amber-600"
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Send Warning
+                </DropdownMenuItem>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem 
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Message
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete the message and all its replies. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMessageMutation.mutate(message.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          
+          {/* User owns message - allow reply management */}
+          {user && message.userId === user.id && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Manage your message">
+                  <Shield className="h-4 w-4 text-blue-600" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem disabled>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Your Message
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
       {showReplyForm && (
@@ -175,16 +320,100 @@ export function MessageCard({ message, showReplies = true }: MessageCardProps) {
         <div className="border-t pt-4">
           <div className="space-y-3">
             {message.replies.map((reply) => (
-              <div key={reply.id} className="flex items-start space-x-3">
+              <div key={reply.id} className="flex items-start space-x-3 group">
                 <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white text-sm font-medium">
                   {reply.nickname.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-sm font-medium text-gray-900">{reply.nickname}</span>
-                    <span className="text-xs text-gray-500">
-                      {formatTimeAgo(reply.createdAt!)}
-                    </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-gray-900">{reply.nickname}</span>
+                      <span className="text-xs text-gray-500">
+                        {formatTimeAgo(reply.createdAt!)}
+                      </span>
+                    </div>
+                    
+                    {/* Reply management controls */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1">
+                      {/* Admin controls */}
+                      {admin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedReplyId(reply.id);
+                                setShowWarningDialog(true);
+                              }}
+                              className="text-amber-600"
+                            >
+                              <AlertTriangle className="h-3 w-3 mr-2" />
+                              Send Warning
+                            </DropdownMenuItem>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem 
+                                  onSelect={(e) => e.preventDefault()}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-2" />
+                                  Delete Reply
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Reply</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete this reply. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteReplyMutation.mutate(reply.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+
+                      {/* User owns message - can delete replies on their message */}
+                      {user && message.userId === user.id && !admin && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Delete reply on your message">
+                              <Trash2 className="h-3 w-3 text-red-500" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Reply</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete this reply from your message. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteReplyMutation.mutate(reply.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete Reply
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
                   </div>
                   <p className="text-sm text-gray-700">{reply.content}</p>
                 </div>
@@ -192,6 +421,43 @@ export function MessageCard({ message, showReplies = true }: MessageCardProps) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Warning Dialog */}
+      {showWarningDialog && (
+        <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Send Warning</AlertDialogTitle>
+              <AlertDialogDescription>
+                Send a warning to the user about their content. Please provide a reason for the warning.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="grid gap-4 py-4">
+              <Textarea
+                placeholder="Enter the reason for this warning..."
+                value={warningReason}
+                onChange={(e) => setWarningReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => sendWarningMutation.mutate({
+                  replyId: selectedReplyId || undefined,
+                  messageId: !selectedReplyId ? message.id : undefined,
+                  reason: warningReason,
+                  userId: message.userId || undefined,
+                })}
+                disabled={!warningReason.trim() || sendWarningMutation.isPending}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                {sendWarningMutation.isPending ? "Sending..." : "Send Warning"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

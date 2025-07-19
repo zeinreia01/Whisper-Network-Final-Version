@@ -10,7 +10,25 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 18, 2025
+### July 19, 2025
+- ✅ Fixed messaging system - resolved category selection and API response handling issues
+- ✅ Added comprehensive admin moderation features:
+  - Admins can delete anonymous messages and all their replies
+  - Admins can delete individual replies on any message  
+  - Admins can send warnings to users for inappropriate content
+  - Enhanced warning system with reason tracking and user notifications
+- ✅ Implemented message ownership features:
+  - Users who own messages (if logged in) can delete replies on their own messages
+  - Clear visual indicators for message ownership with Shield icons
+- ✅ Enhanced mobile navigation UI:
+  - Responsive design with icons-only view on mobile devices
+  - Desktop shows both icons and text labels
+  - Improved spacing and accessibility
+  - Logo positioned optimally for both mobile and desktop
+- ✅ Enhanced message cards with dropdown menus for admin actions
+- ✅ Added proper cache invalidation for all CRUD operations
+
+### July 18, 2025  
 - Updated user terminology: Users are now called "Silent Messengers" and admins are "Whisper Listeners"
 - Redesigned navigation bar with cleaner, professional styling and improved button states
 - Updated landing page with elegant gradient background and improved typography

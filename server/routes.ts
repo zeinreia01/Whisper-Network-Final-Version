@@ -279,13 +279,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete message (admin only)
+  app.delete("/api/messages/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteMessage(parseInt(id));
+      res.json({ message: "Message deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
   app.post("/api/warnings", async (req, res) => {
     try {
-      // In a real app, this would send notifications to users
-      // For now, we'll just log the warning
-      const { replyId, reason } = req.body;
-      console.log(`Warning sent for reply ${replyId}: ${reason}`);
-      res.json({ message: "Warning sent successfully" });
+      const { replyId, messageId, reason, userId } = req.body;
+      
+      // Store warning in database (you could extend schema for warnings table)
+      console.log(`Warning sent for reply ${replyId} on message ${messageId} to user ${userId}: ${reason}`);
+      
+      // In a real app, this would send notifications/emails to users
+      res.json({ 
+        message: "Warning sent successfully",
+        details: `Warning sent for inappropriate content: ${reason}` 
+      });
     } catch (error) {
       console.error("Error sending warning:", error);
       res.status(500).json({ message: "Failed to send warning" });

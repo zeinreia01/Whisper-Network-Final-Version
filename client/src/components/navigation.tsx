@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AuthModal } from "@/components/auth-modal";
 import { AdminAuthModal } from "@/components/admin-auth-modal";
 import { useAuth } from "@/hooks/use-auth";
-import { User, Shield, LogOut, Settings } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu } from "lucide-react";
 
 export function Navigation() {
   const [location] = useLocation();
@@ -22,9 +22,10 @@ export function Navigation() {
   return (
     <>
       <nav className="bg-white border-b border-gray-100 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
-            <div className="flex items-center">
+            {/* Logo section - moved closer to center on mobile */}
+            <div className="flex items-center flex-shrink-0">
               <Link href="/">
                 <h2 className="text-lg font-medium text-gray-900 cursor-pointer tracking-tight">
                   Whispering Network
@@ -32,41 +33,79 @@ export function Navigation() {
               </Link>
             </div>
             
+            {/* Navigation items - responsive design */}
             <div className="flex items-center space-x-1">
-              {navItems.map((item) => (
-                <Link key={item.path} href={item.path}>
-                  <button
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                      location === item.path
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                </Link>
-              ))}
+              {/* Desktop navigation */}
+              <div className="hidden md:flex items-center space-x-1">
+                {navItems.map((item) => (
+                  <Link key={item.path} href={item.path}>
+                    <button
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        location === item.path
+                          ? "bg-gray-100 text-gray-900"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  </Link>
+                ))}
+                
+                {admin && (
+                  <Link href="/admin">
+                    <button
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        location === "/admin"
+                          ? "bg-gray-100 text-gray-900"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      Whisper Listener
+                    </button>
+                  </Link>
+                )}
+              </div>
+
+              {/* Mobile navigation */}
+              <div className="flex md:hidden items-center space-x-1">
+                {navItems.map((item) => (
+                  <Link key={item.path} href={item.path}>
+                    <button
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        location === item.path
+                          ? "bg-gray-100 text-gray-900"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      }`}
+                      title={item.label}
+                    >
+                      {item.path === "/" ? <Home className="h-4 w-4" /> : <BarChart3 className="h-4 w-4" />}
+                    </button>
+                  </Link>
+                ))}
+                
+                {admin && (
+                  <Link href="/admin">
+                    <button
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        location === "/admin"
+                          ? "bg-gray-100 text-gray-900"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      }`}
+                      title="Whisper Listener"
+                    >
+                      <Shield className="h-4 w-4" />
+                    </button>
+                  </Link>
+                )}
+              </div>
               
-              {admin && (
-                <Link href="/admin">
-                  <button
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                      location === "/admin"
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    }`}
-                  >
-                    Whisper Listener
-                  </button>
-                </Link>
-              )}
-              
+              {/* User authentication section */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-9 px-3">
-                      <User className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">{user.username}</span>
+                    <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
+                      <User className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-2">{user.username}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -79,10 +118,10 @@ export function Navigation() {
               ) : admin ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-9 px-3">
-                      <Shield className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">{admin.displayName}</span>
-                      <Badge variant="outline" className="ml-2 text-xs">
+                    <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
+                      <Shield className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-2">{admin.displayName}</span>
+                      <Badge variant="outline" className="hidden sm:inline-flex ml-2 text-xs">
                         Listener
                       </Badge>
                     </Button>
@@ -96,12 +135,23 @@ export function Navigation() {
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center space-x-1">
-                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => setShowAuthModal(true)}>
-                    Silent Messenger
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-9 px-2 sm:px-3" 
+                    onClick={() => setShowAuthModal(true)}
+                  >
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-2">Silent Messenger</span>
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => setShowAdminAuthModal(true)}>
-                    <Shield className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Whisper Listener</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-9 px-2 sm:px-3" 
+                    onClick={() => setShowAdminAuthModal(true)}
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-2">Whisper Listener</span>
                   </Button>
                 </div>
               )}
