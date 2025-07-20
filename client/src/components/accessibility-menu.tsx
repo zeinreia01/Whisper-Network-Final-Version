@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Settings, Moon, Sun, User, Shield, Info } from "lucide-react";
+import { InfoDialog } from "@/components/info-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { UserAccountModal } from "@/components/user-account-modal";
-import { InfoDialog } from "@/components/info-dialog";
 
 export function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -90,7 +90,19 @@ export function AccessibilityMenu() {
 
   return (
     <>
-      <div ref={menuRef} className="fixed top-16 right-5 z-30">
+      <div ref={menuRef} className="fixed top-16 right-5 z-30 flex flex-col items-end space-y-2">
+        {/* Info button as separate circular button */}
+        <InfoDialog 
+          trigger={
+            <button
+              className="bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300"
+              aria-label="About Whispering Network"
+            >
+              <Info className="w-5 h-5 text-primary" />
+            </button>
+          }
+        />
+
         {/* Dynamic Island-style container */}
         <div className={`
           transition-all duration-500 ease-out
@@ -123,8 +135,7 @@ export function AccessibilityMenu() {
                 {darkMode ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" />}
               </button>
 
-              {/* Info button */}
-              <InfoDialog />
+
 
 
 

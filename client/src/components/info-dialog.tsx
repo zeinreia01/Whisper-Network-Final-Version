@@ -3,13 +3,21 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Info, Heart, Shield, Users, Eye, Lock } from "lucide-react";
 
-export function InfoDialog() {
+interface InfoDialogProps {
+  trigger?: React.ReactNode;
+}
+
+export function InfoDialog({ trigger }: InfoDialogProps) {
+  const defaultTrigger = (
+    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Information & Guidelines">
+      <Info className="h-4 w-4" />
+    </Button>
+  );
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Information & Guidelines">
-          <Info className="h-4 w-4" />
-        </Button>
+        {trigger || defaultTrigger}
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] w-[95vw] sm:w-full overflow-hidden">
         <DialogHeader>
