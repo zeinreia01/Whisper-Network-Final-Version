@@ -81,6 +81,15 @@ Preferred communication style: Simple, everyday language.
   - Enhanced reply sections with proper wrapping and minimum width constraints
   - Improved navigation spacing and button sizing for mobile touch interfaces
   - Disabled hover animations on mobile for better touch responsiveness
+  - Fixed admin dashboard mobile layout with responsive tabs and proper spacing
+  - Improved user management cards with mobile-friendly sizing and flex controls
+- ✅ **Aesthetic Message Viewer**: New "View Whisper" feature for beautiful message display
+  - Created downloadable, shareable message viewer with aesthetic gradient backgrounds
+  - Includes message content, category, timestamp, sender name, and Spotify track if attached
+  - Professional typography with serif fonts for elegant whisper presentation
+  - Download as PNG functionality using html2canvas for social sharing
+  - Available on all message cards with Eye icon button
+  - Perfect for screenshotting and sharing beautiful whisper quotes
   - Follow system designed for serverless environments
   - Database schema updates applied for production deployment
   - All new API endpoints compatible with Vercel's free plan limitations

@@ -111,16 +111,16 @@ export default function Admin() {
   ];
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Whisper Listener Dashboard</h1>
+    <div className="min-h-screen bg-background py-4 sm:py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
+        <div className="mb-8 sm:mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Whisper Listener Dashboard</h1>
             <Button
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-start sm:self-center"
             >
               <LogOut className="w-4 h-4" />
               Logout
@@ -132,17 +132,17 @@ export default function Admin() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
               <Card key={stat.title}>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-lg ${stat.color}`}>
-                      <Icon className="w-6 h-6" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className={`p-2 sm:p-3 rounded-lg ${stat.color} flex-shrink-0`}>
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                       <p className="text-sm text-gray-600">{stat.title}</p>
                     </div>
@@ -155,30 +155,33 @@ export default function Admin() {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="messages" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="messages" className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              Messages
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
+              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Messages</span>
+              <span className="sm:hidden">Msg</span>
             </TabsTrigger>
-            <TabsTrigger value="user-management" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              User Management
+            <TabsTrigger value="user-management" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">User Management</span>
+              <span className="sm:hidden">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="admin-management" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Admin Management
+            <TabsTrigger value="admin-management" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
+              <Settings className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Admin Management</span>
+              <span className="sm:hidden">Admin</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="messages" className="mt-6">
+          <TabsContent value="messages" className="mt-4 sm:mt-6">
             <Card>
-              <CardContent className="p-8">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Private Messages</h2>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Filter by recipient:</span>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Private Messages</h2>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Filter by recipient:</span>
                     <Select value={selectedRecipient} onValueChange={setSelectedRecipient}>
-                      <SelectTrigger className="w-48">
+                      <SelectTrigger className="w-full sm:w-48">
                         <SelectValue placeholder="Select recipient" />
                       </SelectTrigger>
                       <SelectContent>
@@ -201,11 +204,11 @@ export default function Admin() {
                 <p className="text-gray-600">No private messages for {selectedRecipient} yet.</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {privateMessages.map((message) => (
-                  <div key={message.id} className="border border-gray-200 rounded-lg p-6">
+                  <div key={message.id} className="border border-border rounded-lg p-4 sm:p-6">
                     <MessageCard message={message} showReplies={false} />
-                    <div className="flex items-center space-x-4 mt-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 mt-4">
                       <Button 
                         className="bg-primary hover:bg-primary/90"
                         onClick={() => {
@@ -246,11 +249,11 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="user-management" className="mt-6">
+          <TabsContent value="user-management" className="mt-4 sm:mt-6">
             <UserManagement />
           </TabsContent>
 
-          <TabsContent value="admin-management" className="mt-6">
+          <TabsContent value="admin-management" className="mt-4 sm:mt-6">
             <AdminManagement />
           </TabsContent>
         </Tabs>

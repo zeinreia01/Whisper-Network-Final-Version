@@ -10,8 +10,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { UserBadge } from "@/components/user-badge";
+import { MessageViewer } from "@/components/message-viewer";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import type { MessageWithReplies } from "@shared/schema";
@@ -316,13 +317,25 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         
         {/* Secondary actions row */}
         <div className="flex items-center space-x-1 sm:space-x-2">
-          <Link href={`/message/${message.id}`}>
-            <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-8">
-              <ExternalLink className="w-3 h-3 mr-1" />
-              <span className="hidden sm:inline">View Thread</span>
-              <span className="sm:hidden">View</span>
-            </Button>
-          </Link>
+          <div className="flex items-center space-x-1">
+            <MessageViewer 
+              message={message}
+              trigger={
+                <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-8">
+                  <Eye className="w-3 h-3 mr-1" />
+                  <span className="hidden sm:inline">View Whisper</span>
+                  <span className="sm:hidden">View</span>
+                </Button>
+              }
+            />
+            <Link href={`/message/${message.id}`}>
+              <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-8">
+                <ExternalLink className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">View Thread</span>
+                <span className="sm:hidden">Thread</span>
+              </Button>
+            </Link>
+          </div>
           
           {/* Admin Controls */}
           {admin && (
