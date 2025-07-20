@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCard } from "@/components/message-card";
 import { AdminManagement } from "@/components/admin-management";
+import { UserManagement } from "@/components/user-management";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -154,10 +155,14 @@ export default function Admin() {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="messages" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="messages" className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
               Messages
+            </TabsTrigger>
+            <TabsTrigger value="user-management" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              User Management
             </TabsTrigger>
             <TabsTrigger value="admin-management" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -239,6 +244,10 @@ export default function Admin() {
             )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="user-management" className="mt-6">
+            <UserManagement />
           </TabsContent>
 
           <TabsContent value="admin-management" className="mt-6">

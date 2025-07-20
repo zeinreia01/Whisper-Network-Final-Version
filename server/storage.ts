@@ -34,6 +34,11 @@ export interface IStorage {
   
   // Recipients operations - now returns admin display names
   getRecipients(): Promise<string[]>;
+  
+  // User management operations
+  deleteUser(userId: number): Promise<void>;
+  getUserMessages(userId: number): Promise<MessageWithReplies[]>;
+  searchUsers(query: string): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -317,6 +322,55 @@ export class DatabaseStorage implements IStorage {
     }
     
     return activeAdmins.map(admin => admin.displayName);
+  }
+
+  // User management operations
+  async deleteUser(userId: number): Promise<void> {
+    // First delete all replies by the user
+    await db
+      .delete(replies)
+      .where(eq(replies.userId, userId));
+    
+    // Then delete all messages by the user
+    await db
+      .delete(messages)
+      .where(eq(messages.userId, userId));
+    
+    // Finally delete the user
+    await db
+      .delete(users)
+      .where(eq(users.id, userId));
+  }
+
+  async getUserMessages(userId: number): Promise<MessageWithReplies[]> {
+    const result = await db.query.messages.findMany({
+      where: eq(messages.userId, userId),
+      orderBy: desc(messages.createdAt),
+      with: {
+        replies: {
+          orderBy: desc(replies.createdAt),
+          with: {
+            user: true,
+          },
+        },
+        user: true,
+      },
+    });
+    return result;
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    if (!query.trim()) {
+      return this.getAllUsers();
+    }
+    
+    const searchTerm = `%${query.toLowerCase()}%`;
+    const result = await db
+      .select()
+      .from(users)
+      .where(ilike(users.username, searchTerm))
+      .orderBy(desc(users.createdAt));
+    return result;
   }
 }
 

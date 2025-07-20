@@ -1,12 +1,19 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Moon, Sun, Bell, User, Shield } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { UserAccountModal } from "@/components/user-account-modal";
+import { NotificationCenter } from "@/components/notification-center";
 
 export function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [largeText, setLargeText] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [showUserAccount, setShowUserAccount] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { user, admin } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,52 +50,155 @@ export function AccessibilityMenu() {
     }
   }, [reducedMotion]);
 
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // Load settings from localStorage
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    const savedHighContrast = localStorage.getItem('highContrast') === 'true';
+    const savedLargeText = localStorage.getItem('largeText') === 'true';
+    const savedReducedMotion = localStorage.getItem('reducedMotion') === 'true';
+    
+    setDarkMode(savedDarkMode);
+    setHighContrast(savedHighContrast);
+    setLargeText(savedLargeText);
+    setReducedMotion(savedReducedMotion);
+  }, []);
+
+  // Save settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
+
+  useEffect(() => {
+    localStorage.setItem('highContrast', highContrast.toString());
+  }, [highContrast]);
+
+  useEffect(() => {
+    localStorage.setItem('largeText', largeText.toString());
+  }, [largeText]);
+
+  useEffect(() => {
+    localStorage.setItem('reducedMotion', reducedMotion.toString());
+  }, [reducedMotion]);
+
   return (
-    <div ref={menuRef} className="fixed top-5 right-5 z-50">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200"
-        aria-label="Accessibility Options"
-      >
-        <Settings className="w-5 h-5 text-primary" />
-      </button>
-      
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 animate-slide-up">
-          <div className="p-4">
-            <h3 className="font-semibold text-sm mb-3">Accessibility</h3>
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={highContrast}
-                  onChange={(e) => setHighContrast(e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm">High Contrast</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={largeText}
-                  onChange={(e) => setLargeText(e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm">Large Text</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={reducedMotion}
-                  onChange={(e) => setReducedMotion(e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm">Reduce Motion</span>
-              </label>
+    <>
+      <div ref={menuRef} className="fixed top-16 right-5 z-30">
+        {/* Dynamic Island-style container */}
+        <div className={`
+          transition-all duration-500 ease-out
+          ${isOpen ? 'bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl p-1 shadow-2xl' : 'bg-transparent'}
+        `}>
+          {/* Main settings button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={`
+              transition-all duration-300
+              ${isOpen 
+                ? 'bg-gray-100 rounded-xl p-2 m-1' 
+                : 'bg-white rounded-full p-3 shadow-lg hover:shadow-xl border border-gray-200'
+              }
+            `}
+            aria-label="Settings & Options"
+          >
+            <Settings className={`${isOpen ? 'w-4 h-4' : 'w-5 h-5'} text-primary transition-all duration-300`} />
+          </button>
+
+          {/* Quick action buttons when expanded */}
+          {isOpen && (
+            <div className="flex items-center space-x-1 p-1">
+              {/* Theme toggle */}
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-600" />}
+              </button>
+
+              {/* Notifications */}
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 rounded-xl hover:bg-gray-100 transition-colors relative"
+                aria-label="Notifications"
+              >
+                <Bell className="w-4 h-4 text-gray-600" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+
+              {/* User account (only for logged in users) */}
+              {(user || admin) && (
+                <button
+                  onClick={() => setShowUserAccount(true)}
+                  className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  aria-label="Account settings"
+                >
+                  {admin ? <Shield className="w-4 h-4 text-purple-600" /> : <User className="w-4 h-4 text-gray-600" />}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Accessibility panel */}
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 animate-slide-up">
+            <div className="p-4">
+              <h3 className="font-semibold text-sm mb-4 text-gray-900">Accessibility & Settings</h3>
+              <div className="space-y-3">
+                <label className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">High Contrast</span>
+                  <input
+                    type="checkbox"
+                    checked={highContrast}
+                    onChange={(e) => setHighContrast(e.target.checked)}
+                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                  />
+                </label>
+                <label className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Large Text</span>
+                  <input
+                    type="checkbox"
+                    checked={largeText}
+                    onChange={(e) => setLargeText(e.target.checked)}
+                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                  />
+                </label>
+                <label className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Reduce Motion</span>
+                  <input
+                    type="checkbox"
+                    checked={reducedMotion}
+                    onChange={(e) => setReducedMotion(e.target.checked)}
+                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                  />
+                </label>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+
+      {/* User Account Modal */}
+      <UserAccountModal 
+        isOpen={showUserAccount} 
+        onClose={() => setShowUserAccount(false)} 
+        user={user}
+        admin={admin}
+      />
+
+      {/* Notification Center */}
+      <NotificationCenter 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
+    </>
   );
 }

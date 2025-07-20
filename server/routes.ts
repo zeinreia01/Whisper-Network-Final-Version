@@ -413,6 +413,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || !user.isActive) {
+        res.status(401).json({ message: "Invalid credentials" });
+        return;
+      }
+
+      const isValidPassword = await comparePasswords(password, user.password);
+      if (!isValidPassword) {
+        res.status(401).json({ message: "Invalid credentials" });
+        return;
+      }
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/admin-login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
       const admin = await storage.getAdminByUsername(username);
       
       if (!admin || admin.password !== password || !admin.isActive) {
@@ -423,8 +447,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, ...adminWithoutPassword } = admin;
       res.json(adminWithoutPassword);
     } catch (error) {
-      console.error("Error during login:", error);
-      res.status(500).json({ message: "Login failed" });
+      console.error("Error during admin login:", error);
+      res.status(500).json({ message: "Admin login failed" });
+    }
+  });
+
+  // User management routes
+  app.get("/api/user/messages/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const messages = await storage.getUserMessages(parseInt(userId));
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching user messages:", error);
+      res.status(500).json({ message: "Failed to fetch user messages" });
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteUser(parseInt(id));
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.get("/api/users/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      const users = await storage.searchUsers(q as string || "");
+      // Remove passwords from response
+      const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove passwords from response
+      const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      const user = await storage.updateUserStatus(parseInt(id), isActive);
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ message: "Failed to update user status" });
     }
   });
 
