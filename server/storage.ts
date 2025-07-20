@@ -503,11 +503,11 @@ export class DatabaseStorage implements IStorage {
     let whereCondition = eq(reactions.messageId, messageId);
     
     if (userId) {
-      whereCondition = and(whereCondition, eq(reactions.userId, userId));
+      whereCondition = and(whereCondition, eq(reactions.userId, userId))!;
     }
     
     if (adminId) {
-      whereCondition = and(whereCondition, eq(reactions.adminId, adminId));
+      whereCondition = and(whereCondition, eq(reactions.adminId, adminId))!;
     }
 
     await db
@@ -532,11 +532,11 @@ export class DatabaseStorage implements IStorage {
     let whereCondition = eq(reactions.messageId, messageId);
     
     if (userId) {
-      whereCondition = and(whereCondition, eq(reactions.userId, userId));
+      whereCondition = and(whereCondition, eq(reactions.userId, userId))!;
     }
     
     if (adminId) {
-      whereCondition = and(whereCondition, eq(reactions.adminId, adminId));
+      whereCondition = and(whereCondition, eq(reactions.adminId, adminId))!;
     }
 
     const [reaction] = await db
