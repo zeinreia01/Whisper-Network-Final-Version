@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Heart, MessageSquare, Check, CheckCheck } from "lucide-react";
+import { Bell, Heart, MessageSquare, Check, CheckCheck, UserPlus } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { Link } from "wouter";
 import type { NotificationWithDetails } from "@shared/schema";
@@ -73,12 +73,17 @@ export function NotificationCenter() {
         return <Heart className="w-4 h-4 text-red-500" />;
       case "reply":
         return <MessageSquare className="w-4 h-4 text-blue-500" />;
+      case "follow":
+        return <UserPlus className="w-4 h-4 text-green-500" />;
       default:
         return <Bell className="w-4 h-4 text-gray-500" />;
     }
   };
 
   const getNotificationLink = (notification: NotificationWithDetails) => {
+    if (notification.type === "follow" && notification.fromUserId) {
+      return `/user/${notification.fromUserId}`;
+    }
     if (notification.messageId) {
       return `/message/${notification.messageId}`;
     }

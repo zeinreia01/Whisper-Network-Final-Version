@@ -460,21 +460,39 @@ export class DatabaseStorage implements IStorage {
 
     // Count reactions on all user messages
     let totalReactions = 0;
-    for (const message of userMessages) {
-      const messageReactions = await db
-        .select()
-        .from(reactions)
-        .where(eq(reactions.messageId, message.id));
-      totalReactions += messageReactions.length;
+    try {
+      for (const message of userMessages) {
+        const messageReactions = await db
+          .select()
+          .from(reactions)
+          .where(eq(reactions.messageId, message.id));
+        totalReactions += messageReactions.length;
+      }
+    } catch (error) {
+      // Skip if reactions table doesn't exist yet
+      totalReactions = 0;
     }
 
     // Get follow stats
-    const { followersCount, followingCount } = await this.getFollowStats(userId);
+    let followersCount = 0;
+    let followingCount = 0;
+    try {
+      const stats = await this.getFollowStats(userId);
+      followersCount = stats.followersCount;
+      followingCount = stats.followingCount;
+    } catch (error) {
+      // Skip if follows table doesn't exist yet
+    }
     
     // Check if current user is following this user
     let isFollowing = false;
-    if (currentUserId && currentUserId !== userId) {
-      isFollowing = await this.isFollowing(currentUserId, userId);
+    try {
+      if (currentUserId && currentUserId !== userId) {
+        isFollowing = await this.isFollowing(currentUserId, userId);
+      }
+    } catch (error) {
+      // Skip if follows table doesn't exist yet
+      isFollowing = false;
     }
 
     return {
