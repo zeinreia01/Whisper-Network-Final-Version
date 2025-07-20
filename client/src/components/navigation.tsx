@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AuthModal } from "@/components/auth-modal";
 import { AdminAuthModal } from "@/components/admin-auth-modal";
 import { InfoDialog } from "@/components/info-dialog";
+import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
 import { User, Shield, LogOut, Settings, Home, BarChart3, Menu } from "lucide-react";
 
@@ -99,6 +100,9 @@ export function Navigation() {
                   </Link>
                 )}
               </div>
+              
+              {/* Notifications for authenticated users */}
+              {(user || admin) && <NotificationCenter />}
               
               {/* Info button */}
               <InfoDialog />

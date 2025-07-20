@@ -10,6 +10,30 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 20, 2025 - Social Features Implementation
+- ✅ **Heart reaction system**: Added heart reactions for messages with counters, restricted to authenticated users only
+  - Real-time reaction counts displayed on all message cards
+  - Visual feedback with filled/unfilled heart icons
+  - Proper authentication checks to prevent anonymous reactions
+- ✅ **Notifications system**: Comprehensive notification center for user engagement
+  - Real-time notifications when users receive reactions on their messages
+  - Bell icon with unread count badge in navigation
+  - Notification history with mark as read functionality
+  - Auto-refresh every 30 seconds for live updates
+- ✅ **User profile viewing**: Social profile interface for authenticated users
+  - View any user's public profile with message statistics
+  - Profile shows message count, reply count, and total reactions received
+  - Browse user's public message history
+  - User avatar generation and join date display
+  - Profile access buttons on all reply nicknames
+- ✅ **Enhanced social navigation**: Added notification center to main navigation
+  - Notifications only visible to authenticated users
+  - Seamless integration with existing navigation design
+- ✅ **Database schema expansion**: Added reactions and notifications tables with proper relationships
+  - Foreign key constraints for data integrity
+  - Optimized queries for reaction counting and notification retrieval
+- ✅ **Vercel + Supabase compatibility**: All new features maintain deployment compatibility
+
 ### July 20, 2025 - Replit Agent Migration & Dark Mode Completion
 - ✅ **Migration completed**: Successfully migrated project from Replit Agent to standard Replit environment
 - ✅ **Database setup**: Connected to user's Supabase PostgreSQL database with proper environment configuration

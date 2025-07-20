@@ -1,228 +1,200 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, AlertTriangle, Info, CheckCircle, X, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { Bell, Heart, MessageSquare, Check, CheckCheck } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
+import { Link } from "wouter";
+import type { NotificationWithDetails } from "@shared/schema";
 
-interface Notification {
-  id: string;
-  type: 'warning' | 'info' | 'success' | 'error';
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-}
+export function NotificationCenter() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { user, admin } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-interface NotificationCenterProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: user 
+      ? [`/api/notifications/user/${user.id}`]
+      : admin 
+      ? [`/api/notifications/admin/${admin.id}`]
+      : [],
+    enabled: !!(user || admin),
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
-export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: number) => {
+      const response = await apiRequest("PATCH", `/api/notifications/${notificationId}/read`);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: user 
+          ? [`/api/notifications/user/${user.id}`]
+          : [`/api/notifications/admin/${admin?.id}`]
+      });
+    },
+  });
 
-  // Initialize with sample notifications (you can replace with real API calls)
-  useEffect(() => {
-    const sampleNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'info',
-        title: 'Welcome to Whispering Network',
-        message: 'Thank you for joining our community. Your privacy and emotional well-being are our top priorities.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        read: false,
-      },
-      {
-        id: '2',
-        type: 'warning',
-        title: 'Community Guidelines Reminder',
-        message: 'Please remember to be kind and supportive in your interactions. Harassment or harmful content will be removed.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        read: false,
-      },
-      {
-        id: '3',
-        type: 'success',
-        title: 'Message Posted',
-        message: 'Your message has been successfully posted and is now visible to the community.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        read: true,
-      },
-    ];
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const data = user ? { userId: user.id } : { adminId: admin?.id };
+      const response = await apiRequest("PATCH", "/api/notifications/mark-all-read", data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: user 
+          ? [`/api/notifications/user/${user.id}`]
+          : [`/api/notifications/admin/${admin?.id}`]
+      });
+      toast({
+        title: "All notifications marked as read",
+        description: "Your notification center has been cleared.",
+      });
+    },
+  });
 
-    // Only set if notifications array is empty (avoid overriding)
-    if (notifications.length === 0) {
-      setNotifications(sampleNotifications);
-    }
-  }, []);
+  if (!user && !admin) return null;
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const unreadCount = notifications?.filter((n: NotificationWithDetails) => !n.isRead).length || 0;
+
+  const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-      case 'info':
-        return <Info className="w-5 h-5 text-blue-500" />;
-      case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'error':
-        return <X className="w-5 h-5 text-red-500" />;
+      case "reaction":
+        return <Heart className="w-4 h-4 text-red-500" />;
+      case "reply":
+        return <MessageSquare className="w-4 h-4 text-blue-500" />;
       default:
-        return <Bell className="w-5 h-5 text-gray-500" />;
+        return <Bell className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  const getNotificationColor = (type: Notification['type']) => {
-    switch (type) {
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'info':
-        return 'bg-blue-50 border-blue-200';
-      case 'success':
-        return 'bg-green-50 border-green-200';
-      case 'error':
-        return 'bg-red-50 border-red-200';
-      default:
-        return 'bg-gray-50 border-gray-200';
+  const getNotificationLink = (notification: NotificationWithDetails) => {
+    if (notification.messageId) {
+      return `/message/${notification.messageId}`;
     }
+    return "/dashboard";
   };
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notif =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notif => ({ ...notif, read: true }))
-    );
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[70vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Bell className="w-5 h-5" />
-              <span>Notifications</span>
-              {unreadCount > 0 && (
-                <Badge variant="destructive" className="text-xs">
-                  {unreadCount}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {notifications.length > 0 && (
-                <>
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={markAllAsRead}
-                      className="text-xs"
-                    >
-                      Mark all read
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearAll}
-                    className="text-xs text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-3 h-3 mr-1" />
-                    Clear all
-                  </Button>
-                </>
-              )}
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto">
-          {notifications.length === 0 ? (
-            <div className="text-center py-12">
-              <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-              <p className="text-gray-500">You're all caught up! Check back later for updates.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`
-                    p-4 rounded-lg border transition-all duration-200 hover:shadow-sm
-                    ${getNotificationColor(notification.type)}
-                    ${!notification.read ? 'ring-2 ring-blue-500/20' : ''}
-                  `}
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="relative">
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0"
+            >
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Notifications</CardTitle>
+              {notifications && notifications.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  disabled={markAllAsReadMutation.isPending || unreadCount === 0}
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {getNotificationIcon(notification.type)}
+                  <CheckCheck className="w-4 h-4 mr-1" />
+                  Mark all read
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-96">
+              {isLoading ? (
+                <div className="p-4 space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-start space-x-3">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-full mb-1" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
-                            {notification.title}
-                          </h4>
-                          <p className={`text-sm mt-1 ${!notification.read ? 'text-gray-700' : 'text-gray-600'}`}>
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {formatTimeAgo(notification.timestamp)}
-                          </p>
+                  ))}
+                </div>
+              ) : notifications && notifications.length > 0 ? (
+                <div className="divide-y">
+                  {notifications.map((notification: NotificationWithDetails) => (
+                    <div
+                      key={notification.id}
+                      className={`p-4 hover:bg-muted/50 transition-colors ${
+                        !notification.isRead ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 mt-1">
+                          {getNotificationIcon(notification.type)}
                         </div>
-                        <div className="flex items-center space-x-1 ml-2">
-                          {!notification.read && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => markAsRead(notification.id)}
-                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-                            >
-                              <CheckCircle className="w-3 h-3" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteNotification(notification.id)}
-                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                        <div className="flex-1 min-w-0">
+                          <Link 
+                            href={getNotificationLink(notification)}
+                            onClick={() => {
+                              if (!notification.isRead) {
+                                markAsReadMutation.mutate(notification.id);
+                              }
+                              setIsOpen(false);
+                            }}
                           >
-                            <X className="w-3 h-3" />
-                          </Button>
+                            <p className="text-sm text-foreground mb-1 hover:text-primary cursor-pointer">
+                              {notification.content}
+                            </p>
+                          </Link>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">
+                              {formatTimeAgo(notification.createdAt!)}
+                            </p>
+                            {!notification.isRead && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markAsReadMutation.mutate(notification.id);
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                <Check className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex justify-end pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+              ) : (
+                <div className="p-8 text-center">
+                  <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">No notifications</h3>
+                  <p className="text-xs text-muted-foreground">
+                    You're all caught up! Notifications will appear here.
+                  </p>
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </PopoverContent>
+    </Popover>
   );
 }

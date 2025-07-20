@@ -13,6 +13,7 @@ import Dashboard from "@/pages/dashboard";
 import Admin from "@/pages/admin";
 import MessageThread from "@/pages/message-thread";
 import Login from "@/pages/login";
+import { UserProfilePage } from "@/pages/user-profile";
 import { useState, useEffect } from "react";
 
 function Router() {
@@ -42,6 +43,7 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/admin" component={Admin} />
         <Route path="/message/:id" component={MessageThread} />
+        <Route path="/user/:id" component={UserProfilePage} />
         <Route path="/login" component={Login} />
         <Route component={NotFound} />
       </Switch>

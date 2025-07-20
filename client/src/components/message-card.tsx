@@ -10,7 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import type { MessageWithReplies } from "@shared/schema";
@@ -28,6 +28,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   const [warningReason, setWarningReason] = useState("");
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [selectedReplyId, setSelectedReplyId] = useState<number | null>(null);
+  const [hasReacted, setHasReacted] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { admin, user } = useAuth();
@@ -43,6 +44,17 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       setNickname("");
     }
   }, [defaultNickname, showReplyForm]);
+
+  // Check if current user has reacted to this message
+  useEffect(() => {
+    if ((user || admin) && message.reactions) {
+      const userReaction = message.reactions.find(reaction => 
+        (user && reaction.userId === user.id) || 
+        (admin && reaction.adminId === admin.id)
+      );
+      setHasReacted(!!userReaction);
+    }
+  }, [message.reactions, user, admin]);
 
   const category = categories.find(c => c.id === message.category);
   
@@ -70,6 +82,39 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       toast({
         title: "Error",
         description: "Failed to send reply. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reactionMutation = useMutation({
+    mutationFn: async ({ add }: { add: boolean }) => {
+      const data = {
+        userId: user?.id,
+        adminId: admin?.id,
+        type: "heart"
+      };
+      
+      if (add) {
+        const response = await apiRequest("POST", `/api/messages/${message.id}/reactions`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("DELETE", `/api/messages/${message.id}/reactions`, data);
+        return response;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      setHasReacted(!hasReacted);
+      toast({
+        title: hasReacted ? "Reaction removed" : "Reaction added",
+        description: hasReacted ? "You removed your heart reaction" : "You reacted with a heart",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update reaction. Please try again.",
         variant: "destructive",
       });
     },
@@ -224,6 +269,32 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
             Reply
           </button>
           <span>{message.replies.length} replies</span>
+          
+          {/* Heart reaction button - only for authenticated users */}
+          {(user || admin) && (
+            <button
+              onClick={() => reactionMutation.mutate({ add: !hasReacted })}
+              disabled={reactionMutation.isPending}
+              className={`flex items-center space-x-1 transition-colors ${
+                hasReacted 
+                  ? 'text-red-500 hover:text-red-600' 
+                  : 'hover:text-red-500'
+              }`}
+            >
+              <Heart 
+                className={`w-4 h-4 ${hasReacted ? 'fill-current' : ''}`} 
+              />
+              <span>{message.reactionCount || 0}</span>
+            </button>
+          )}
+          
+          {/* Show reaction count for non-authenticated users */}
+          {!user && !admin && message.reactionCount && message.reactionCount > 0 && (
+            <div className="flex items-center space-x-1 text-gray-400">
+              <Heart className="w-4 h-4" />
+              <span>{message.reactionCount}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <Link href={`/message/${message.id}`}>
@@ -348,7 +419,17 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
+                        {/* View profile button for authenticated users */}
+                        {reply.userId && (user || admin) && (
+                          <Link href={`/user/${reply.userId}`}>
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-primary/10">
+                              <User className="h-3 w-3 text-primary" />
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
                       {/* Show admin permission tag */}
                       {reply.adminId && (
                         <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">

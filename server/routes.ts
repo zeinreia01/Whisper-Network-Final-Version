@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema } from "@shared/schema";
+import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -510,6 +510,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user status:", error);
       res.status(500).json({ message: "Failed to update user status" });
+    }
+  });
+
+  // User profile routes
+  app.get("/api/users/:id/profile", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const profile = await storage.getUserProfile(parseInt(id));
+      if (!profile) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const { password, ...profileWithoutPassword } = profile;
+      res.json(profileWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  app.get("/api/users/:id/messages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const messages = await storage.getUserMessages(parseInt(id));
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching user messages:", error);
+      res.status(500).json({ message: "Failed to fetch user messages" });
+    }
+  });
+
+  // Reaction routes
+  app.post("/api/messages/:id/reactions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const messageId = parseInt(id);
+      const { userId, adminId, type = "heart" } = req.body;
+
+      // Check if user already reacted
+      const existingReaction = await storage.getUserReaction(messageId, userId, adminId);
+      if (existingReaction) {
+        return res.status(400).json({ message: "You have already reacted to this message" });
+      }
+
+      // Add reaction
+      const reaction = await storage.addReaction({
+        messageId,
+        userId: userId || null,
+        adminId: adminId || null,
+        type,
+      });
+
+      // Get message to find owner for notification
+      const message = await storage.getMessageById(messageId);
+      if (message && message.userId) {
+        // Create notification for message owner
+        const fromName = userId ? (await storage.getUserById(userId))?.username : 
+                         adminId ? (await storage.getAdminByUsername("admin"))?.displayName : "Anonymous";
+        
+        await storage.createNotification({
+          userId: message.userId,
+          type: "reaction",
+          messageId,
+          fromUserId: userId || null,
+          fromAdminId: adminId || null,
+          content: `${fromName} reacted with ${type} to your message`,
+          isRead: false,
+        });
+      }
+
+      res.status(201).json(reaction);
+    } catch (error) {
+      console.error("Error adding reaction:", error);
+      res.status(500).json({ message: "Failed to add reaction" });
+    }
+  });
+
+  app.delete("/api/messages/:id/reactions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const messageId = parseInt(id);
+      const { userId, adminId } = req.body;
+
+      await storage.removeReaction(messageId, userId, adminId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing reaction:", error);
+      res.status(500).json({ message: "Failed to remove reaction" });
+    }
+  });
+
+  app.get("/api/messages/:id/reactions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const reactions = await storage.getMessageReactions(parseInt(id));
+      res.json(reactions);
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+      res.status(500).json({ message: "Failed to fetch reactions" });
+    }
+  });
+
+  // Notification routes
+  app.get("/api/notifications/user/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const notifications = await storage.getUserNotifications(parseInt(userId));
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching user notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/admin/:adminId", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const notifications = await storage.getAdminNotifications(parseInt(adminId));
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching admin notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.markNotificationAsRead(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.patch("/api/notifications/mark-all-read", async (req, res) => {
+    try {
+      const { userId, adminId } = req.body;
+      await storage.markAllNotificationsAsRead(userId, adminId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
     }
   });
 

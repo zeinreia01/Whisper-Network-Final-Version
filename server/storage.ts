@@ -1,4 +1,4 @@
-import { messages, replies, admins, users, type Message, type Reply, type Admin, type User, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type MessageWithReplies } from "@shared/schema";
+import { messages, replies, admins, users, reactions, notifications, type Message, type Reply, type Admin, type User, type Reaction, type Notification, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type InsertReaction, type InsertNotification, type MessageWithReplies, type UserProfile, type NotificationWithDetails } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and } from "drizzle-orm";
 
@@ -39,6 +39,20 @@ export interface IStorage {
   deleteUser(userId: number): Promise<void>;
   getUserMessages(userId: number): Promise<MessageWithReplies[]>;
   searchUsers(query: string): Promise<User[]>;
+  getUserProfile(userId: number): Promise<UserProfile | null>;
+  
+  // Reaction operations
+  addReaction(reaction: InsertReaction): Promise<Reaction>;
+  removeReaction(messageId: number, userId?: number, adminId?: number): Promise<void>;
+  getMessageReactions(messageId: number): Promise<Reaction[]>;
+  getUserReaction(messageId: number, userId?: number, adminId?: number): Promise<Reaction | null>;
+  
+  // Notification operations
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getUserNotifications(userId: number): Promise<NotificationWithDetails[]>;
+  getAdminNotifications(adminId: number): Promise<NotificationWithDetails[]>;
+  markNotificationAsRead(notificationId: number): Promise<void>;
+  markAllNotificationsAsRead(userId?: number, adminId?: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -109,7 +123,20 @@ export class DatabaseStorage implements IStorage {
         user: true,
       },
     });
-    return result;
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      result.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
   }
 
   async getPrivateMessages(): Promise<MessageWithReplies[]> {
@@ -182,7 +209,16 @@ export class DatabaseStorage implements IStorage {
         user: true,
       },
     });
-    return result || null;
+
+    if (!result) return null;
+
+    // Add reaction data
+    const messageReactions = await this.getMessageReactions(result.id);
+    return {
+      ...result,
+      reactionCount: messageReactions.length,
+      reactions: messageReactions,
+    };
   }
 
   async getMessagesByRecipient(recipient: string): Promise<MessageWithReplies[]> {
@@ -371,6 +407,152 @@ export class DatabaseStorage implements IStorage {
       .where(ilike(users.username, searchTerm))
       .orderBy(desc(users.createdAt));
     return result;
+  }
+
+  async getUserProfile(userId: number): Promise<UserProfile | null> {
+    const user = await this.getUserById(userId);
+    if (!user) return null;
+
+    const userMessages = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.userId, userId));
+
+    const userReplies = await db
+      .select()
+      .from(replies)
+      .where(eq(replies.userId, userId));
+
+    const totalReactions = await db
+      .select()
+      .from(reactions)
+      .where(eq(reactions.messageId, userMessages[0]?.id || 0));
+
+    return {
+      ...user,
+      messageCount: userMessages.length,
+      replyCount: userReplies.length,
+      totalReactions: totalReactions.length,
+    };
+  }
+
+  // Reaction operations
+  async addReaction(reactionData: InsertReaction): Promise<Reaction> {
+    const [reaction] = await db
+      .insert(reactions)
+      .values(reactionData)
+      .returning();
+    return reaction;
+  }
+
+  async removeReaction(messageId: number, userId?: number, adminId?: number): Promise<void> {
+    let whereCondition = eq(reactions.messageId, messageId);
+    
+    if (userId) {
+      whereCondition = and(whereCondition, eq(reactions.userId, userId));
+    }
+    
+    if (adminId) {
+      whereCondition = and(whereCondition, eq(reactions.adminId, adminId));
+    }
+
+    await db
+      .delete(reactions)
+      .where(whereCondition);
+  }
+
+  async getMessageReactions(messageId: number): Promise<Reaction[]> {
+    try {
+      const result = await db
+        .select()
+        .from(reactions)
+        .where(eq(reactions.messageId, messageId));
+      return result;
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+      return [];
+    }
+  }
+
+  async getUserReaction(messageId: number, userId?: number, adminId?: number): Promise<Reaction | null> {
+    let whereCondition = eq(reactions.messageId, messageId);
+    
+    if (userId) {
+      whereCondition = and(whereCondition, eq(reactions.userId, userId));
+    }
+    
+    if (adminId) {
+      whereCondition = and(whereCondition, eq(reactions.adminId, adminId));
+    }
+
+    const [reaction] = await db
+      .select()
+      .from(reactions)
+      .where(whereCondition)
+      .limit(1);
+    
+    return reaction || null;
+  }
+
+  // Notification operations
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const [notification] = await db
+      .insert(notifications)
+      .values(notificationData)
+      .returning();
+    return notification;
+  }
+
+  async getUserNotifications(userId: number): Promise<NotificationWithDetails[]> {
+    try {
+      const result = await db
+        .select()
+        .from(notifications)
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt));
+      return result as NotificationWithDetails[];
+    } catch (error) {
+      console.error("Error fetching user notifications:", error);
+      return [];
+    }
+  }
+
+  async getAdminNotifications(adminId: number): Promise<NotificationWithDetails[]> {
+    try {
+      const result = await db
+        .select()
+        .from(notifications)
+        .where(eq(notifications.adminId, adminId))
+        .orderBy(desc(notifications.createdAt));
+      return result as NotificationWithDetails[];
+    } catch (error) {
+      console.error("Error fetching admin notifications:", error);
+      return [];
+    }
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId?: number, adminId?: number): Promise<void> {
+    let whereCondition;
+    
+    if (userId) {
+      whereCondition = eq(notifications.userId, userId);
+    } else if (adminId) {
+      whereCondition = eq(notifications.adminId, adminId);
+    } else {
+      return; // Must provide either userId or adminId
+    }
+
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(whereCondition);
   }
 }
 

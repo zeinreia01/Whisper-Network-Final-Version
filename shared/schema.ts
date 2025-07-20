@@ -45,6 +45,31 @@ export const admins = pgTable("admins", {
   isActive: boolean("is_active").default(true),
 });
 
+// Heart reactions table
+export const reactions = pgTable("reactions", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").references(() => messages.id).notNull(),
+  userId: integer("user_id").references(() => users.id),
+  adminId: integer("admin_id").references(() => admins.id),
+  type: text("type").notNull().default("heart"), // heart, like, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  adminId: integer("admin_id").references(() => admins.id),
+  type: text("type").notNull(), // reaction, reply, mention
+  messageId: integer("message_id").references(() => messages.id),
+  replyId: integer("reply_id").references(() => replies.id),
+  fromUserId: integer("from_user_id").references(() => users.id),
+  fromAdminId: integer("from_admin_id").references(() => admins.id),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   messages: many(messages),
   replies: many(replies),
@@ -66,6 +91,52 @@ export const repliesRelations = relations(replies, ({ one }) => ({
   user: one(users, {
     fields: [replies.userId],
     references: [users.id],
+  }),
+  admin: one(admins, {
+    fields: [replies.adminId],
+    references: [admins.id],
+  }),
+}));
+
+export const reactionsRelations = relations(reactions, ({ one }) => ({
+  message: one(messages, {
+    fields: [reactions.messageId],
+    references: [messages.id],
+  }),
+  user: one(users, {
+    fields: [reactions.userId],
+    references: [users.id],
+  }),
+  admin: one(admins, {
+    fields: [reactions.adminId],
+    references: [admins.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+  admin: one(admins, {
+    fields: [notifications.adminId],
+    references: [admins.id],
+  }),
+  message: one(messages, {
+    fields: [notifications.messageId],
+    references: [messages.id],
+  }),
+  reply: one(replies, {
+    fields: [notifications.replyId],
+    references: [replies.id],
+  }),
+  fromUser: one(users, {
+    fields: [notifications.fromUserId],
+    references: [users.id],
+  }),
+  fromAdmin: one(admins, {
+    fields: [notifications.fromAdminId],
+    references: [admins.id],
   }),
 }));
 
@@ -89,6 +160,16 @@ export const insertAdminSchema = createInsertSchema(admins).omit({
   createdAt: true,
 });
 
+export const insertReactionSchema = createInsertSchema(reactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
@@ -97,14 +178,35 @@ export type InsertReply = z.infer<typeof insertReplySchema>;
 export type Reply = typeof replies.$inferSelect;
 export type InsertAdmin = z.infer<typeof insertAdminSchema>;
 export type Admin = typeof admins.$inferSelect;
+export type InsertReaction = z.infer<typeof insertReactionSchema>;
+export type Reaction = typeof reactions.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
 
 export type MessageWithReplies = Message & {
   replies: Reply[];
   user?: User | null;
+  reactions?: Reaction[];
+  reactionCount?: number;
+  userHasReacted?: boolean;
 };
 
 export type ReplyWithUser = Reply & {
   user?: User | null;
+  admin?: Admin | null;
+};
+
+export type UserProfile = User & {
+  messageCount: number;
+  replyCount: number;
+  totalReactions: number;
+};
+
+export type NotificationWithDetails = Notification & {
+  fromUser?: User | null;
+  fromAdmin?: Admin | null;
+  message?: Message | null;
+  reply?: Reply | null;
 };
 
 // Message categories with their colors
