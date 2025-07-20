@@ -1,0 +1,116 @@
+[19:44:15.107] Running build in Washington, D.C., USA (East) – iad1
+[19:44:15.108] Build machine configuration: 2 cores, 8 GB
+[19:44:15.137] Cloning github.com/zeinreia01/Whisper-Network-Final-Version (Branch: main, Commit: ffd98c8)
+[19:44:15.718] Cloning completed: 580.000ms
+[19:44:15.767] Found .vercelignore
+[19:44:15.776] Removed 9 ignored files defined in .vercelignore
+[19:44:15.776]   /attached_assets/Screenshot_20250720-154537_1752997590693.png
+[19:44:15.776]   /attached_assets/Screenshot_20250720-165604_1753001974498.png
+[19:44:15.777]   /attached_assets/Screenshot_20250720-165609_1753001974457.png
+[19:44:15.777]   /attached_assets/Screenshot_20250720-170637_1753002631679.png
+[19:44:15.777]   /attached_assets/Screenshot_20250720-185921_1753009244101.png
+[19:44:15.777]   /attached_assets/Screenshot_20250720-185924_1753009244047.png
+[19:44:15.777]   /attached_assets/whisper-5-1753003175678_1753003275382.png
+[19:44:15.778]   /attached_assets/whisper-7-1753003632462_1753003884639.png
+[19:44:15.778]   /GIT_TRANSFER_GUIDE.md
+[19:44:16.339] Restored build cache from previous deployment (5HsFW83vsQsm9nWtwuuosNypa54u)
+[19:44:18.469] Running "vercel build"
+[19:44:19.076] Vercel CLI 44.4.3
+[19:44:19.789] Running "install" command: `npm install`...
+[19:44:22.434] 
+[19:44:22.435] up to date, audited 507 packages in 2s
+[19:44:22.435] 
+[19:44:22.435] 69 packages are looking for funding
+[19:44:22.436]   run `npm fund` for details
+[19:44:22.464] 
+[19:44:22.465] 11 vulnerabilities (3 low, 8 moderate)
+[19:44:22.465] 
+[19:44:22.465] To address issues that do not require attention, run:
+[19:44:22.465]   npm audit fix
+[19:44:22.466] 
+[19:44:22.466] To address all issues (including breaking changes), run:
+[19:44:22.466]   npm audit fix --force
+[19:44:22.466] 
+[19:44:22.467] Run `npm audit` for details.
+[19:44:22.704] 
+[19:44:22.704] > rest-express@1.0.0 build
+[19:44:22.705] > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+[19:44:22.705] 
+[19:44:23.014] [36mvite v5.4.19 [32mbuilding for production...[36m[39m
+[19:44:23.336] transforming...
+[19:44:23.375] Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+[19:44:23.376]   npx update-browserslist-db@latest
+[19:44:23.376]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[19:44:28.664] [32m✓[39m 1855 modules transformed.
+[19:44:29.112] rendering chunks...
+[19:44:29.124] computing gzip size...
+[19:44:29.147] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  0.63 kB[22m[1m[22m[2m │ gzip:   0.38 kB[22m
+[19:44:29.148] [2m../dist/public/[22m[2massets/[22m[35mindex-CQFf1EiN.css  [39m[1m[2m 81.24 kB[22m[1m[22m[2m │ gzip:  14.04 kB[22m
+[19:44:29.148] [2m../dist/public/[22m[2massets/[22m[36mindex-DntQjJQZ.js   [39m[1m[33m798.12 kB[39m[22m[2m │ gzip: 219.35 kB[22m
+[19:44:29.148] [33m
+[19:44:29.149] (!) Some chunks are larger than 500 kB after minification. Consider:
+[19:44:29.149] - Using dynamic import() to code-split the application
+[19:44:29.149] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[19:44:29.149] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[19:44:29.150] [32m✓ built in 5.84s[39m
+[19:44:29.233] ▲ [WARNING] Duplicate member "getUserById" in class body [duplicate-class-member]
+[19:44:29.233] 
+[19:44:29.234]     server/storage.ts:356:8:
+[19:44:29.234]       356 │   async getUserById(userId: number): Promise<User | undefined> {
+[19:44:29.234]           ╵         ~~~~~~~~~~~
+[19:44:29.234] 
+[19:44:29.234]   The original member "getUserById" is here:
+[19:44:29.234] 
+[19:44:29.234]     server/storage.ts:85:8:
+[19:44:29.234]       85 │   async getUserById(id: number): Promise<User | undefined> {
+[19:44:29.234]          ╵         ~~~~~~~~~~~
+[19:44:29.234] 
+[19:44:29.234] ▲ [WARNING] Duplicate member "getUserMessages" in class body [duplicate-class-member]
+[19:44:29.234] 
+[19:44:29.234]     server/storage.ts:416:8:
+[19:44:29.234]       416 │   async getUserMessages(userId: number): Promise<MessageWithRepli...
+[19:44:29.235]           ╵         ~~~~~~~~~~~~~~~
+[19:44:29.235] 
+[19:44:29.235]   The original member "getUserMessages" is here:
+[19:44:29.235] 
+[19:44:29.235]     server/storage.ts:365:8:
+[19:44:29.235]       365 │   async getUserMessages(userId: number): Promise<Message[]> {
+[19:44:29.235]           ╵         ~~~~~~~~~~~~~~~
+[19:44:29.235] 
+[19:44:29.242] 2 warnings
+[19:44:29.243] 
+[19:44:29.243]   dist/index.js  50.8kb
+[19:44:29.243] 
+[19:44:29.243] ⚡ Done in 19ms
+[19:44:29.273] Installing dependencies...
+[19:44:30.110] 
+[19:44:30.110] up to date in 780ms
+[19:44:30.110] 
+[19:44:30.111] 69 packages are looking for funding
+[19:44:30.111]   run `npm fund` for details
+[19:44:30.324] Using TypeScript 5.6.3 (local user-provided)
+[19:44:35.848] server/routes.ts(207,15): error TS7034: Variable 'reactions' implicitly has type 'any[]' in some locations where its type cannot be determined.
+[19:44:35.849] server/routes.ts(219,13): error TS7005: Variable 'reactions' implicitly has an 'any[]' type.
+[19:44:35.849] server/routes.ts(255,11): error TS7034: Variable 'reactions' implicitly has type 'any[]' in some locations where its type cannot be determined.
+[19:44:35.850] server/routes.ts(267,9): error TS7005: Variable 'reactions' implicitly has an 'any[]' type.
+[19:44:35.850] 
+[19:44:36.445] server/storage.ts(85,9): error TS2393: Duplicate function implementation.
+[19:44:36.445] server/storage.ts(356,9): error TS2393: Duplicate function implementation.
+[19:44:36.445] server/storage.ts(365,9): error TS2393: Duplicate function implementation.
+[19:44:36.445] server/storage.ts(416,9): error TS2393: Duplicate function implementation.
+[19:44:36.445] server/storage.ts(522,7): error TS2322: Type 'SQL<unknown> | undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.445]   Type 'undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.445] server/storage.ts(526,7): error TS2322: Type 'SQL<unknown> | undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.446]   Type 'undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.446] server/storage.ts(551,7): error TS2322: Type 'SQL<unknown> | undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.446]   Type 'undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.446] server/storage.ts(555,7): error TS2322: Type 'SQL<unknown> | undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.446]   Type 'undefined' is not assignable to type 'SQL<unknown>'.
+[19:44:36.446] 
+[19:44:38.182] Build Completed in /vercel/output [18s]
+[19:44:38.272] Deploying outputs...
+[19:44:41.471] 
+[19:44:41.606] Deployment completed
+[19:44:59.954] Uploading build cache [86.36 MB]...
+[19:45:01.457] Build cache uploaded: 1.502s
+[19:45:03.730] Exiting build container

@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enhance messages with reaction counts and reactions
       const messagesWithReactions = await Promise.all(
         messages.map(async (message) => {
-          let reactions = [];
+          let reactions: any[] = [];
           let reactionCount = 0;
           
           try {
@@ -252,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Add reaction data
-      let reactions = [];
+      let reactions: any[] = [];
       let reactionCount = 0;
       
       try {

@@ -353,23 +353,7 @@ export class DatabaseStorage implements IStorage {
     return admin;
   }
 
-  async getUserById(userId: number): Promise<User | undefined> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-    return user;
-  }
 
-  async getUserMessages(userId: number): Promise<Message[]> {
-    const result = await db
-      .select()
-      .from(messages)
-      .where(and(eq(messages.userId, userId), eq(messages.isPublic, true)))
-      .orderBy(desc(messages.createdAt));
-    return result;
-  }
 
   async getUserReplies(userId: number): Promise<Reply[]> {
     const result = await db
