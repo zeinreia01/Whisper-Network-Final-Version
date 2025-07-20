@@ -85,9 +85,9 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         {/* Aesthetic Message Display */}
         <div 
           ref={messageRef}
-          className="bg-gradient-to-br from-purple-50 to-blue-50 p-8 rounded-2xl shadow-xl border border-purple-100"
+          className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 p-8 rounded-2xl shadow-xl border border-purple-100 dark:border-gray-700"
           style={{
-            fontFamily: 'Georgia, serif',
+            fontFamily: '"Times New Roman", serif',
             backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(147, 51, 234, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)'
           }}
         >
@@ -96,7 +96,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
               Whispering Network
             </h1>
-            <p className="text-gray-600 text-sm">A place where voices unite and hearts connect</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">A place where voices unite and hearts connect</p>
           </div>
 
           {/* Category and timestamp */}
@@ -107,30 +107,30 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 {category?.name || message.category}
               </Badge>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               {formatTimeAgo(message.createdAt!)}
             </div>
           </div>
 
           {/* Main message content */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-md border border-white/20">
-            <blockquote className="text-lg leading-relaxed text-gray-800 text-center italic">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-md border border-white/20 dark:border-gray-600/20">
+            <blockquote className="text-lg leading-relaxed text-gray-800 dark:text-gray-100 text-center italic font-serif">
               "{message.content}"
             </blockquote>
           </div>
 
           {/* Spotify track if available */}
           {message.spotifyLink && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-center space-x-3">
-                <Music className="w-5 h-5 text-green-600" />
+                <Music className="w-5 h-5 text-green-600 dark:text-green-400" />
                 <div className="text-center">
-                  <p className="text-sm font-medium text-green-800">Soundtrack to this whisper</p>
+                  <p className="text-sm font-medium text-green-800 dark:text-green-300 font-serif">Soundtrack to this whisper</p>
                   <a 
                     href={message.spotifyLink} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-green-600 hover:text-green-700 text-sm underline"
+                    className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm underline font-serif"
                   >
                     Listen on Spotify
                   </a>
@@ -142,31 +142,31 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           {/* Author attribution */}
           <div className="text-center mb-6">
             {message.senderName ? (
-              <p className="text-gray-600 italic">
+              <p className="text-gray-600 dark:text-gray-300 italic font-serif">
                 — {message.senderName}
               </p>
             ) : (
-              <p className="text-gray-500 italic text-sm">
+              <p className="text-gray-500 dark:text-gray-400 italic text-sm font-serif">
                 — Anonymous Whisper
               </p>
             )}
           </div>
 
           {/* Stats */}
-          <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
+          <div className="flex items-center justify-center space-x-6 text-sm text-gray-600 dark:text-gray-300">
             <div className="flex items-center space-x-1">
               <Heart className="w-4 h-4" />
-              <span>{message.reactionCount || 0} hearts</span>
+              <span className="font-serif">{message.reactionCount || 0} hearts</span>
             </div>
             <div className="flex items-center space-x-1">
               <MessageCircle className="w-4 h-4" />
-              <span>{message.replies?.length || 0} replies</span>
+              <span className="font-serif">{message.replies?.length || 0} replies</span>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="text-center mt-8 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-400">
+          <div className="text-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-serif">
               This whisper was shared on Whispering Network • {new Date(message.createdAt!).toLocaleDateString()}
             </p>
           </div>

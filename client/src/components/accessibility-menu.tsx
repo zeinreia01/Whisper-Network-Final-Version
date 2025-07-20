@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Moon, Sun, Bell, User, Shield } from "lucide-react";
+import { Settings, Moon, Sun, User, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { UserAccountModal } from "@/components/user-account-modal";
-import { NotificationCenter } from "@/components/notification-center";
 
 export function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +10,7 @@ export function AccessibilityMenu() {
   const [largeText, setLargeText] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [showUserAccount, setShowUserAccount] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, admin } = useAuth();
 
@@ -123,15 +122,7 @@ export function AccessibilityMenu() {
                 {darkMode ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" />}
               </button>
 
-              {/* Notifications */}
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
-                aria-label="Notifications"
-              >
-                <Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+
 
               {/* User account (only for logged in users) */}
               {(user || admin) && (
@@ -194,11 +185,7 @@ export function AccessibilityMenu() {
         admin={admin}
       />
 
-      {/* Notification Center */}
-      <NotificationCenter 
-        isOpen={showNotifications} 
-        onClose={() => setShowNotifications(false)} 
-      />
+
     </>
   );
 }
