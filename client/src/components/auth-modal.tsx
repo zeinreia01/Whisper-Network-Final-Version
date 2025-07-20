@@ -217,7 +217,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-4 p-4 bg-muted rounded-lg">
           <p className="text-sm text-gray-600">
             <strong>Privacy Note:</strong> No email required. Your username keeps your messages organized 
             while maintaining anonymity. Only you can see your private messages.

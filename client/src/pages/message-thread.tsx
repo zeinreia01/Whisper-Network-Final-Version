@@ -115,19 +115,19 @@ export default function MessageThread() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (!message) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <h2 className="text-xl font-medium mb-2">Message not found</h2>
-            <p className="text-gray-600 mb-4">This message may have been removed or doesn't exist.</p>
+            <p className="text-muted-foreground mb-4">This message may have been removed or doesn't exist.</p>
             <Link href="/dashboard">
               <Button>Back to Dashboard</Button>
             </Link>
@@ -138,7 +138,7 @@ export default function MessageThread() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -167,7 +167,7 @@ export default function MessageThread() {
                 <Badge variant="outline" className={`${getCategoryStyle(message.category)} border`}>
                   {message.category}
                 </Badge>
-                <div className="flex items-center text-sm text-gray-500 gap-4">
+                <div className="flex items-center text-sm text-muted-foreground gap-4">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     {message.createdAt ? new Date(message.createdAt).toLocaleDateString() : "Unknown date"}
@@ -183,9 +183,9 @@ export default function MessageThread() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-900 text-lg leading-relaxed mb-4">{message.content}</p>
+            <p className="text-foreground text-lg leading-relaxed mb-4">{message.content}</p>
             {message.spotifyLink && (
-              <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Music className="w-5 h-5 text-green-600" />
                   <span className="font-medium text-green-800">Spotify Track</span>

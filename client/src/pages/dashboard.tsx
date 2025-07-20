@@ -51,11 +51,11 @@ export default function Dashboard() {
         : messages.filter(message => message.category === activeCategory));
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Community Dashboard</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Community Dashboard</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             A place where voices unite and hearts connect
           </p>
         </div>
@@ -90,13 +90,13 @@ export default function Dashboard() {
         {isLoading || isSearching ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">
+            <p className="mt-4 text-muted-foreground">
               {isSearching ? "Searching messages..." : "Loading messages..."}
             </p>
           </div>
         ) : displayMessages.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               {searchQuery 
                 ? `No messages found for "${searchQuery}". Try different keywords.`
                 : (activeCategory === "all" 

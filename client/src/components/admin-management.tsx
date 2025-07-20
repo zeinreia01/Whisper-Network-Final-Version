@@ -135,7 +135,7 @@ export function AdminManagement() {
       </CardHeader>
       <CardContent>
         {showCreateForm && (
-          <form onSubmit={handleCreateAdmin} className="space-y-4 mb-6 p-4 border rounded-lg bg-gray-50">
+          <form onSubmit={handleCreateAdmin} className="space-y-4 mb-6 p-4 border rounded-lg bg-muted">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="username">Username</Label>

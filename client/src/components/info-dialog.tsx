@@ -192,7 +192,7 @@ export function InfoDialog() {
             </section>
 
             {/* Contact */}
-            <section className="bg-gray-50 p-4 rounded-lg">
+            <section className="bg-muted p-4 rounded-lg">
               <h3 className="text-lg font-semibold mb-2">Questions or Concerns?</h3>
               <p className="text-sm text-gray-700">
                 Send a private message to any of our <strong>Whisper Listeners</strong> through the platform, 

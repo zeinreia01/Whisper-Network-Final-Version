@@ -90,6 +90,11 @@
     background: rgba(255, 255, 255, 0.9);
   }
   
+  .dark .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(34, 34, 40, 0.9);
+  }
+  
   .message-card {
     transition: all 0.3s ease;
   }

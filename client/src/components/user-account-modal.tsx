@@ -156,7 +156,7 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
                 ) : filteredMessages.length > 0 ? (
                   <div className="space-y-4 max-h-64 overflow-y-auto">
                     {filteredMessages.map((message) => (
-                      <div key={message.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div key={message.id} className="border rounded-lg p-4 hover:bg-muted">
                         <div className="flex items-start justify-between mb-2">
                           <Badge variant="secondary" className="text-xs">
                             {message.category}

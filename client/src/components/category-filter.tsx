@@ -7,15 +7,15 @@ interface CategoryFilterProps {
 
 export function CategoryFilter({ activeCategory, onCategoryChange }: CategoryFilterProps) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Filter by Category</h2>
+    <div className="bg-card rounded-xl shadow-lg p-6 mb-8">
+      <h2 className="text-lg font-semibold text-foreground mb-4">Filter by Category</h2>
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => onCategoryChange("all")}
           className={`flex items-center px-4 py-2 rounded-full transition-colors ${
             activeCategory === "all"
-              ? "bg-gray-200 text-gray-900"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? "bg-secondary text-secondary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-secondary"
           }`}
         >
           <span className="category-dot bg-gray-400"></span>

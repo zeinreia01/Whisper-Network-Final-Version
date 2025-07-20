@@ -65,12 +65,12 @@ export default function Admin() {
   // Early return after all hooks
   if (!admin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <Lock className="w-12 h-12 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-light mb-2">Whisper Listener Access Required</h2>
-            <p className="text-gray-600 mb-4">Please sign in as a Whisper Listener to access this panel.</p>
+            <p className="text-muted-foreground mb-4">Please sign in as a Whisper Listener to access this panel.</p>
             <Button onClick={() => navigate("/")} className="w-full">
               Go to Home
             </Button>
@@ -111,11 +111,11 @@ export default function Admin() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Whisper Listener Dashboard</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Whisper Listener Dashboard</h1>
             <Button
               onClick={handleLogout}
               variant="outline"
