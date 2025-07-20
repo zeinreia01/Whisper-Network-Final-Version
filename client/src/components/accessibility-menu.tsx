@@ -184,8 +184,6 @@ export function AccessibilityMenu() {
         user={user}
         admin={admin}
       />
-
-
     </>
   );
 }
