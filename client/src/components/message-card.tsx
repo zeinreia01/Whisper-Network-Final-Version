@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield } from "lucide-react";
 import { categories } from "@/lib/categories";
+import { formatTimeAgo } from "@/lib/utils";
 import type { MessageWithReplies } from "@shared/schema";
 
 interface MessageCardProps {
@@ -34,12 +35,14 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   // Auto-fill nickname for logged-in users
   const defaultNickname = user ? user.username : admin ? admin.displayName : "";
   
-  // Initialize nickname when component mounts
+  // Initialize nickname when component mounts and reset on auth changes
   useEffect(() => {
-    if (defaultNickname && !nickname) {
+    if (defaultNickname) {
       setNickname(defaultNickname);
+    } else {
+      setNickname("");
     }
-  }, [defaultNickname, nickname]);
+  }, [defaultNickname, showReplyForm]);
 
   const category = categories.find(c => c.id === message.category);
   
@@ -56,7 +59,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
       setReplyText("");
-      setNickname("");
+      setNickname(defaultNickname); // Reset to default nickname instead of empty
       setShowReplyForm(false);
       toast({
         title: "Reply sent!",
@@ -304,10 +307,11 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         <div className="border-t pt-4 mb-4">
           <div className="space-y-3">
             <Input
-              placeholder={defaultNickname ? "Your nickname (auto-filled)" : "Your nickname..."}
+              placeholder={defaultNickname ? `Replying as: ${defaultNickname}` : "Your nickname..."}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               disabled={!!defaultNickname}
+              className={defaultNickname ? "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300" : ""}
             />
             <Input
               placeholder="Write your reply..."
@@ -344,15 +348,15 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-900">{reply.nickname}</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
                       {/* Show admin permission tag */}
                       {reply.adminId && (
-                        <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 text-purple-700 border-purple-200">
+                        <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
                           <Shield className="h-3 w-3 mr-1" />
                           Whisper Listener
                         </Badge>
                       )}
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatTimeAgo(reply.createdAt!)}
                       </span>
                     </div>
@@ -439,7 +443,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                       )}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700">{reply.content}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{reply.content}</p>
                 </div>
               </div>
             ))}

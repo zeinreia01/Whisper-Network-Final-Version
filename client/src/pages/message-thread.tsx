@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowLeft, Reply as ReplyIcon, Trash2, AlertTriangle, Info, Calendar, Music } from "lucide-react";
+import { ArrowLeft, Reply as ReplyIcon, Trash2, AlertTriangle, Info, Calendar, Music, Shield } from "lucide-react";
+import { formatTimeAgo } from "@/lib/utils";
 import { MESSAGE_CATEGORIES } from "@shared/schema";
 import type { MessageWithReplies, Reply } from "@shared/schema";
 
@@ -24,6 +25,14 @@ export default function MessageThread() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Auto-fill nickname for authenticated users
+  useEffect(() => {
+    const defaultNickname = user ? user.username : admin ? admin.displayName : "";
+    if (defaultNickname) {
+      setReplyForm(prev => ({ ...prev, nickname: defaultNickname }));
+    }
+  }, [user, admin]);
+
   const { data: message, isLoading } = useQuery<MessageWithReplies>({
     queryKey: ["/api/messages", id],
     enabled: !!id,
@@ -31,15 +40,19 @@ export default function MessageThread() {
 
   const addReplyMutation = useMutation({
     mutationFn: async (data: { content: string; nickname: string }) => {
-      return await apiRequest("POST", "/api/replies", {
+      const replyData = {
         messageId: parseInt(id!),
         content: data.content,
         nickname: data.nickname,
-      });
+        userId: user?.id,
+        adminId: admin?.id,
+      };
+      return await apiRequest("POST", "/api/replies", replyData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages", id] });
-      setReplyForm({ content: "", nickname: "" });
+      const defaultNickname = user ? user.username : admin ? admin.displayName : "";
+      setReplyForm({ content: "", nickname: defaultNickname });
       toast({
         title: "Reply added",
         description: "Your reply has been posted successfully.",
@@ -214,8 +227,9 @@ export default function MessageThread() {
                     id="nickname"
                     value={replyForm.nickname}
                     onChange={(e) => setReplyForm({ ...replyForm, nickname: e.target.value })}
-                    placeholder={user ? `Reply as ${user.username}` : "Enter a nickname"}
-                    required
+                    placeholder={user ? `Replying as: ${user.username}` : admin ? `Replying as: ${admin.displayName}` : "Enter a nickname"}
+                    disabled={!!(user || admin)}
+                    className={(user || admin) ? "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300" : ""}
                   />
                 </div>
                 <div>
@@ -230,7 +244,7 @@ export default function MessageThread() {
                   />
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Please follow our community guidelines when replying
                   </p>
                   <Button type="submit" disabled={addReplyMutation.isPending}>
@@ -246,7 +260,7 @@ export default function MessageThread() {
             {message.replies.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <p className="text-gray-600">No replies yet. Be the first to share your thoughts!</p>
+                  <p className="text-gray-600 dark:text-gray-400">No replies yet. Be the first to share your thoughts!</p>
                 </CardContent>
               </Card>
             ) : (
@@ -255,9 +269,16 @@ export default function MessageThread() {
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
-                        <span className="font-medium text-gray-900">{reply.nickname}</span>
-                        <span className="text-sm text-gray-500">
-                          {reply.createdAt ? new Date(reply.createdAt).toLocaleDateString() : "Unknown date"}
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
+                        {/* Show admin permission tag */}
+                        {reply.adminId && (
+                          <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Whisper Listener
+                          </Badge>
+                        )}
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {reply.createdAt ? formatTimeAgo(reply.createdAt) : "Unknown date"}
                         </span>
                       </div>
                       {admin && (
@@ -273,7 +294,7 @@ export default function MessageThread() {
                         </div>
                       )}
                     </div>
-                    <p className="text-gray-700 leading-relaxed">{reply.content}</p>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{reply.content}</p>
                   </CardContent>
                 </Card>
               ))

@@ -22,13 +22,13 @@ export function Navigation() {
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
+      <nav className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             {/* Logo section - moved closer to center on mobile */}
             <div className="flex items-center flex-shrink-0">
               <Link href="/">
-                <h2 className="text-lg font-medium text-gray-900 cursor-pointer tracking-tight">
+                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight">
                   Whispering Network
                 </h2>
               </Link>
@@ -43,8 +43,8 @@ export function Navigation() {
                     <button
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                         location === item.path
-                          ? "bg-gray-100 text-gray-900"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                          ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
                       }`}
                     >
                       {item.label}

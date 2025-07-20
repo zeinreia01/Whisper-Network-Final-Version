@@ -94,7 +94,7 @@ export function AccessibilityMenu() {
         {/* Dynamic Island-style container */}
         <div className={`
           transition-all duration-500 ease-out
-          ${isOpen ? 'bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl p-1 shadow-2xl' : 'bg-transparent'}
+          ${isOpen ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-1 shadow-2xl' : 'bg-transparent'}
         `}>
           {/* Main settings button */}
           <button
@@ -102,8 +102,8 @@ export function AccessibilityMenu() {
             className={`
               transition-all duration-300
               ${isOpen 
-                ? 'bg-gray-100 rounded-xl p-2 m-1' 
-                : 'bg-white rounded-full p-3 shadow-lg hover:shadow-xl border border-gray-200'
+                ? 'bg-gray-100 dark:bg-gray-800 rounded-xl p-2 m-1' 
+                : 'bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700'
               }
             `}
             aria-label="Settings & Options"
@@ -117,19 +117,19 @@ export function AccessibilityMenu() {
               {/* Theme toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-600" />}
+                {darkMode ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" />}
               </button>
 
               {/* Notifications */}
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 rounded-xl hover:bg-gray-100 transition-colors relative"
+                className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
                 aria-label="Notifications"
               >
-                <Bell className="w-4 h-4 text-gray-600" />
+                <Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
@@ -137,10 +137,10 @@ export function AccessibilityMenu() {
               {(user || admin) && (
                 <button
                   onClick={() => setShowUserAccount(true)}
-                  className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   aria-label="Account settings"
                 >
-                  {admin ? <Shield className="w-4 h-4 text-purple-600" /> : <User className="w-4 h-4 text-gray-600" />}
+                  {admin ? <Shield className="w-4 h-4 text-purple-600" /> : <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />}
                 </button>
               )}
             </div>
@@ -149,35 +149,35 @@ export function AccessibilityMenu() {
         
         {/* Accessibility panel */}
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 animate-slide-up">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 animate-slide-up">
             <div className="p-4">
-              <h3 className="font-semibold text-sm mb-4 text-gray-900">Accessibility & Settings</h3>
+              <h3 className="font-semibold text-sm mb-4 text-gray-900 dark:text-gray-100">Accessibility & Settings</h3>
               <div className="space-y-3">
                 <label className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">High Contrast</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">High Contrast</span>
                   <input
                     type="checkbox"
                     checked={highContrast}
                     onChange={(e) => setHighContrast(e.target.checked)}
-                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                    className="w-4 h-4 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
                   />
                 </label>
                 <label className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Large Text</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Large Text</span>
                   <input
                     type="checkbox"
                     checked={largeText}
                     onChange={(e) => setLargeText(e.target.checked)}
-                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                    className="w-4 h-4 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
                   />
                 </label>
                 <label className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Reduce Motion</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Reduce Motion</span>
                   <input
                     type="checkbox"
                     checked={reducedMotion}
                     onChange={(e) => setReducedMotion(e.target.checked)}
-                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                    className="w-4 h-4 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
                   />
                 </label>
               </div>
