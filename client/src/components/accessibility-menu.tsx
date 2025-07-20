@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Moon, Sun, User, Shield } from "lucide-react";
+import { Settings, Moon, Sun, User, Shield, Info } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { UserAccountModal } from "@/components/user-account-modal";
+import { InfoDialog } from "@/components/info-dialog";
 
 export function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -121,6 +122,9 @@ export function AccessibilityMenu() {
               >
                 {darkMode ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" />}
               </button>
+
+              {/* Info button */}
+              <InfoDialog />
 
 
 
