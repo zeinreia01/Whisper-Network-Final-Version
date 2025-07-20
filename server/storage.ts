@@ -345,6 +345,33 @@ export class DatabaseStorage implements IStorage {
     return admin;
   }
 
+  async getUserById(userId: number): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return user;
+  }
+
+  async getUserMessages(userId: number): Promise<Message[]> {
+    const result = await db
+      .select()
+      .from(messages)
+      .where(and(eq(messages.userId, userId), eq(messages.isPublic, true)))
+      .orderBy(desc(messages.createdAt));
+    return result;
+  }
+
+  async getUserReplies(userId: number): Promise<Reply[]> {
+    const result = await db
+      .select()
+      .from(replies)
+      .where(eq(replies.userId, userId))
+      .orderBy(desc(replies.createdAt));
+    return result;
+  }
+
   async getRecipients(): Promise<string[]> {
     // Return active admin display names as recipients
     const activeAdmins = await db
@@ -469,7 +496,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(reactions.messageId, messageId));
       return result;
     } catch (error) {
-      console.error("Error fetching reactions:", error);
+      // Return empty array if table doesn't exist yet
       return [];
     }
   }
@@ -512,7 +539,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(notifications.createdAt));
       return result as NotificationWithDetails[];
     } catch (error) {
-      console.error("Error fetching user notifications:", error);
+      // Return empty array if table doesn't exist yet
       return [];
     }
   }
@@ -526,7 +553,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(notifications.createdAt));
       return result as NotificationWithDetails[];
     } catch (error) {
-      console.error("Error fetching admin notifications:", error);
+      // Return empty array if table doesn't exist yet
       return [];
     }
   }

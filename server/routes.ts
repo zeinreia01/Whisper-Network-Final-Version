@@ -656,6 +656,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile endpoints
+  app.get("/api/users/:id/profile", async (req, res) => {
+    const userId = parseInt(req.params.id);
+    if (!userId) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+
+    try {
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Get user statistics
+      const userMessages = await storage.getUserMessages(userId);
+      const userReplies = await storage.getUserReplies(userId);
+      
+      // Count total reactions received
+      let totalReactions = 0;
+      for (const message of userMessages) {
+        try {
+          const reactions = await storage.getMessageReactions(message.id);
+          totalReactions += reactions.length;
+        } catch (error) {
+          // Skip if reactions table doesn't exist yet
+        }
+      }
+
+      const profile = {
+        id: user.id,
+        username: user.username,
+        createdAt: user.createdAt,
+        messageCount: userMessages.length,
+        replyCount: userReplies.length,
+        totalReactions,
+      };
+
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ error: "Failed to fetch user profile" });
+    }
+  });
+
+  app.get("/api/users/:id/messages", async (req, res) => {
+    const userId = parseInt(req.params.id);
+    if (!userId) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+
+    try {
+      const messages = await storage.getUserMessages(userId);
+      
+      // Get reactions and replies for each message
+      const messagesWithDetails = await Promise.all(
+        messages.map(async (message) => {
+          let reactionCount = 0;
+          try {
+            const reactions = await storage.getMessageReactions(message.id);
+            reactionCount = reactions.length;
+          } catch (error) {
+            // Skip if reactions table doesn't exist yet
+          }
+          
+          const replies = await storage.getRepliesByMessageId(message.id);
+          return {
+            ...message,
+            reactionCount,
+            replies: replies || [],
+          };
+        })
+      );
+
+      res.json(messagesWithDetails);
+    } catch (error) {
+      console.error("Error fetching user messages:", error);
+      res.status(500).json({ error: "Failed to fetch user messages" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

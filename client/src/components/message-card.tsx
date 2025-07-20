@@ -223,6 +223,13 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         <span className={`text-sm font-medium ${category?.color}`}>
           {category?.name}
         </span>
+        {/* Show authenticated user badge */}
+        {message.userId && (
+          <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
+            <User className="h-3 w-3 mr-1" />
+            Authenticated User
+          </Badge>
+        )}
         {message.recipient && (
           <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">
             To: {message.recipient}
@@ -235,7 +242,17 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
 
       {message.senderName && (
         <div className="mb-3">
-          <span className="text-sm text-gray-600 font-medium">From: {message.senderName}</span>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600 font-medium">From: {message.senderName}</span>
+            {/* View profile button for authenticated sender */}
+            {message.userId && (user || admin) && (
+              <Link href={`/user/${message.userId}`}>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/10" title="View Profile">
+                  <User className="h-4 w-4 text-primary" />
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       )}
 
@@ -420,14 +437,15 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center space-x-1">
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
-                        {/* View profile button for authenticated users */}
-                        {reply.userId && (user || admin) && (
+                        {/* Make nickname clickable for authenticated users */}
+                        {reply.userId && (user || admin) ? (
                           <Link href={`/user/${reply.userId}`}>
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-primary/10">
-                              <User className="h-3 w-3 text-primary" />
-                            </Button>
+                            <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                              {reply.nickname}
+                            </button>
                           </Link>
+                        ) : (
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
                         )}
                       </div>
                       {/* Show admin permission tag */}
@@ -435,6 +453,13 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                         <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
                           <Shield className="h-3 w-3 mr-1" />
                           Whisper Listener
+                        </Badge>
+                      )}
+                      {/* Show authenticated user badge for regular users */}
+                      {reply.userId && !reply.adminId && (
+                        <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
+                          <User className="h-3 w-3 mr-1" />
+                          Authenticated User
                         </Badge>
                       )}
                       <span className="text-xs text-gray-500 dark:text-gray-400">
