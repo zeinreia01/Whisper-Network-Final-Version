@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 20, 2025 - Vercel + Supabase Migration
+- ✅ **Database migration**: Successfully migrated from Neon to Supabase PostgreSQL
+- ✅ **Environment setup**: Added dotenv support with override configuration for database URL
+- ✅ **Vercel deployment configuration**: Created complete vercel.json for full-stack deployment
+- ✅ **Serverless API setup**: Created /api/index.ts for Vercel serverless functions
+- ✅ **Build optimization**: Verified build process works for production deployment
+- ✅ **Database schema verification**: Confirmed all tables and data are preserved in Supabase
+- ✅ **Deployment guide**: Created comprehensive VERCEL_SUPABASE_DEPLOYMENT_GUIDE.md
+- ✅ **File structure optimization**: Added .vercelignore and .env.example for deployment
+- ✅ **Testing verification**: Confirmed all existing features work with new infrastructure
+
 ### July 19, 2025 - Final Feature Implementation
 - ✅ **Search functionality**: Full-text search for public messages by content, category, and sender name with real-time results
   - Advanced search with fallback support for database compatibility
