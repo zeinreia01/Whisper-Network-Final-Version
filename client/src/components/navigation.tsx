@@ -69,7 +69,7 @@ export function Navigation() {
               </div>
 
               {/* Mobile navigation */}
-              <div className="flex md:hidden items-center space-x-1">
+              <div className="flex md:hidden items-center space-x-0.5">
                 {navItems.map((item) => (
                   <Link key={item.path} href={item.path}>
                     <button

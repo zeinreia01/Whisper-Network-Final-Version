@@ -218,20 +218,22 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   };
 
   return (
-    <div className="message-card bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
-      <div className="flex items-center space-x-2 mb-4">
-        <span className={`category-dot ${category?.color}`}></span>
-        <span className={`text-sm font-medium ${category?.color}`}>
-          {category?.name}
-        </span>
+    <div className="message-card bg-card rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-xl transition-all duration-300">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="flex items-center space-x-2">
+          <span className={`category-dot ${category?.color}`}></span>
+          <span className={`text-sm font-medium ${category?.color}`}>
+            {category?.name}
+          </span>
+        </div>
         {/* Show user type badge */}
         {message.userId && <UserBadge userType="user" variant="small" />}
         {message.recipient && (
-          <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">
+          <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded whitespace-nowrap">
             To: {message.recipient}
           </span>
         )}
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 whitespace-nowrap">
           • {formatTimeAgo(message.createdAt!)}
         </span>
       </div>
@@ -273,22 +275,24 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         </div>
       )}
 
-      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-        <div className="flex items-center space-x-4">
+      {/* Mobile-optimized action bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 mb-4 gap-3">
+        {/* Primary actions row */}
+        <div className="flex items-center space-x-3 sm:space-x-4">
           <button
             onClick={() => setShowReplyForm(!showReplyForm)}
-            className="hover:text-primary transition-colors"
+            className="hover:text-primary transition-colors flex-shrink-0"
           >
             Reply
           </button>
-          <span>{message.replies.length} replies</span>
+          <span className="flex-shrink-0">{message.replies.length} replies</span>
           
           {/* Heart reaction button - only for authenticated users */}
           {(user || admin) && (
             <button
               onClick={() => reactionMutation.mutate({ add: !hasReacted })}
               disabled={reactionMutation.isPending}
-              className={`flex items-center space-x-1 transition-colors ${
+              className={`flex items-center space-x-1 transition-colors flex-shrink-0 ${
                 hasReacted 
                   ? 'text-red-500 hover:text-red-600' 
                   : 'hover:text-red-500'
@@ -303,17 +307,20 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
           
           {/* Show reaction count for non-authenticated users */}
           {!user && !admin && message.reactionCount && message.reactionCount > 0 && (
-            <div className="flex items-center space-x-1 text-gray-400">
+            <div className="flex items-center space-x-1 text-gray-400 flex-shrink-0">
               <Heart className="w-4 h-4" />
               <span>{message.reactionCount}</span>
             </div>
           )}
         </div>
-        <div className="flex items-center space-x-2">
+        
+        {/* Secondary actions row */}
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <Link href={`/message/${message.id}`}>
-            <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary">
+            <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-8">
               <ExternalLink className="w-3 h-3 mr-1" />
-              View Thread
+              <span className="hidden sm:inline">View Thread</span>
+              <span className="sm:hidden">View</span>
             </Button>
           </Link>
           
@@ -425,12 +432,12 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         <div className="border-t pt-4">
           <div className="space-y-3">
             {message.replies.map((reply) => (
-              <div key={reply.id} className="flex items-start space-x-3 group">
-                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white text-sm font-medium">
+              <div key={reply.id} className="flex items-start space-x-2 sm:space-x-3 group">
+                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                   {reply.nickname.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center space-x-1">
                         {/* Make nickname clickable for authenticated users */}
@@ -453,7 +460,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                     </div>
                     
                     {/* Reply management controls */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 flex-shrink-0">
                       {/* Admin controls */}
                       {admin && (
                         <DropdownMenu>

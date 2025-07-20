@@ -104,6 +104,28 @@
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   }
   
+  /* Mobile-specific improvements */
+  @media (max-width: 640px) {
+    .message-card {
+      margin-bottom: 1rem;
+    }
+    
+    .message-card:hover {
+      transform: none; /* Disable hover transform on mobile for better touch interaction */
+    }
+    
+    /* Ensure text wraps properly on mobile */
+    .message-card p {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    /* Improve button spacing on mobile */
+    .message-card button {
+      min-height: 44px; /* Better touch targets */
+    }
+  }
+  
   .category-dot {
     width: 8px;
     height: 8px;

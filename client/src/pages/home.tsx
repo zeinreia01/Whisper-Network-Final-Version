@@ -108,18 +108,18 @@ export default function Home() {
   const selectedCategory = categories.find(c => c.id === category);
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Share Your Voice</h1>
+    <div className="min-h-screen bg-background py-4 sm:py-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">Share Your Voice</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Create a message to share with the community or keep private for admin review
           </p>
         </div>
 
         {/* Message Creation Card */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
+        <Card className="mb-8 sm:mb-12">
+          <CardContent className="p-4 sm:p-6 lg:p-8">
             <div className="space-y-6">
               <div>
                 <Label htmlFor="category">Category</Label>
@@ -239,8 +239,8 @@ export default function Home() {
 
         {/* Recent Messages Preview */}
         <Card>
-          <CardContent className="p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Community Messages</h2>
+          <CardContent className="p-4 sm:p-6 lg:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">Recent Community Messages</h2>
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
