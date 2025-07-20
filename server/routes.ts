@@ -200,7 +200,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages/public", async (req, res) => {
     try {
       const messages = await storage.getPublicMessages();
-      res.json(messages);
+      
+      // Enhance messages with reaction counts and reactions
+      const messagesWithReactions = await Promise.all(
+        messages.map(async (message) => {
+          let reactions = [];
+          let reactionCount = 0;
+          
+          try {
+            reactions = await storage.getMessageReactions(message.id);
+            reactionCount = reactions.length;
+          } catch (error) {
+            // Skip if reactions table doesn't exist
+          }
+
+          return {
+            ...message,
+            reactions,
+            reactionCount,
+          };
+        })
+      );
+
+      res.json(messagesWithReactions);
     } catch (error) {
       console.error("Error fetching public messages:", error);
       res.status(500).json({ message: "Failed to fetch messages" });
@@ -228,7 +250,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(404).json({ message: "Message not found" });
         return;
       }
-      res.json(message);
+      
+      // Add reaction data
+      let reactions = [];
+      let reactionCount = 0;
+      
+      try {
+        reactions = await storage.getMessageReactions(message.id);
+        reactionCount = reactions.length;
+      } catch (error) {
+        // Skip if reactions table doesn't exist
+      }
+
+      res.json({
+        ...message,
+        reactions,
+        reactionCount,
+      });
     } catch (error) {
       console.error("Error fetching message:", error);
       res.status(500).json({ message: "Failed to fetch message" });
