@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Eye, Download, Camera, Music, Heart, MessageCircle } from "lucide-react";
 import { categories } from "@/lib/categories";
+import { getSpotifyDisplayName } from "@/lib/spotify";
 import type { MessageWithReplies } from "@shared/schema";
 import html2canvas from "html2canvas";
 
@@ -125,7 +126,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
               <div className="flex items-center justify-center space-x-3">
                 <Music className="w-5 h-5 text-green-600 dark:text-green-400" />
                 <div className="text-center">
-                  <p className="text-sm font-medium text-green-800 dark:text-green-300 font-serif">Soundtrack to this whisper</p>
+                  <p className="text-sm font-medium text-green-800 dark:text-green-300 font-serif">{getSpotifyDisplayName(message.spotifyLink)}</p>
                   <a 
                     href={message.spotifyLink} 
                     target="_blank" 

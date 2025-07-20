@@ -126,7 +126,7 @@ export default function Admin() {
               Logout
             </Button>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Private messages from Silent Messengers and community guidance
           </p>
         </div>
@@ -143,8 +143,8 @@ export default function Admin() {
                       <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                      <p className="text-sm text-gray-600">{stat.title}</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{stat.title}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -155,7 +155,7 @@ export default function Admin() {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="messages" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
             <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
               <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="hidden sm:inline">Messages</span>
@@ -170,11 +170,6 @@ export default function Admin() {
               <Settings className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="hidden sm:inline">Admin Management</span>
               <span className="sm:hidden">Admin</span>
-            </TabsTrigger>
-            <TabsTrigger value="about" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
-              <Heart className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">About</span>
-              <span className="sm:hidden">Info</span>
             </TabsTrigger>
           </TabsList>
 
@@ -262,61 +257,7 @@ export default function Admin() {
             <AdminManagement />
           </TabsContent>
 
-          <TabsContent value="about" className="mt-4 sm:mt-6">
-            <Card>
-              <CardContent className="p-6 sm:p-8">
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
-                      About Whispering Network
-                    </h2>
-                    <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-blue-500 mx-auto rounded-full"></div>
-                  </div>
 
-                  <div className="prose prose-lg max-w-none dark:prose-invert">
-                    <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 mb-8 border border-purple-100 dark:border-gray-700">
-                      <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Creator's Vision</h3>
-                      <blockquote className="text-lg italic leading-relaxed text-gray-700 dark:text-gray-300 border-l-4 border-purple-400 pl-6 font-serif">
-                        "I wanted to create a space where connection transcends visibility—where voices unite not through faces, but through the raw authenticity of shared experience. In a world that demands we be seen to be heard, I envisioned a sanctuary where anonymity becomes strength, where vulnerability finds safety, and where the whispers of the heart can echo without judgment.
-                        <br/><br/>
-                        This is a place where souls can open without having to shatter, where the silent can finally speak, and where the deepest truths find their way to listening hearts. Every whisper here carries the weight of human experience, every reply the warmth of genuine understanding.
-                        <br/><br/>
-                        In the dance between darkness and light, between speaking and listening, we discover that sometimes the most profound connections happen when we remove the masks and simply exist as we are—imperfect, searching, beautifully human."
-                      </blockquote>
-                      <div className="mt-6 text-right">
-                        <p className="text-gray-600 dark:text-gray-400 font-serif">— Zeke, Creator of Whispering Network</p>
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                        <h4 className="text-lg font-semibold mb-3 text-purple-600 dark:text-purple-400">The Philosophy</h4>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                          Born from the understanding that authentic connection requires courage, not visibility. 
-                          In anonymity, we find freedom. In listening, we discover empathy. In sharing, we heal together.
-                        </p>
-                      </div>
-
-                      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                        <h4 className="text-lg font-semibold mb-3 text-blue-600 dark:text-blue-400">The Mission</h4>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                          To provide a digital sanctuary where every whisper matters, every story has value, 
-                          and every person finds solace in the knowledge that they are not alone in their journey.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 text-center bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-700">
-                      <p className="text-gray-600 dark:text-gray-400 italic">
-                        "In every whisper shared, in every heart that listens, in every moment of genuine connection—
-                        we prove that humanity's greatest strength lies not in being seen, but in truly seeing others."
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </div>
