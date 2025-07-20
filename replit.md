@@ -10,7 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 20, 2025 - Social Features Implementation ✅ COMPLETED
+### July 20, 2025 - Social Features Implementation ✅ COMPLETED & Admin Delete Fix
 - ✅ **Heart reaction system**: Fully functional heart reactions with real-time API integration
   - Heart reaction buttons for authenticated users with proper state management
   - Real-time reaction counts displayed on all message cards (tested and working)
@@ -69,6 +69,10 @@ Preferred communication style: Simple, everyday language.
   - Improved responsive design with proper scrolling on mobile devices
   - Dialog can be closed properly on all device types
 - ✅ **Vercel & Supabase compatibility**: All features maintain deployment compatibility
+- ✅ **CRITICAL FIX - Admin Message Deletion**: Fixed foreign key constraint error when deleting messages
+  - Updated deleteMessage function to properly cascade deletions (reactions → replies → message)
+  - Resolved database foreign key constraint violations that prevented admin content management
+  - Admin delete functionality now working correctly for content moderation
   - Follow system designed for serverless environments
   - Database schema updates applied for production deployment
   - All new API endpoints compatible with Vercel's free plan limitations

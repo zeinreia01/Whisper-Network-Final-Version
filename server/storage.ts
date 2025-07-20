@@ -307,15 +307,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMessage(messageId: number): Promise<void> {
-    // First delete all replies to the message
-    await db
-      .delete(replies)
-      .where(eq(replies.messageId, messageId));
+    // Delete in proper order to avoid foreign key constraints
+    // 1. Delete all reactions for this message
+    await db.delete(reactions).where(eq(reactions.messageId, messageId));
     
-    // Then delete the message itself
-    await db
-      .delete(messages)
-      .where(eq(messages.id, messageId));
+    // 2. Delete all replies to the message
+    await db.delete(replies).where(eq(replies.messageId, messageId));
+    
+    // 3. Finally delete the message itself
+    await db.delete(messages).where(eq(messages.id, messageId));
   }
 
   // Admin operations
