@@ -37,45 +37,112 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (!messageRef.current) return;
 
     try {
-      // Create a temporary container with exact styling for download
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '-9999px';
-      tempDiv.style.width = '800px';
-      tempDiv.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)';
-      tempDiv.style.padding = '40px';
-      tempDiv.style.fontFamily = '"Times New Roman", serif';
+      // Create optimized download container
+      const downloadContainer = document.createElement('div');
+      downloadContainer.style.position = 'absolute';
+      downloadContainer.style.left = '-9999px';
+      downloadContainer.style.top = '-9999px';
+      downloadContainer.style.width = '600px';
+      downloadContainer.style.height = 'auto';
+      downloadContainer.style.fontFamily = '"Times New Roman", serif';
+      downloadContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+      downloadContainer.style.padding = '32px';
+      downloadContainer.style.borderRadius = '16px';
+      downloadContainer.style.color = '#ffffff';
       
-      // Clone the message content
-      const clone = messageRef.current.cloneNode(true) as HTMLElement;
-      
-      // Remove any interactive elements that shouldn't be in the download
-      const links = clone.querySelectorAll('a');
-      links.forEach(link => {
-        link.style.textDecoration = 'none';
-        link.style.cursor = 'default';
-      });
-      
-      tempDiv.appendChild(clone);
-      document.body.appendChild(tempDiv);
+      // Create Instagram-optimized content
+      downloadContainer.innerHTML = `
+        <div style="text-align: center; margin-bottom: 32px;">
+          <h1 style="font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px 0; font-family: 'Times New Roman', serif;">
+            Whispering Network
+          </h1>
+          <p style="color: #94a3b8; font-size: 14px; margin: 0; font-family: 'Times New Roman', serif;">
+            A place where voices unite and hearts connect
+          </p>
+        </div>
 
-      const canvas = await html2canvas(tempDiv, {
-        backgroundColor: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-        scale: 3, // Higher resolution for crisp text
-        width: 800,
-        height: tempDiv.scrollHeight,
+        <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${category?.color?.replace('bg-', '') || '#8b5cf6'};"></div>
+            <span style="background-color: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: #e2e8f0; font-family: 'Times New Roman', serif;">
+              ${category?.name || message.category}
+            </span>
+          </div>
+          <span style="color: #94a3b8; font-size: 14px; font-family: 'Times New Roman', serif;">
+            ${formatTimeAgo(message.createdAt!)}
+          </span>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.2);">
+          <blockquote style="font-size: 20px; line-height: 1.6; color: #f8fafc; text-align: center; font-style: italic; margin: 0; font-family: 'Times New Roman', serif;">
+            "${message.content}"
+          </blockquote>
+        </div>
+
+        ${message.spotifyLink ? `
+          <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+              <span style="color: #22c55e; font-size: 20px;">🎵</span>
+              <div style="text-align: center;">
+                <p style="font-size: 14px; font-weight: 500; color: #22c55e; margin: 0 0 4px 0; font-family: 'Times New Roman', serif;">
+                  ${getSpotifyDisplayName(message.spotifyLink)}
+                </p>
+                <p style="color: #16a34a; font-size: 12px; margin: 0; font-family: 'Times New Roman', serif;">
+                  Listen on Spotify
+                </p>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        <div style="text-align: center; margin-bottom: 24px;">
+          <p style="color: #94a3b8; font-style: italic; font-size: 16px; margin: 0; font-family: 'Times New Roman', serif;">
+            — ${message.senderName || 'Anonymous Whisper'}
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; font-size: 14px; color: #94a3b8; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span style="color: #f87171;">♥</span>
+            <span style="font-family: 'Times New Roman', serif;">${message.reactionCount || 0} hearts</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span style="color: #60a5fa;">💬</span>
+            <span style="font-family: 'Times New Roman', serif;">${message.replies?.length || 0} replies</span>
+          </div>
+        </div>
+
+        <div style="text-align: center; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+          <p style="font-size: 12px; color: #64748b; margin: 0; font-family: 'Times New Roman', serif;">
+            This whisper was shared on Whispering Network • ${new Date(message.createdAt!).toLocaleDateString()}
+          </p>
+        </div>
+      `;
+      
+      document.body.appendChild(downloadContainer);
+
+      const canvas = await html2canvas(downloadContainer, {
+        backgroundColor: '#1a1a2e',
+        scale: 4, // Ultra high resolution for Instagram quality
+        width: 600,
+        height: downloadContainer.scrollHeight,
         useCORS: true,
         allowTaint: false,
-        foreignObjectRendering: true,
         logging: false,
+        onclone: (clonedDoc) => {
+          // Ensure gradients render properly in cloned document
+          const clonedContainer = clonedDoc.querySelector('div') as HTMLElement;
+          if (clonedContainer) {
+            clonedContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+          }
+        }
       });
 
-      // Clean up temporary element
-      document.body.removeChild(tempDiv);
+      // Clean up
+      document.body.removeChild(downloadContainer);
 
       const link = document.createElement('a');
-      link.download = `whisper-${message.id}-${Date.now()}.png`;
+      link.download = `whispering-network-${message.id}-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
     } catch (error) {
@@ -115,10 +182,10 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         {/* Aesthetic Message Display */}
         <div 
           ref={messageRef}
-          className="bg-gradient-to-br from-purple-50 to-blue-50 p-8 rounded-2xl shadow-xl border border-purple-200"
+          className="bg-gradient-to-br from-gray-900 to-slate-800 dark:from-gray-900 dark:to-slate-800 p-8 rounded-2xl shadow-xl border border-gray-700 dark:border-gray-700"
           style={{
             fontFamily: '"Times New Roman", serif',
-            backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(147, 51, 234, 0.08) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%)',
+            backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(147, 51, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
             minHeight: '500px',
             maxWidth: '700px',
             margin: '0 auto'
@@ -126,10 +193,10 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         >
           {/* Header with branding */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
               Whispering Network
             </h1>
-            <p className="text-gray-600 text-sm font-serif">A place where voices unite and hearts connect</p>
+            <p className="text-gray-300 dark:text-gray-300 text-sm font-serif">A place where voices unite and hearts connect</p>
           </div>
 
           {/* Category and timestamp */}
@@ -140,26 +207,26 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 {category?.name || message.category}
               </Badge>
             </div>
-            <div className="text-sm text-gray-500 font-serif">
+            <div className="text-sm text-gray-400 dark:text-gray-400 font-serif">
               {formatTimeAgo(message.createdAt!)}
             </div>
           </div>
 
           {/* Main message content */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border border-white/30">
-            <blockquote className="text-xl leading-relaxed text-gray-800 text-center italic font-serif">
+          <div className="bg-white/10 dark:bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border border-white/20 dark:border-white/20">
+            <blockquote className="text-xl leading-relaxed text-white dark:text-white text-center italic font-serif">
               "{message.content}"
             </blockquote>
           </div>
 
           {/* Spotify track if available */}
           {message.spotifyLink && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="bg-green-900/20 dark:bg-green-900/20 border border-green-600/30 dark:border-green-600/30 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-center space-x-3">
-                <Music className="w-5 h-5 text-green-600" />
+                <Music className="w-5 h-5 text-green-400 dark:text-green-400" />
                 <div className="text-center">
-                  <p className="text-sm font-medium text-green-800 font-serif">{getSpotifyDisplayName(message.spotifyLink)}</p>
-                  <p className="text-green-600 text-sm font-serif">Listen on Spotify</p>
+                  <p className="text-sm font-medium text-green-300 dark:text-green-300 font-serif">{getSpotifyDisplayName(message.spotifyLink)}</p>
+                  <p className="text-green-400 dark:text-green-400 text-sm font-serif">Listen on Spotify</p>
                 </div>
               </div>
             </div>
@@ -168,18 +235,18 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           {/* Author attribution */}
           <div className="text-center mb-6">
             {message.senderName ? (
-              <p className="text-gray-600 italic font-serif">
+              <p className="text-gray-300 dark:text-gray-300 italic font-serif">
                 — {message.senderName}
               </p>
             ) : (
-              <p className="text-gray-500 italic text-sm font-serif">
+              <p className="text-gray-400 dark:text-gray-400 italic text-sm font-serif">
                 — Anonymous Whisper
               </p>
             )}
           </div>
 
           {/* Stats */}
-          <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
+          <div className="flex items-center justify-center space-x-6 text-sm text-gray-300 dark:text-gray-300">
             <div className="flex items-center space-x-1">
               <Heart className="w-4 h-4" />
               <span className="font-serif">{message.reactionCount || 0} hearts</span>
@@ -191,8 +258,8 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           </div>
 
           {/* Footer */}
-          <div className="text-center mt-8 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-400 font-serif">
+          <div className="text-center mt-8 pt-6 border-t border-gray-600 dark:border-gray-600">
+            <p className="text-xs text-gray-400 dark:text-gray-400 font-serif">
               This whisper was shared on Whispering Network • {new Date(message.createdAt!).toLocaleDateString()}
             </p>
           </div>
