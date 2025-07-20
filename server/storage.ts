@@ -1,4 +1,4 @@
-import { messages, replies, admins, users, reactions, notifications, type Message, type Reply, type Admin, type User, type Reaction, type Notification, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type InsertReaction, type InsertNotification, type MessageWithReplies, type UserProfile, type NotificationWithDetails } from "@shared/schema";
+import { messages, replies, admins, users, reactions, notifications, follows, type Message, type Reply, type Admin, type User, type Reaction, type Notification, type Follow, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, type MessageWithReplies, type UserProfile, type NotificationWithDetails } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and } from "drizzle-orm";
 
@@ -53,6 +53,14 @@ export interface IStorage {
   getAdminNotifications(adminId: number): Promise<NotificationWithDetails[]>;
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId?: number, adminId?: number): Promise<void>;
+  
+  // Follow operations
+  followUser(followerId: number, followingId: number): Promise<Follow>;
+  unfollowUser(followerId: number, followingId: number): Promise<void>;
+  isFollowing(followerId: number, followingId: number): Promise<boolean>;
+  getUserFollowers(userId: number): Promise<User[]>;
+  getUserFollowing(userId: number): Promise<User[]>;
+  getFollowStats(userId: number): Promise<{ followersCount: number; followingCount: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -436,7 +444,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getUserProfile(userId: number): Promise<UserProfile | null> {
+  async getUserProfile(userId: number, currentUserId?: number): Promise<UserProfile | null> {
     const user = await this.getUserById(userId);
     if (!user) return null;
 
@@ -450,16 +458,33 @@ export class DatabaseStorage implements IStorage {
       .from(replies)
       .where(eq(replies.userId, userId));
 
-    const totalReactions = await db
-      .select()
-      .from(reactions)
-      .where(eq(reactions.messageId, userMessages[0]?.id || 0));
+    // Count reactions on all user messages
+    let totalReactions = 0;
+    for (const message of userMessages) {
+      const messageReactions = await db
+        .select()
+        .from(reactions)
+        .where(eq(reactions.messageId, message.id));
+      totalReactions += messageReactions.length;
+    }
+
+    // Get follow stats
+    const { followersCount, followingCount } = await this.getFollowStats(userId);
+    
+    // Check if current user is following this user
+    let isFollowing = false;
+    if (currentUserId && currentUserId !== userId) {
+      isFollowing = await this.isFollowing(currentUserId, userId);
+    }
 
     return {
       ...user,
       messageCount: userMessages.length,
       replyCount: userReplies.length,
-      totalReactions: totalReactions.length,
+      totalReactions,
+      followersCount,
+      followingCount,
+      isFollowing,
     };
   }
 
@@ -580,6 +605,83 @@ export class DatabaseStorage implements IStorage {
       .update(notifications)
       .set({ isRead: true })
       .where(whereCondition);
+  }
+
+  // Follow operations
+  async followUser(followerId: number, followingId: number): Promise<Follow> {
+    const [follow] = await db
+      .insert(follows)
+      .values({ followerId, followingId })
+      .returning();
+    return follow;
+  }
+
+  async unfollowUser(followerId: number, followingId: number): Promise<void> {
+    await db
+      .delete(follows)
+      .where(and(
+        eq(follows.followerId, followerId),
+        eq(follows.followingId, followingId)
+      ));
+  }
+
+  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+    const [follow] = await db
+      .select()
+      .from(follows)
+      .where(and(
+        eq(follows.followerId, followerId),
+        eq(follows.followingId, followingId)
+      ))
+      .limit(1);
+    return !!follow;
+  }
+
+  async getUserFollowers(userId: number): Promise<User[]> {
+    const result = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        createdAt: users.createdAt,
+        isActive: users.isActive,
+      })
+      .from(follows)
+      .innerJoin(users, eq(follows.followerId, users.id))
+      .where(eq(follows.followingId, userId));
+    return result;
+  }
+
+  async getUserFollowing(userId: number): Promise<User[]> {
+    const result = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        createdAt: users.createdAt,
+        isActive: users.isActive,
+      })
+      .from(follows)
+      .innerJoin(users, eq(follows.followingId, users.id))
+      .where(eq(follows.followerId, userId));
+    return result;
+  }
+
+  async getFollowStats(userId: number): Promise<{ followersCount: number; followingCount: number }> {
+    const [followersResult] = await db
+      .select({ count: follows.id })
+      .from(follows)
+      .where(eq(follows.followingId, userId));
+    
+    const [followingResult] = await db
+      .select({ count: follows.id })
+      .from(follows)
+      .where(eq(follows.followerId, userId));
+
+    return {
+      followersCount: followersResult?.count || 0,
+      followingCount: followingResult?.count || 0,
+    };
   }
 }
 

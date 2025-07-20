@@ -60,13 +60,21 @@ export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   adminId: integer("admin_id").references(() => admins.id),
-  type: text("type").notNull(), // reaction, reply, mention
+  type: text("type").notNull(), // reaction, reply, mention, follow
   messageId: integer("message_id").references(() => messages.id),
   replyId: integer("reply_id").references(() => replies.id),
   fromUserId: integer("from_user_id").references(() => users.id),
   fromAdminId: integer("from_admin_id").references(() => admins.id),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Follow system table
+export const follows = pgTable("follows", {
+  id: serial("id").primaryKey(),
+  followerId: integer("follower_id").references(() => users.id).notNull(),
+  followingId: integer("following_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -140,6 +148,17 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   }),
 }));
 
+export const followsRelations = relations(follows, ({ one }) => ({
+  follower: one(users, {
+    fields: [follows.followerId],
+    references: [users.id],
+  }),
+  following: one(users, {
+    fields: [follows.followingId],
+    references: [users.id],
+  }),
+}));
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -170,6 +189,11 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
+export const insertFollowSchema = createInsertSchema(follows).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
@@ -182,6 +206,8 @@ export type InsertReaction = z.infer<typeof insertReactionSchema>;
 export type Reaction = typeof reactions.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+export type InsertFollow = z.infer<typeof insertFollowSchema>;
+export type Follow = typeof follows.$inferSelect;
 
 export type MessageWithReplies = Message & {
   replies: Reply[];
@@ -200,6 +226,9 @@ export type UserProfile = User & {
   messageCount: number;
   replyCount: number;
   totalReactions: number;
+  followersCount: number;
+  followingCount: number;
+  isFollowing?: boolean;
 };
 
 export type NotificationWithDetails = Notification & {

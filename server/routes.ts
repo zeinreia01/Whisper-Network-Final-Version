@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema } from "@shared/schema";
+import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -659,41 +659,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User profile endpoints
   app.get("/api/users/:id/profile", async (req, res) => {
     const userId = parseInt(req.params.id);
+    const currentUserId = req.query.currentUserId ? parseInt(req.query.currentUserId as string) : undefined;
+    
     if (!userId) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
     try {
-      const user = await storage.getUserById(userId);
-      if (!user) {
+      const profile = await storage.getUserProfile(userId, currentUserId);
+      if (!profile) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Get user statistics
-      const userMessages = await storage.getUserMessages(userId);
-      const userReplies = await storage.getUserReplies(userId);
-      
-      // Count total reactions received
-      let totalReactions = 0;
-      for (const message of userMessages) {
-        try {
-          const reactions = await storage.getMessageReactions(message.id);
-          totalReactions += reactions.length;
-        } catch (error) {
-          // Skip if reactions table doesn't exist yet
-        }
-      }
-
-      const profile = {
-        id: user.id,
-        username: user.username,
-        createdAt: user.createdAt,
-        messageCount: userMessages.length,
-        replyCount: userReplies.length,
-        totalReactions,
-      };
-
-      res.json(profile);
+      // Don't return password
+      const { password, ...profileWithoutPassword } = profile;
+      res.json(profileWithoutPassword);
     } catch (error) {
       console.error("Error fetching user profile:", error);
       res.status(500).json({ error: "Failed to fetch user profile" });
@@ -733,6 +713,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user messages:", error);
       res.status(500).json({ error: "Failed to fetch user messages" });
+    }
+  });
+
+  // Follow system endpoints
+  app.post("/api/users/:id/follow", async (req, res) => {
+    try {
+      const followingId = parseInt(req.params.id);
+      const { followerId } = req.body;
+      
+      if (!followingId || !followerId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (followingId === followerId) {
+        return res.status(400).json({ error: "Cannot follow yourself" });
+      }
+
+      // Check if already following
+      const isAlreadyFollowing = await storage.isFollowing(followerId, followingId);
+      if (isAlreadyFollowing) {
+        return res.status(400).json({ error: "Already following this user" });
+      }
+
+      const follow = await storage.followUser(followerId, followingId);
+      
+      // Create notification for the followed user
+      const follower = await storage.getUserById(followerId);
+      if (follower) {
+        await storage.createNotification({
+          userId: followingId,
+          type: "follow",
+          fromUserId: followerId,
+          content: `${follower.username} started following you`,
+        });
+      }
+
+      res.json(follow);
+    } catch (error) {
+      console.error("Error following user:", error);
+      res.status(500).json({ error: "Failed to follow user" });
+    }
+  });
+
+  app.delete("/api/users/:id/follow", async (req, res) => {
+    try {
+      const followingId = parseInt(req.params.id);
+      const { followerId } = req.body;
+      
+      if (!followingId || !followerId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      await storage.unfollowUser(followerId, followingId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+      res.status(500).json({ error: "Failed to unfollow user" });
+    }
+  });
+
+  app.get("/api/users/:id/followers", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (!userId) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      const followers = await storage.getUserFollowers(userId);
+      // Remove password from response
+      const followersWithoutPassword = followers.map(({ password, ...user }) => user);
+      res.json(followersWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching followers:", error);
+      res.status(500).json({ error: "Failed to fetch followers" });
+    }
+  });
+
+  app.get("/api/users/:id/following", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (!userId) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      const following = await storage.getUserFollowing(userId);
+      // Remove password from response
+      const followingWithoutPassword = following.map(({ password, ...user }) => user);
+      res.json(followingWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching following:", error);
+      res.status(500).json({ error: "Failed to fetch following" });
     }
   });
 

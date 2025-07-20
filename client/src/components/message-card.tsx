@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { UserBadge } from "@/components/user-badge";
 import { Link } from "wouter";
 import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User } from "lucide-react";
 import { categories } from "@/lib/categories";
@@ -223,13 +224,8 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         <span className={`text-sm font-medium ${category?.color}`}>
           {category?.name}
         </span>
-        {/* Show authenticated user badge */}
-        {message.userId && (
-          <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
-            <User className="h-3 w-3 mr-1" />
-            Authenticated User
-          </Badge>
-        )}
+        {/* Show user type badge */}
+        {message.userId && <UserBadge userType="user" variant="small" />}
         {message.recipient && (
           <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">
             To: {message.recipient}
@@ -448,20 +444,9 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
                         )}
                       </div>
-                      {/* Show admin permission tag */}
-                      {reply.adminId && (
-                        <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
-                          <Shield className="h-3 w-3 mr-1" />
-                          Whisper Listener
-                        </Badge>
-                      )}
-                      {/* Show authenticated user badge for regular users */}
-                      {reply.userId && !reply.adminId && (
-                        <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
-                          <User className="h-3 w-3 mr-1" />
-                          Authenticated User
-                        </Badge>
-                      )}
+                      {/* Show user type badges */}
+                      {reply.adminId && <UserBadge userType="admin" variant="small" />}
+                      {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatTimeAgo(reply.createdAt!)}
                       </span>

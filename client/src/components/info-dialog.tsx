@@ -11,14 +11,14 @@ export function InfoDialog() {
           <Info className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh] w-[95vw] sm:w-full overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Heart className="h-5 w-5 text-primary" />
             <span>Welcome to Whispering Network</span>
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[60vh] pr-4">
+        <ScrollArea className="h-[60vh] max-h-[70vh] pr-4 overflow-y-auto">
           <div className="space-y-6">
             
             {/* Introduction */}
