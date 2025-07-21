@@ -207,6 +207,33 @@ export function InfoDialog({ trigger }: InfoDialogProps) {
                 or create a public message tagged with "Advice" - our community is always here to help.
               </p>
             </section>
+
+            {/* Developer Support */}
+            <section className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2 flex items-center text-blue-800">
+                <Shield className="h-4 w-4 mr-2" />
+                Need Help or Have Questions?
+              </h3>
+              <div className="space-y-2 text-sm text-blue-700">
+                <p>
+                  For technical support, suggestions, or any questions about the platform, 
+                  feel free to reach out to our development team:
+                </p>
+                <div className="bg-white/60 p-3 rounded border border-blue-200">
+                  <p className="font-medium">📧 Developer Support:</p>
+                  <a 
+                    href="mailto:whispernetworkofficial@gmail.com" 
+                    className="text-blue-600 hover:text-blue-800 underline font-mono text-sm"
+                  >
+                    whispernetworkofficial@gmail.com
+                  </a>
+                </div>
+                <p className="text-xs text-blue-600">
+                  We welcome feedback, bug reports, feature suggestions, and any questions 
+                  about using Whispering Network. Your input helps us improve the platform for everyone!
+                </p>
+              </div>
+            </section>
           </div>
         </ScrollArea>
       </DialogContent>
