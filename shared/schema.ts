@@ -27,6 +27,7 @@ export const messages = pgTable("messages", {
 export const replies = pgTable("replies", {
   id: serial("id").primaryKey(),
   messageId: integer("message_id").references(() => messages.id).notNull(),
+  parentReplyId: integer("parent_reply_id").references(() => replies.id), // For nested replies
   content: text("content").notNull(),
   nickname: text("nickname").notNull(),
   userId: integer("user_id").references(() => users.id), // Link to user account (optional)
@@ -91,7 +92,7 @@ export const messagesRelations = relations(messages, ({ many, one }) => ({
   }),
 }));
 
-export const repliesRelations = relations(replies, ({ one }) => ({
+export const repliesRelations = relations(replies, ({ one, many }) => ({
   message: one(messages, {
     fields: [replies.messageId],
     references: [messages.id],
@@ -103,6 +104,14 @@ export const repliesRelations = relations(replies, ({ one }) => ({
   admin: one(admins, {
     fields: [replies.adminId],
     references: [admins.id],
+  }),
+  parentReply: one(replies, {
+    fields: [replies.parentReplyId],
+    references: [replies.id],
+    relationName: "parentChild",
+  }),
+  childReplies: many(replies, {
+    relationName: "parentChild",
   }),
 }));
 
@@ -220,6 +229,8 @@ export type MessageWithReplies = Message & {
 export type ReplyWithUser = Reply & {
   user?: User | null;
   admin?: Admin | null;
+  parentReply?: Reply | null;
+  childReplies?: Reply[];
 };
 
 export type UserProfile = User & {

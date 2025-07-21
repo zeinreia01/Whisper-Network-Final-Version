@@ -9,7 +9,7 @@ export interface IStorage {
   getUserById(id: number): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   updateUserStatus(userId: number, isActive: boolean): Promise<User>;
-  
+
   // Message operations
   createMessage(message: InsertMessage): Promise<Message>;
   getPublicMessages(): Promise<MessageWithReplies[]>;
@@ -20,40 +20,40 @@ export interface IStorage {
   searchPublicMessages(query: string): Promise<MessageWithReplies[]>;
   updateMessageVisibility(messageId: number, isPublic: boolean): Promise<Message>;
   deleteMessage(messageId: number): Promise<void>;
-  
+
   // Reply operations
   createReply(reply: InsertReply): Promise<Reply>;
   getRepliesByMessageId(messageId: number): Promise<Reply[]>;
   deleteReply(id: number): Promise<void>;
-  
+
   // Admin operations
   createAdmin(admin: InsertAdmin): Promise<Admin>;
   getAdminByUsername(username: string): Promise<Admin | undefined>;
   getAllAdmins(): Promise<Admin[]>;
   updateAdminStatus(adminId: number, isActive: boolean): Promise<Admin>;
-  
+
   // Recipients operations - now returns admin display names
   getRecipients(): Promise<string[]>;
-  
+
   // User management operations
   deleteUser(userId: number): Promise<void>;
   getUserMessages(userId: number): Promise<MessageWithReplies[]>;
   searchUsers(query: string): Promise<User[]>;
   getUserProfile(userId: number): Promise<UserProfile | null>;
-  
+
   // Reaction operations
   addReaction(reaction: InsertReaction): Promise<Reaction>;
   removeReaction(messageId: number, userId?: number, adminId?: number): Promise<void>;
   getMessageReactions(messageId: number): Promise<Reaction[]>;
   getUserReaction(messageId: number, userId?: number, adminId?: number): Promise<Reaction | null>;
-  
+
   // Notification operations
   createNotification(notification: InsertNotification): Promise<Notification>;
   getUserNotifications(userId: number): Promise<NotificationWithDetails[]>;
   getAdminNotifications(adminId: number): Promise<NotificationWithDetails[]>;
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId?: number, adminId?: number): Promise<void>;
-  
+
   // Follow operations
   followUser(followerId: number, followingId: number): Promise<Follow>;
   unfollowUser(followerId: number, followingId: number): Promise<void>;
@@ -190,12 +190,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRepliesByMessageId(messageId: number): Promise<Reply[]> {
-    const result = await db
+    const allReplies = await db
       .select()
       .from(replies)
+      .leftJoin(users, eq(replies.userId, users.id))
+      .leftJoin(admins, eq(replies.adminId, admins.id))
       .where(eq(replies.messageId, messageId))
       .orderBy(desc(replies.createdAt));
-    return result;
+
+    const enhancedReplies = allReplies.map(row => ({
+      ...row.replies,
+      user: row.users,
+      admin: row.admins,
+      childReplies: [],
+    }));
+    // Build nested structure
+    const replyMap = new Map();
+    const topLevelReplies = [];
+
+    // First pass: create map of all replies
+    for (const reply of enhancedReplies) {
+      replyMap.set(reply.id, reply);
+    }
+
+    // Second pass: build nested structure
+    for (const reply of enhancedReplies) {
+      if (reply.parentReplyId) {
+        const parent = replyMap.get(reply.parentReplyId);
+        if (parent) {
+          parent.childReplies.push(reply);
+        }
+      } else {
+        topLevelReplies.push(reply);
+      }
+    }
+
+    return topLevelReplies;
   }
 
   async deleteReply(id: number): Promise<void> {
@@ -250,7 +280,7 @@ export class DatabaseStorage implements IStorage {
     if (!query.trim()) {
       return this.getPublicMessages();
     }
-    
+
     const searchTerm = `%${query.toLowerCase()}%`;
     try {
       const result = await db.query.messages.findMany({
@@ -310,10 +340,10 @@ export class DatabaseStorage implements IStorage {
     // Delete in proper order to avoid foreign key constraints
     // 1. Delete all reactions for this message
     await db.delete(reactions).where(eq(reactions.messageId, messageId));
-    
+
     // 2. Delete all replies to the message
     await db.delete(replies).where(eq(replies.messageId, messageId));
-    
+
     // 3. Finally delete the message itself
     await db.delete(messages).where(eq(messages.id, messageId));
   }
@@ -370,12 +400,12 @@ export class DatabaseStorage implements IStorage {
       .select({ displayName: admins.displayName })
       .from(admins)
       .where(eq(admins.isActive, true));
-    
+
     if (activeAdmins.length === 0) {
       // Fallback to default recipients if no admins exist
       return ["Admin", "Moderator", "Support", "Community Manager"];
     }
-    
+
     return activeAdmins.map(admin => admin.displayName);
   }
 
@@ -385,12 +415,12 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(replies)
       .where(eq(replies.userId, userId));
-    
+
     // Then delete all messages by the user
     await db
       .delete(messages)
       .where(eq(messages.userId, userId));
-    
+
     // Finally delete the user
     await db
       .delete(users)
@@ -418,7 +448,7 @@ export class DatabaseStorage implements IStorage {
     if (!query.trim()) {
       return this.getAllUsers();
     }
-    
+
     const searchTerm = `%${query.toLowerCase()}%`;
     const result = await db
       .select()
@@ -467,7 +497,7 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       // Skip if follows table doesn't exist yet
     }
-    
+
     // Check if current user is following this user
     let isFollowing = false;
     try {
@@ -501,11 +531,11 @@ export class DatabaseStorage implements IStorage {
 
   async removeReaction(messageId: number, userId?: number, adminId?: number): Promise<void> {
     const conditions = [eq(reactions.messageId, messageId)];
-    
+
     if (userId) {
       conditions.push(eq(reactions.userId, userId));
     }
-    
+
     if (adminId) {
       conditions.push(eq(reactions.adminId, adminId));
     }
@@ -530,11 +560,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserReaction(messageId: number, userId?: number, adminId?: number): Promise<Reaction | null> {
     const conditions = [eq(reactions.messageId, messageId)];
-    
+
     if (userId) {
       conditions.push(eq(reactions.userId, userId));
     }
-    
+
     if (adminId) {
       conditions.push(eq(reactions.adminId, adminId));
     }
@@ -544,7 +574,7 @@ export class DatabaseStorage implements IStorage {
       .from(reactions)
       .where(and(...conditions))
       .limit(1);
-    
+
     return reaction || null;
   }
 
@@ -673,7 +703,7 @@ export class DatabaseStorage implements IStorage {
       .select({ count: follows.id })
       .from(follows)
       .where(eq(follows.followingId, userId));
-    
+
     const [followingResult] = await db
       .select({ count: follows.id })
       .from(follows)
