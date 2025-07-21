@@ -161,7 +161,20 @@ export class DatabaseStorage implements IStorage {
         user: true,
       },
     });
-    return result;
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      result.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
   }
 
   async getMessagesByCategory(category: string): Promise<MessageWithReplies[]> {
@@ -178,7 +191,20 @@ export class DatabaseStorage implements IStorage {
         user: true,
       },
     });
-    return result;
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      result.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
   }
 
   async createReply(replyData: InsertReply): Promise<Reply> {
@@ -243,7 +269,20 @@ export class DatabaseStorage implements IStorage {
         user: true,
       },
     });
-    return result;
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      result.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
   }
 
   async searchPublicMessages(query: string): Promise<MessageWithReplies[]> {
@@ -252,8 +291,10 @@ export class DatabaseStorage implements IStorage {
     }
     
     const searchTerm = `%${query.toLowerCase()}%`;
+    let result;
+    
     try {
-      const result = await db.query.messages.findMany({
+      result = await db.query.messages.findMany({
         where: and(
           eq(messages.isPublic, true),
           or(
@@ -273,11 +314,10 @@ export class DatabaseStorage implements IStorage {
           user: true,
         },
       });
-      return result;
     } catch (error) {
       console.error('Search error:', error);
       // Fallback to simple content search if complex query fails
-      const result = await db.query.messages.findMany({
+      result = await db.query.messages.findMany({
         where: and(
           eq(messages.isPublic, true),
           ilike(messages.content, searchTerm)
@@ -293,8 +333,21 @@ export class DatabaseStorage implements IStorage {
           user: true,
         },
       });
-      return result;
     }
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      result.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
   }
 
   async updateMessageVisibility(messageId: number, isPublic: boolean): Promise<Message> {
