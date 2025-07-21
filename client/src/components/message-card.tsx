@@ -11,13 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { UserBadge } from "@/components/user-badge";
 import { MessageViewer } from "@/components/message-viewer";
-import { NestedReply } from "@/components/nested-reply";
 import { Link } from "wouter";
 import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { getSpotifyDisplayName } from "@/lib/spotify";
-import type { MessageWithReplies, ReplyWithUser } from "@shared/schema";
+import type { MessageWithReplies } from "@shared/schema";
 
 interface MessageCardProps {
   message: MessageWithReplies;
@@ -29,7 +28,6 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<{ id: number | null, nickname: string, isMessage: boolean }>({ id: null, nickname: "", isMessage: true });
   const [warningReason, setWarningReason] = useState("");
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [selectedReplyId, setSelectedReplyId] = useState<number | null>(null);
@@ -64,7 +62,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   const category = categories.find(c => c.id === message.category);
   
   const createReplyMutation = useMutation({
-    mutationFn: async (data: { messageId: number; content: string; nickname: string; parentReplyId?: number }) => {
+    mutationFn: async (data: { messageId: number; content: string; nickname: string }) => {
       const replyData = {
         ...data,
         userId: user?.id,
@@ -201,19 +199,10 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       return;
     }
 
-    // Add @mention if replying to someone specific
-    let finalContent = replyText;
-    if (replyingTo.id !== null && !replyingTo.isMessage && replyingTo.nickname) {
-      if (!replyText.startsWith(`@${replyingTo.nickname}`)) {
-        finalContent = `@${replyingTo.nickname} ${replyText}`;
-      }
-    }
-
     createReplyMutation.mutate({
       messageId: message.id,
-      content: finalContent,
+      content: replyText,
       nickname: nickname,
-      parentReplyId: replyingTo.isMessage ? undefined : replyingTo.id || undefined,
     });
   };
 
@@ -228,23 +217,6 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
     if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     return 'Just now';
-  };
-
-  const handleReplyToMessage = () => {
-    setReplyingTo({ id: null, nickname: message.senderName || "Anonymous", isMessage: true });
-    setShowReplyForm(true);
-  };
-
-  const handleReplyToReply = (reply: any) => {
-    setReplyingTo({ id: reply.id, nickname: reply.nickname, isMessage: false });
-    setShowReplyForm(true);
-  };
-
-  const cancelReply = () => {
-    setShowReplyForm(false);
-    setReplyingTo({ id: null, nickname: "", isMessage: true });
-    setReplyText("");
-    setNickname(defaultNickname);
   };
 
   return (
@@ -310,7 +282,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         {/* Primary actions row */}
         <div className="flex items-center space-x-3 sm:space-x-4">
           <button
-            onClick={handleReplyToMessage}
+            onClick={() => setShowReplyForm(!showReplyForm)}
             className="hover:text-primary transition-colors flex-shrink-0"
           >
             Reply
@@ -439,18 +411,6 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       {showReplyForm && (
         <div className="border-t pt-4 mb-4">
           <div className="space-y-3">
-            {/* Show who you're replying to */}
-            <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
-              <span className="text-sm text-gray-600">
-                {replyingTo.isMessage 
-                  ? `Replying to the original whisper by ${replyingTo.nickname}`
-                  : `Replying to ${replyingTo.nickname}'s comment`
-                }
-              </span>
-              <Button variant="ghost" size="sm" onClick={cancelReply} className="h-6 w-6 p-0">
-                ✕
-              </Button>
-            </div>
             <Input
               placeholder={defaultNickname ? `Replying as: ${defaultNickname}` : "Your nickname..."}
               value={nickname}
@@ -459,7 +419,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
               className={defaultNickname ? "bg-muted text-muted-foreground" : ""}
             />
             <Input
-              placeholder={replyingTo.isMessage ? "Write your reply..." : `Reply to ${replyingTo.nickname}...`}
+              placeholder="Write your reply..."
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
             />
@@ -473,7 +433,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
               </Button>
               <Button 
                 variant="outline" 
-                onClick={cancelReply}
+                onClick={() => setShowReplyForm(false)}
               >
                 Cancel
               </Button>
@@ -484,14 +444,120 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
 
       {showReplies && message.replies.length > 0 && (
         <div className="border-t pt-4">
-          <div className="space-y-4">
+          <div className="space-y-3">
             {message.replies.map((reply) => (
-              <NestedReply
-                key={reply.id}
-                reply={reply}
-                messageId={message.id}
-                onReply={handleReplyToReply}
-              />
+              <div key={reply.id} className="flex items-start space-x-2 sm:space-x-3 group">
+                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                  {reply.nickname.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1">
+                        {/* Make nickname clickable for authenticated users */}
+                        {reply.userId && (user || admin) ? (
+                          <Link href={`/user/${reply.userId}`}>
+                            <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                              {reply.nickname}
+                            </button>
+                          </Link>
+                        ) : (
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
+                        )}
+                      </div>
+                      {/* Show user type badges */}
+                      {reply.adminId && <UserBadge userType="admin" variant="small" />}
+                      {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatTimeAgo(reply.createdAt!)}
+                      </span>
+                    </div>
+                    
+                    {/* Reply management controls */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 flex-shrink-0">
+                      {/* Admin controls */}
+                      {admin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedReplyId(reply.id);
+                                setShowWarningDialog(true);
+                              }}
+                              className="text-amber-600"
+                            >
+                              <AlertTriangle className="h-3 w-3 mr-2" />
+                              Send Warning
+                            </DropdownMenuItem>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem 
+                                  onSelect={(e) => e.preventDefault()}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-2" />
+                                  Delete Reply
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Reply</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete this reply. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteReplyMutation.mutate(reply.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+
+                      {/* User owns message - can delete replies on their message */}
+                      {user && message.userId === user.id && !admin && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Delete reply on your message">
+                              <Trash2 className="h-3 w-3 text-red-500" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Reply</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete this reply from your message. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteReplyMutation.mutate(reply.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete Reply
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{reply.content}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
