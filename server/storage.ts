@@ -118,50 +118,116 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublicMessages(): Promise<MessageWithReplies[]> {
-    const result = await db.query.messages.findMany({
-      where: eq(messages.isPublic, true),
-      orderBy: desc(messages.createdAt),
-      with: {
-        replies: {
-          orderBy: desc(replies.createdAt),
-          with: {
-            user: true,
+    try {
+      const result = await db.query.messages.findMany({
+        where: eq(messages.isPublic, true),
+        orderBy: desc(messages.createdAt),
+        with: {
+          replies: {
+            orderBy: desc(replies.createdAt),
+            with: {
+              user: true,
+              admin: true,
+            },
           },
+          user: true,
         },
-        user: true,
-      },
-    });
+      });
 
-    // Add reaction counts to messages
-    const messagesWithReactions = await Promise.all(
-      result.map(async (message) => {
-        const messageReactions = await this.getMessageReactions(message.id);
-        return {
-          ...message,
-          reactionCount: messageReactions.length,
-          reactions: messageReactions,
-        };
-      })
-    );
+      // Add reaction counts to messages
+      const messagesWithReactions = await Promise.all(
+        result.map(async (message) => {
+          const messageReactions = await this.getMessageReactions(message.id);
+          // Get nested replies structure for each message
+          const nestedReplies = await this.getRepliesByMessageId(message.id);
+          return {
+            ...message,
+            replies: nestedReplies,
+            reactionCount: messageReactions.length,
+            reactions: messageReactions,
+          };
+        })
+      );
 
-    return messagesWithReactions;
+      return messagesWithReactions;
+    } catch (error) {
+      console.error("Error in getPublicMessages:", error);
+      // Fallback to simple query without nested relations
+      const simpleResult = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.isPublic, true))
+        .orderBy(desc(messages.createdAt));
+
+      const messagesWithBasicData = await Promise.all(
+        simpleResult.map(async (message) => {
+          const messageReactions = await this.getMessageReactions(message.id);
+          const messageReplies = await this.getRepliesByMessageId(message.id);
+          return {
+            ...message,
+            replies: messageReplies,
+            user: message.userId ? await this.getUserById(message.userId) : null,
+            reactionCount: messageReactions.length,
+            reactions: messageReactions,
+          };
+        })
+      );
+
+      return messagesWithBasicData;
+    }
   }
 
   async getPrivateMessages(): Promise<MessageWithReplies[]> {
-    const result = await db.query.messages.findMany({
-      where: eq(messages.isPublic, false),
-      orderBy: desc(messages.createdAt),
-      with: {
-        replies: {
-          orderBy: desc(replies.createdAt),
-          with: {
-            user: true,
+    try {
+      const result = await db.query.messages.findMany({
+        where: eq(messages.isPublic, false),
+        orderBy: desc(messages.createdAt),
+        with: {
+          replies: {
+            orderBy: desc(replies.createdAt),
+            with: {
+              user: true,
+              admin: true,
+            },
           },
+          user: true,
         },
-        user: true,
-      },
-    });
-    return result;
+      });
+
+      // Get nested replies for each message
+      const messagesWithNestedReplies = await Promise.all(
+        result.map(async (message) => {
+          const nestedReplies = await this.getRepliesByMessageId(message.id);
+          return {
+            ...message,
+            replies: nestedReplies,
+          };
+        })
+      );
+
+      return messagesWithNestedReplies;
+    } catch (error) {
+      console.error("Error in getPrivateMessages:", error);
+      // Fallback to simple query
+      const simpleResult = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.isPublic, false))
+        .orderBy(desc(messages.createdAt));
+
+      const messagesWithBasicData = await Promise.all(
+        simpleResult.map(async (message) => {
+          const messageReplies = await this.getRepliesByMessageId(message.id);
+          return {
+            ...message,
+            replies: messageReplies,
+            user: message.userId ? await this.getUserById(message.userId) : null,
+          };
+        })
+      );
+
+      return messagesWithBasicData;
+    }
   }
 
   async getMessagesByCategory(category: string): Promise<MessageWithReplies[]> {
@@ -190,42 +256,62 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRepliesByMessageId(messageId: number): Promise<Reply[]> {
-    const allReplies = await db
-      .select()
-      .from(replies)
-      .leftJoin(users, eq(replies.userId, users.id))
-      .leftJoin(admins, eq(replies.adminId, admins.id))
-      .where(eq(replies.messageId, messageId))
-      .orderBy(desc(replies.createdAt));
+    try {
+      // Try the new nested structure first
+      const allReplies = await db
+        .select()
+        .from(replies)
+        .leftJoin(users, eq(replies.userId, users.id))
+        .leftJoin(admins, eq(replies.adminId, admins.id))
+        .where(eq(replies.messageId, messageId))
+        .orderBy(desc(replies.createdAt));
 
-    const enhancedReplies = allReplies.map(row => ({
-      ...row.replies,
-      user: row.users,
-      admin: row.admins,
-      childReplies: [],
-    }));
-    // Build nested structure
-    const replyMap = new Map();
-    const topLevelReplies = [];
+      const enhancedReplies = allReplies.map(row => ({
+        ...row.replies,
+        user: row.users,
+        admin: row.admins,
+        childReplies: [],
+      }));
 
-    // First pass: create map of all replies
-    for (const reply of enhancedReplies) {
-      replyMap.set(reply.id, reply);
-    }
+      // Build nested structure
+      const replyMap = new Map();
+      const topLevelReplies = [];
 
-    // Second pass: build nested structure
-    for (const reply of enhancedReplies) {
-      if (reply.parentReplyId) {
-        const parent = replyMap.get(reply.parentReplyId);
-        if (parent) {
-          parent.childReplies.push(reply);
-        }
-      } else {
-        topLevelReplies.push(reply);
+      // First pass: create map of all replies
+      for (const reply of enhancedReplies) {
+        replyMap.set(reply.id, reply);
       }
-    }
 
-    return topLevelReplies;
+      // Second pass: build nested structure
+      for (const reply of enhancedReplies) {
+        if (reply.parentReplyId) {
+          const parent = replyMap.get(reply.parentReplyId);
+          if (parent) {
+            parent.childReplies.push(reply);
+          }
+        } else {
+          topLevelReplies.push(reply);
+        }
+      }
+
+      return topLevelReplies;
+    } catch (error) {
+      // Fallback for databases without parentReplyId column
+      console.warn("Using fallback reply query - nested replies not supported:", error);
+      const result = await db.query.replies.findMany({
+        where: eq(replies.messageId, messageId),
+        orderBy: desc(replies.createdAt),
+        with: {
+          user: true,
+          admin: true,
+        },
+      });
+
+      return result.map(reply => ({
+        ...reply,
+        childReplies: [],
+      }));
+    }
   }
 
   async deleteReply(id: number): Promise<void> {
@@ -235,28 +321,55 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMessageById(id: number): Promise<MessageWithReplies | null> {
-    const result = await db.query.messages.findFirst({
-      where: eq(messages.id, id),
-      with: {
-        replies: {
-          orderBy: desc(replies.createdAt),
-          with: {
-            user: true,
+    try {
+      const result = await db.query.messages.findFirst({
+        where: eq(messages.id, id),
+        with: {
+          replies: {
+            orderBy: desc(replies.createdAt),
+            with: {
+              user: true,
+              admin: true,
+            },
           },
+          user: true,
         },
-        user: true,
-      },
-    });
+      });
 
-    if (!result) return null;
+      if (!result) return null;
 
-    // Add reaction data
-    const messageReactions = await this.getMessageReactions(result.id);
-    return {
-      ...result,
-      reactionCount: messageReactions.length,
-      reactions: messageReactions,
-    };
+      // Add reaction data and nested replies
+      const messageReactions = await this.getMessageReactions(result.id);
+      const nestedReplies = await this.getRepliesByMessageId(result.id);
+      
+      return {
+        ...result,
+        replies: nestedReplies,
+        reactionCount: messageReactions.length,
+        reactions: messageReactions,
+      };
+    } catch (error) {
+      console.error("Error in getMessageById:", error);
+      // Fallback to simple query
+      const [message] = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.id, id))
+        .limit(1);
+
+      if (!message) return null;
+
+      const messageReactions = await this.getMessageReactions(message.id);
+      const messageReplies = await this.getRepliesByMessageId(message.id);
+
+      return {
+        ...message,
+        replies: messageReplies,
+        user: message.userId ? await this.getUserById(message.userId) : null,
+        reactionCount: messageReactions.length,
+        reactions: messageReactions,
+      };
+    }
   }
 
   async getMessagesByRecipient(recipient: string): Promise<MessageWithReplies[]> {
