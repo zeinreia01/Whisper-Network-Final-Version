@@ -500,19 +500,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async removeReaction(messageId: number, userId?: number, adminId?: number): Promise<void> {
-    let whereCondition = eq(reactions.messageId, messageId);
+    const conditions = [eq(reactions.messageId, messageId)];
     
     if (userId) {
-      whereCondition = and(whereCondition, eq(reactions.userId, userId))!;
+      conditions.push(eq(reactions.userId, userId));
     }
     
     if (adminId) {
-      whereCondition = and(whereCondition, eq(reactions.adminId, adminId))!;
+      conditions.push(eq(reactions.adminId, adminId));
     }
 
     await db
       .delete(reactions)
-      .where(whereCondition);
+      .where(and(...conditions));
   }
 
   async getMessageReactions(messageId: number): Promise<Reaction[]> {
@@ -529,20 +529,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserReaction(messageId: number, userId?: number, adminId?: number): Promise<Reaction | null> {
-    let whereCondition = eq(reactions.messageId, messageId);
+    const conditions = [eq(reactions.messageId, messageId)];
     
     if (userId) {
-      whereCondition = and(whereCondition, eq(reactions.userId, userId))!;
+      conditions.push(eq(reactions.userId, userId));
     }
     
     if (adminId) {
-      whereCondition = and(whereCondition, eq(reactions.adminId, adminId))!;
+      conditions.push(eq(reactions.adminId, adminId));
     }
 
     const [reaction] = await db
       .select()
       .from(reactions)
-      .where(whereCondition)
+      .where(and(...conditions))
       .limit(1);
     
     return reaction || null;
@@ -593,20 +593,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markAllNotificationsAsRead(userId?: number, adminId?: number): Promise<void> {
-    let whereCondition;
-    
     if (userId) {
-      whereCondition = eq(notifications.userId, userId);
+      await db
+        .update(notifications)
+        .set({ isRead: true })
+        .where(eq(notifications.userId, userId));
     } else if (adminId) {
-      whereCondition = eq(notifications.adminId, adminId);
+      await db
+        .update(notifications)
+        .set({ isRead: true })
+        .where(eq(notifications.adminId, adminId));
     } else {
       return; // Must provide either userId or adminId
     }
-
-    await db
-      .update(notifications)
-      .set({ isRead: true })
-      .where(whereCondition);
   }
 
   // Follow operations
