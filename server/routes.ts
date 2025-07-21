@@ -649,6 +649,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Liked messages routes (personal archive)
+  app.post("/api/messages/:id/like", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const messageId = parseInt(id);
+      const { userId, adminId } = req.body;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ message: "Authentication required" });
+      }
+
+      // Check if already liked
+      const isLiked = await storage.isMessageLiked(userId, adminId, messageId);
+      if (isLiked) {
+        return res.status(400).json({ message: "Message already liked" });
+      }
+
+      const liked = await storage.likeMessage(userId, adminId, messageId);
+      res.status(201).json(liked);
+    } catch (error) {
+      console.error("Error liking message:", error);
+      res.status(500).json({ message: "Failed to like message" });
+    }
+  });
+
+  app.delete("/api/messages/:id/like", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const messageId = parseInt(id);
+      const { userId, adminId } = req.body;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ message: "Authentication required" });
+      }
+
+      await storage.unlikeMessage(userId, adminId, messageId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unliking message:", error);
+      res.status(500).json({ message: "Failed to unlike message" });
+    }
+  });
+
+  app.get("/api/users/:userId/liked-messages", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { adminId } = req.query;
+      
+      const likedMessages = await storage.getUserLikedMessages(
+        parseInt(userId), 
+        adminId ? parseInt(adminId as string) : undefined
+      );
+      res.json(likedMessages);
+    } catch (error) {
+      console.error("Error fetching liked messages:", error);
+      res.status(500).json({ message: "Failed to fetch liked messages" });
+    }
+  });
+
+  // User profile update routes
+  app.patch("/api/users/:userId/profile", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      // Validate display name cooldown if being updated
+      if (updates.displayName !== undefined) {
+        const canUpdate = await storage.canUpdateDisplayName(parseInt(userId));
+        if (!canUpdate) {
+          return res.status(400).json({ 
+            message: "Display name can only be changed once every 30 days" 
+          });
+        }
+      }
+
+      const updatedUser = await storage.updateUserProfile(parseInt(userId), updates);
+      
+      // Don't return password
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.get("/api/users/:userId/can-update-display-name", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const canUpdate = await storage.canUpdateDisplayName(parseInt(userId));
+      res.json({ canUpdate });
+    } catch (error) {
+      console.error("Error checking display name cooldown:", error);
+      res.status(500).json({ message: "Failed to check cooldown" });
+    }
+  });
+
   // Notification routes
   app.get("/api/notifications/user/:userId", async (req, res) => {
     try {

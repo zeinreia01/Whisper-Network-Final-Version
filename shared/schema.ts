@@ -8,6 +8,9 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  displayName: text("display_name"), // User's display name (can be changed with cooldown)
+  profilePicture: text("profile_picture"), // URL or path to profile picture
+  lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
 });
@@ -75,6 +78,15 @@ export const follows = pgTable("follows", {
   id: serial("id").primaryKey(),
   followerId: integer("follower_id").references(() => users.id).notNull(),
   followingId: integer("following_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Liked messages table for personal archives
+export const likedMessages = pgTable("liked_messages", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  adminId: integer("admin_id").references(() => admins.id),
+  messageId: integer("message_id").references(() => messages.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -159,6 +171,21 @@ export const followsRelations = relations(follows, ({ one }) => ({
   }),
 }));
 
+export const likedMessagesRelations = relations(likedMessages, ({ one }) => ({
+  user: one(users, {
+    fields: [likedMessages.userId],
+    references: [users.id],
+  }),
+  admin: one(admins, {
+    fields: [likedMessages.adminId],
+    references: [admins.id],
+  }),
+  message: one(messages, {
+    fields: [likedMessages.messageId],
+    references: [messages.id],
+  }),
+}));
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -194,6 +221,17 @@ export const insertFollowSchema = createInsertSchema(follows).omit({
   createdAt: true,
 });
 
+export const insertLikedMessageSchema = createInsertSchema(likedMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Profile update schemas
+export const updateUserProfileSchema = z.object({
+  displayName: z.string().min(2).max(50).optional(),
+  profilePicture: z.string().url().optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
@@ -208,6 +246,9 @@ export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertFollow = z.infer<typeof insertFollowSchema>;
 export type Follow = typeof follows.$inferSelect;
+export type InsertLikedMessage = z.infer<typeof insertLikedMessageSchema>;
+export type LikedMessage = typeof likedMessages.$inferSelect;
+export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
 
 export type MessageWithReplies = Message & {
   replies: Reply[];

@@ -1,4 +1,4 @@
-import { messages, replies, admins, users, reactions, notifications, follows, type Message, type Reply, type Admin, type User, type Reaction, type Notification, type Follow, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, type MessageWithReplies, type UserProfile, type NotificationWithDetails } from "@shared/schema";
+import { messages, replies, admins, users, reactions, notifications, follows, likedMessages, type Message, type Reply, type Admin, type User, type Reaction, type Notification, type Follow, type LikedMessage, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, type InsertLikedMessage, type MessageWithReplies, type UserProfile, type NotificationWithDetails, type UpdateUserProfile } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and } from "drizzle-orm";
 
@@ -61,6 +61,16 @@ export interface IStorage {
   getUserFollowers(userId: number): Promise<User[]>;
   getUserFollowing(userId: number): Promise<User[]>;
   getFollowStats(userId: number): Promise<{ followersCount: number; followingCount: number }>;
+  
+  // Liked messages operations (personal archive)
+  likeMessage(userId: number, adminId: number | undefined, messageId: number): Promise<LikedMessage>;
+  unlikeMessage(userId: number, adminId: number | undefined, messageId: number): Promise<void>;
+  isMessageLiked(userId: number, adminId: number | undefined, messageId: number): Promise<boolean>;
+  getUserLikedMessages(userId: number, adminId?: number): Promise<MessageWithReplies[]>;
+  
+  // User profile operations
+  updateUserProfile(userId: number, updates: UpdateUserProfile): Promise<User>;
+  canUpdateDisplayName(userId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -697,6 +707,9 @@ export class DatabaseStorage implements IStorage {
         id: users.id,
         username: users.username,
         password: users.password,
+        displayName: users.displayName,
+        profilePicture: users.profilePicture,
+        lastDisplayNameChange: users.lastDisplayNameChange,
         createdAt: users.createdAt,
         isActive: users.isActive,
       })
@@ -712,6 +725,9 @@ export class DatabaseStorage implements IStorage {
         id: users.id,
         username: users.username,
         password: users.password,
+        displayName: users.displayName,
+        profilePicture: users.profilePicture,
+        lastDisplayNameChange: users.lastDisplayNameChange,
         createdAt: users.createdAt,
         isActive: users.isActive,
       })
@@ -736,6 +752,140 @@ export class DatabaseStorage implements IStorage {
       followersCount: followersResult?.count || 0,
       followingCount: followingResult?.count || 0,
     };
+  }
+
+  // Liked messages operations (personal archive)
+  async likeMessage(userId: number, adminId: number | undefined, messageId: number): Promise<LikedMessage> {
+    const [liked] = await db
+      .insert(likedMessages)
+      .values({
+        userId: userId || null,
+        adminId: adminId || null,
+        messageId,
+      })
+      .returning();
+    return liked;
+  }
+
+  async unlikeMessage(userId: number, adminId: number | undefined, messageId: number): Promise<void> {
+    const conditions = [eq(likedMessages.messageId, messageId)];
+    
+    if (userId) {
+      conditions.push(eq(likedMessages.userId, userId));
+    }
+    
+    if (adminId) {
+      conditions.push(eq(likedMessages.adminId, adminId));
+    }
+
+    await db
+      .delete(likedMessages)
+      .where(and(...conditions));
+  }
+
+  async isMessageLiked(userId: number, adminId: number | undefined, messageId: number): Promise<boolean> {
+    const conditions = [eq(likedMessages.messageId, messageId)];
+    
+    if (userId) {
+      conditions.push(eq(likedMessages.userId, userId));
+    }
+    
+    if (adminId) {
+      conditions.push(eq(likedMessages.adminId, adminId));
+    }
+
+    const [liked] = await db
+      .select()
+      .from(likedMessages)
+      .where(and(...conditions))
+      .limit(1);
+    
+    return !!liked;
+  }
+
+  async getUserLikedMessages(userId: number, adminId?: number): Promise<MessageWithReplies[]> {
+    const conditions = [];
+    
+    if (userId) {
+      conditions.push(eq(likedMessages.userId, userId));
+    }
+    
+    if (adminId) {
+      conditions.push(eq(likedMessages.adminId, adminId));
+    }
+
+    const likedMessageIds = await db
+      .select({ messageId: likedMessages.messageId })
+      .from(likedMessages)
+      .where(and(...conditions))
+      .orderBy(desc(likedMessages.createdAt));
+
+    if (likedMessageIds.length === 0) {
+      return [];
+    }
+
+    const messageIds = likedMessageIds.map(row => row.messageId);
+    
+    const result = await db.query.messages.findMany({
+      where: or(...messageIds.map(id => eq(messages.id, id))),
+      orderBy: desc(messages.createdAt),
+      with: {
+        replies: {
+          orderBy: desc(replies.createdAt),
+          with: {
+            user: true,
+          },
+        },
+        user: true,
+      },
+    });
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      result.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
+  }
+
+  // User profile operations
+  async updateUserProfile(userId: number, updates: UpdateUserProfile): Promise<User> {
+    const updateData: any = {};
+    
+    if (updates.displayName !== undefined) {
+      updateData.displayName = updates.displayName;
+      updateData.lastDisplayNameChange = new Date();
+    }
+    
+    if (updates.profilePicture !== undefined) {
+      updateData.profilePicture = updates.profilePicture;
+    }
+
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return user;
+  }
+
+  async canUpdateDisplayName(userId: number): Promise<boolean> {
+    const user = await this.getUserById(userId);
+    
+    if (!user || !user.lastDisplayNameChange) {
+      return true; // First time or no previous change
+    }
+    
+    const daysSinceLastChange = (Date.now() - new Date(user.lastDisplayNameChange).getTime()) / (1000 * 60 * 60 * 24);
+    return daysSinceLastChange >= 30;
   }
 }
 

@@ -14,6 +14,8 @@ import Admin from "@/pages/admin";
 import MessageThread from "@/pages/message-thread";
 import Login from "@/pages/login";
 import { UserProfilePage } from "@/pages/user-profile";
+import PersonalArchivePage from "@/pages/personal-archive";
+import PersonalPage from "@/pages/personal";
 import { useState, useEffect } from "react";
 
 function Router() {
@@ -44,6 +46,8 @@ function Router() {
         <Route path="/admin" component={Admin} />
         <Route path="/message/:id" component={MessageThread} />
         <Route path="/user/:id" component={UserProfilePage} />
+        <Route path="/personal-archive" component={PersonalArchivePage} />
+        <Route path="/personal" component={PersonalPage} />
         <Route path="/login" component={Login} />
         <Route component={NotFound} />
       </Switch>

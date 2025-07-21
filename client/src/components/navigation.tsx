@@ -8,7 +8,7 @@ import { AdminAuthModal } from "@/components/admin-auth-modal";
 
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
-import { User, Shield, LogOut, Settings, Home, BarChart3, Menu } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive } from "lucide-react";
 
 export function Navigation() {
   const [location] = useLocation();
@@ -114,6 +114,18 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <Link href="/personal">
+                      <DropdownMenuItem>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Personal Settings
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/personal-archive">
+                      <DropdownMenuItem>
+                        <Archive className="h-4 w-4 mr-2" />
+                        Personal Archive
+                      </DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem onClick={logout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out

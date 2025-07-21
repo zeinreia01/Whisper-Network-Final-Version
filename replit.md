@@ -10,6 +10,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 21, 2025 - Personal Features Implementation ✅ COMPLETED
+
+- ✅ **Authentication Prompts**: Non-authenticated users now get a login prompt when trying to react to messages
+- ✅ **Personal Archive System**: Authenticated users can save messages to their personal archive with bookmark button
+- ✅ **User Profile Management**: Users can update display names (30-day cooldown) and profile picture URLs
+- ✅ **Personal Dashboard**: Complete personal archive page showing saved messages with statistics
+- ✅ **Profile Settings Page**: Dedicated page for managing user profile information and account details
+- ✅ **Database Schema Extended**: Added liked_messages table and user profile fields (displayName, profilePicture, lastDisplayNameChange)
+- ✅ **Enhanced Navigation**: Added Personal Settings and Personal Archive to user dropdown menu
+- ✅ **API Endpoints**: Complete backend support for liking messages and updating user profiles
+- ✅ **Dual-Purpose Hearts**: Heart reactions serve both as engagement and personal archiving system
+- ✅ **Cooldown System**: 30-day restriction on display name changes with proper validation
+- ✅ **Responsive Design**: All new features work seamlessly on mobile and desktop
+- ✅ **TypeScript Integration**: Full type safety with Zod validation for all new features
+
 ### July 21, 2025 - Complete Migration with Data Preservation ✅ COMPLETED
 
 - ✅ **Full Project Migration**: Successfully migrated Whispering Network from Replit Agent to standard Replit environment

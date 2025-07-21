@@ -5,14 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { UserBadge } from "@/components/user-badge";
 import { MessageViewer } from "@/components/message-viewer";
+import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, Bookmark } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { getSpotifyDisplayName } from "@/lib/spotify";
@@ -32,6 +34,9 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [selectedReplyId, setSelectedReplyId] = useState<number | null>(null);
   const [hasReacted, setHasReacted] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { admin, user } = useAuth();
@@ -58,6 +63,12 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       setHasReacted(!!userReaction);
     }
   }, [message.reactions, user, admin]);
+
+  // Check if user has liked this message (for archive feature)
+  useEffect(() => {
+    // We'll check this with the personal archive when implemented
+    setHasLiked(false);
+  }, [user, admin, message.id]);
 
   const category = categories.find(c => c.id === message.category);
   
@@ -122,6 +133,53 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       });
     },
   });
+
+  const likeMutation = useMutation({
+    mutationFn: async ({ add }: { add: boolean }) => {
+      const data = {
+        userId: user?.id,
+        adminId: admin?.id,
+      };
+      
+      if (add) {
+        const response = await apiRequest("POST", `/api/messages/${message.id}/like`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("DELETE", `/api/messages/${message.id}/like`, data);
+        return response;
+      }
+    },
+    onSuccess: () => {
+      setHasLiked(!hasLiked);
+      toast({
+        title: hasLiked ? "Removed from archive" : "Added to archive",
+        description: hasLiked ? "Message removed from your personal archive" : "Message saved to your personal archive",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update archive. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleHeartClick = () => {
+    if (!user && !admin) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    reactionMutation.mutate({ add: !hasReacted });
+  };
+
+  const handleArchiveClick = () => {
+    if (!user && !admin) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    likeMutation.mutate({ add: !hasLiked });
+  };
 
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
@@ -289,30 +347,38 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
           </button>
           <span className="flex-shrink-0">{message.replies.length} replies</span>
           
-          {/* Heart reaction button - only for authenticated users */}
+          {/* Heart reaction button - visible to everyone but prompts login for non-authenticated */}
+          <button
+            onClick={handleHeartClick}
+            disabled={reactionMutation.isPending}
+            className={`flex items-center space-x-1 transition-colors flex-shrink-0 ${
+              hasReacted 
+                ? 'text-red-500 hover:text-red-600' 
+                : 'hover:text-red-500'
+            }`}
+          >
+            <Heart 
+              className={`w-4 h-4 ${hasReacted ? 'fill-current' : ''}`} 
+            />
+            <span>{message.reactionCount || 0}</span>
+          </button>
+
+          {/* Archive button for authenticated users */}
           {(user || admin) && (
             <button
-              onClick={() => reactionMutation.mutate({ add: !hasReacted })}
-              disabled={reactionMutation.isPending}
+              onClick={handleArchiveClick}
+              disabled={likeMutation.isPending}
               className={`flex items-center space-x-1 transition-colors flex-shrink-0 ${
-                hasReacted 
-                  ? 'text-red-500 hover:text-red-600' 
-                  : 'hover:text-red-500'
+                hasLiked 
+                  ? 'text-blue-500 hover:text-blue-600' 
+                  : 'hover:text-blue-500'
               }`}
+              title="Save to personal archive"
             >
-              <Heart 
-                className={`w-4 h-4 ${hasReacted ? 'fill-current' : ''}`} 
+              <Bookmark 
+                className={`w-4 h-4 ${hasLiked ? 'fill-current' : ''}`} 
               />
-              <span>{message.reactionCount || 0}</span>
             </button>
-          )}
-          
-          {/* Show reaction count for non-authenticated users */}
-          {!user && !admin && message.reactionCount && message.reactionCount > 0 && (
-            <div className="flex items-center space-x-1 text-gray-400 flex-shrink-0">
-              <Heart className="w-4 h-4" />
-              <span>{message.reactionCount}</span>
-            </div>
           )}
         </div>
         
@@ -599,6 +665,35 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
           </AlertDialogContent>
         </AlertDialog>
       )}
+
+      {/* Authentication prompt dialog */}
+      <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Login Required</DialogTitle>
+            <DialogDescription>
+              You need to log in to react to messages and save them to your personal archive.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowAuthPrompt(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              setShowAuthPrompt(false);
+              setShowAuthModal(true);
+            }}>
+              Login / Sign Up
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Auth modal */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 }
