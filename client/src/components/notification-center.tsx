@@ -65,7 +65,7 @@ export function NotificationCenter() {
 
   if (!user && !admin) return null;
 
-  const unreadCount = notifications?.filter((n: NotificationWithDetails) => !n.isRead).length || 0;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter((n: NotificationWithDetails) => !n.isRead).length : 0;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -110,7 +110,7 @@ export function NotificationCenter() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Notifications</CardTitle>
-              {notifications && notifications.length > 0 && (
+              {Array.isArray(notifications) && notifications.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -137,9 +137,9 @@ export function NotificationCenter() {
                     </div>
                   ))}
                 </div>
-              ) : notifications && notifications.length > 0 ? (
+              ) : Array.isArray(notifications) && notifications.length > 0 ? (
                 <div className="divide-y">
-                  {notifications.map((notification: NotificationWithDetails) => (
+                  {Array.isArray(notifications) && notifications.map((notification: NotificationWithDetails) => (
                     <div
                       key={notification.id}
                       className={`p-4 hover:bg-muted/50 transition-colors ${

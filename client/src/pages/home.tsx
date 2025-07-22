@@ -5,12 +5,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { MessageCard } from "@/components/message-card";
 import { categories } from "@/lib/categories";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
+import { User, Eye, EyeOff } from "lucide-react";
 import type { MessageWithReplies } from "@shared/schema";
 
 export default function Home() {
@@ -20,8 +23,10 @@ export default function Home() {
   const [recipient, setRecipient] = useState("");
   const [senderName, setSenderName] = useState("");
   const [showRecipientSelector, setShowRecipientSelector] = useState(false);
+  const [postAsAuthenticated, setPostAsAuthenticated] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, admin } = useAuth();
 
   const { data: recentMessages = [], isLoading } = useQuery<MessageWithReplies[]>({
     queryKey: ["/api/messages/public"],
@@ -32,7 +37,7 @@ export default function Home() {
   });
 
   const createMessageMutation = useMutation({
-    mutationFn: async (data: { content: string; category: string; spotifyLink?: string; isPublic: boolean; recipient?: string; senderName?: string }) => {
+    mutationFn: async (data: { content: string; category: string; spotifyLink?: string; isPublic: boolean; recipient?: string; senderName?: string; isAuthenticated?: boolean; userId?: number; adminId?: number }) => {
       const response = await apiRequest("POST", "/api/messages", data);
       return await response.json();
     },
@@ -73,6 +78,9 @@ export default function Home() {
       spotifyLink: spotifyLink || undefined,
       isPublic: true,
       senderName: senderName || undefined,
+      isAuthenticated: postAsAuthenticated,
+      userId: postAsAuthenticated ? user?.id : undefined,
+      adminId: postAsAuthenticated ? admin?.id : undefined,
     });
   };
 
@@ -102,6 +110,9 @@ export default function Home() {
       isPublic: false,
       recipient,
       senderName: senderName || undefined,
+      isAuthenticated: postAsAuthenticated,
+      userId: postAsAuthenticated ? user?.id : undefined,
+      adminId: postAsAuthenticated ? admin?.id : undefined,
     });
   };
 
@@ -169,6 +180,30 @@ export default function Home() {
                   placeholder="https://open.spotify.com/track/..."
                 />
               </div>
+
+              {/* Authentication Toggle - Only show for logged in users */}
+              {(user || admin) && (
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                  <div className="flex items-center space-x-3">
+                    <User className="w-5 h-5 text-primary" />
+                    <div>
+                      <Label className="text-sm font-medium">
+                        {postAsAuthenticated ? "Posting as Silent Messenger" : "Posting Anonymously"}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {postAsAuthenticated 
+                          ? `Your username (${user?.username || admin?.displayName}) will be visible and this will appear on your profile`
+                          : "Your identity will remain hidden and this won't appear on your profile"
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={postAsAuthenticated}
+                    onCheckedChange={setPostAsAuthenticated}
+                  />
+                </div>
+              )}
 
               {showRecipientSelector && (
                 <div>

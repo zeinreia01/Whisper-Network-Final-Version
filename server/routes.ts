@@ -709,6 +709,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User profile update routes
+  // Message privacy routes
+  app.patch("/api/messages/:messageId/privacy", async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const { userId, isOwnerPrivate } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Authentication required" });
+      }
+      
+      const message = await storage.updateMessagePrivacy(parseInt(messageId), userId, isOwnerPrivate);
+      res.json(message);
+    } catch (error) {
+      console.error("Error updating message privacy:", error);
+      res.status(500).json({ message: "Failed to update message privacy" });
+    }
+  });
+
+  // Verified badge routes (only ZEKE001 can manage)
+  app.patch("/api/users/:userId/verification", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { isVerified, adminUsername } = req.body;
+      
+      // Only ZEKE001 can grant/revoke verified badges
+      if (adminUsername !== "ZEKE001") {
+        return res.status(403).json({ message: "Only ZEKE001 can manage verified badges" });
+      }
+      
+      const user = await storage.updateUserVerificationStatus(parseInt(userId), isVerified);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user verification:", error);
+      res.status(500).json({ message: "Failed to update verification status" });
+    }
+  });
+
+  app.patch("/api/admins/:adminId/verification", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const { isVerified, adminUsername } = req.body;
+      
+      // Only ZEKE001 can grant/revoke verified badges
+      if (adminUsername !== "ZEKE001") {
+        return res.status(403).json({ message: "Only ZEKE001 can manage verified badges" });
+      }
+      
+      const admin = await storage.updateAdminVerificationStatus(parseInt(adminId), isVerified);
+      res.json(admin);
+    } catch (error) {
+      console.error("Error updating admin verification:", error);
+      res.status(500).json({ message: "Failed to update verification status" });
+    }
+  });
+
   app.patch("/api/users/:userId/profile", async (req, res) => {
     try {
       const { userId } = req.params;

@@ -15,7 +15,7 @@ import { UserBadge } from "@/components/user-badge";
 import { MessageViewer } from "@/components/message-viewer";
 import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, Bookmark } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { getSpotifyDisplayName } from "@/lib/spotify";
@@ -182,6 +182,35 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
     likeMutation.mutate({ add: !hasLiked });
   };
 
+  const privacyToggleMutation = useMutation({
+    mutationFn: async (isPrivate: boolean) => {
+      const response = await apiRequest("PATCH", `/api/messages/${message.id}/privacy`, {
+        userId: user?.id,
+        isOwnerPrivate: isPrivate
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/private"] });
+      toast({
+        title: "Privacy updated",
+        description: message.isOwnerPrivate ? "Message is now public" : "Message is now private",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update message privacy.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePrivacyToggle = () => {
+    privacyToggleMutation.mutate(!message.isOwnerPrivate);
+  };
+
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
       const response = await apiRequest("DELETE", `/api/messages/${messageId}`);
@@ -287,8 +316,15 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
             {category?.name}
           </span>
         </div>
-        {/* Show user type badge */}
-        {message.userId && <UserBadge userType="user" variant="small" />}
+        {/* Show user type badge and verified status */}
+        {(message.userId || message.adminId) && (
+          <div className="flex items-center space-x-1">
+            <UserBadge userType={message.adminId ? "admin" : "user"} variant="small" />
+            {((message.user?.isVerified) || (message.admin?.isVerified)) && (
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">✓ Verified</span>
+            )}
+          </div>
+        )}
         {message.recipient && (
           <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded whitespace-nowrap">
             To: {message.recipient}
@@ -315,17 +351,30 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
               </Avatar>
             )}
             <div className="flex items-center space-x-2">
-              {message.userId && (user || admin) ? (
+              {/* Show authenticated user information with clickable username */}
+              {message.userId && message.user && (user || admin) ? (
                 <Link href={`/user/${message.userId}`}>
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium hover:text-primary dark:hover:text-primary cursor-pointer transition-colors">
-                    From: {message.user?.displayName || message.senderName}
+                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium hover:text-primary dark:hover:text-primary cursor-pointer transition-colors flex items-center space-x-1">
+                    <span>From: {message.user?.displayName || message.user?.username}</span>
+                    {message.user?.isVerified && (
+                      <span className="text-blue-500 text-xs">✓</span>
+                    )}
                   </span>
                 </Link>
-              ) : (
+              ) : message.adminId && message.admin && (user || admin) ? (
+                <Link href={`/admin/${message.adminId}`}>
+                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium hover:text-primary dark:hover:text-primary cursor-pointer transition-colors flex items-center space-x-1">
+                    <span>From: {message.admin?.displayName}</span>
+                    {message.admin?.isVerified && (
+                      <span className="text-blue-500 text-xs">✓</span>
+                    )}
+                  </span>
+                </Link>
+              ) : message.senderName ? (
                 <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                  From: {message.user?.displayName || message.senderName}
+                  From: {message.senderName}
                 </span>
-              )}
+              ) : null}
               {/* View profile button for authenticated sender */}
               {message.userId && (user || admin) && (
                 <Link href={`/user/${message.userId}`}>
@@ -480,8 +529,8 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
             </DropdownMenu>
           )}
           
-          {/* User owns message - allow reply management */}
-          {user && message.userId === user.id && (
+          {/* User owns message - allow message privacy management */}
+          {((user && message.userId === user.id) || (admin && message.adminId === admin.id)) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Manage your message">
@@ -492,6 +541,10 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                 <DropdownMenuItem disabled>
                   <Shield className="h-4 w-4 mr-2" />
                   Your Message
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePrivacyToggle()}>
+                  {message.isOwnerPrivate ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
+                  {message.isOwnerPrivate ? "Make Public" : "Make Private"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

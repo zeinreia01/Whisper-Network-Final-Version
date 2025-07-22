@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   profilePicture: text("profile_picture"), // URL or path to profile picture
   bio: text("bio"), // User's bio/description (200 character limit)
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
+  isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
+  likedMessagesPrivacy: text("liked_messages_privacy").default("private"), // "public" or "private"
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
 });
@@ -25,6 +27,9 @@ export const messages = pgTable("messages", {
   recipient: text("recipient"), // Who the private message is sent to
   senderName: text("sender_name"), // Optional sender name
   userId: integer("user_id").references(() => users.id), // Link to user account (optional)
+  adminId: integer("admin_id").references(() => admins.id), // Link to admin account (optional)
+  isAuthenticated: boolean("is_authenticated").default(false), // Whether posted as authenticated user
+  isOwnerPrivate: boolean("is_owner_private").default(false), // Whether owner set this as private
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -35,6 +40,8 @@ export const replies = pgTable("replies", {
   nickname: text("nickname").notNull(),
   userId: integer("user_id").references(() => users.id), // Link to user account (optional)
   adminId: integer("admin_id").references(() => admins.id), // Link to admin account (optional)
+  mentionedUserId: integer("mentioned_user_id").references(() => users.id), // User being mentioned
+  mentionedAdminId: integer("mentioned_admin_id").references(() => admins.id), // Admin being mentioned
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -45,6 +52,7 @@ export const admins = pgTable("admins", {
   password: text("password"), // Optional password for non-ZEKE001 accounts
   displayName: text("display_name").notNull().unique(), // What shows in recipient options
   role: text("role").notNull().default("admin"), // admin, moderator, support, community_manager
+  isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
 });
@@ -102,6 +110,10 @@ export const messagesRelations = relations(messages, ({ many, one }) => ({
     fields: [messages.userId],
     references: [users.id],
   }),
+  admin: one(admins, {
+    fields: [messages.adminId],
+    references: [admins.id],
+  }),
 }));
 
 export const repliesRelations = relations(replies, ({ one }) => ({
@@ -115,6 +127,14 @@ export const repliesRelations = relations(replies, ({ one }) => ({
   }),
   admin: one(admins, {
     fields: [replies.adminId],
+    references: [admins.id],
+  }),
+  mentionedUser: one(users, {
+    fields: [replies.mentionedUserId],
+    references: [users.id],
+  }),
+  mentionedAdmin: one(admins, {
+    fields: [replies.mentionedAdminId],
     references: [admins.id],
   }),
 }));
@@ -258,6 +278,7 @@ export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
 export type MessageWithReplies = Message & {
   replies: Reply[];
   user?: User | null;
+  admin?: Admin | null;
   reactions?: Reaction[];
   reactionCount?: number;
   userHasReacted?: boolean;
@@ -266,6 +287,8 @@ export type MessageWithReplies = Message & {
 export type ReplyWithUser = Reply & {
   user?: User | null;
   admin?: Admin | null;
+  mentionedUser?: User | null;
+  mentionedAdmin?: Admin | null;
 };
 
 export type UserProfile = User & {
@@ -275,6 +298,7 @@ export type UserProfile = User & {
   followersCount: number;
   followingCount: number;
   isFollowing?: boolean;
+  publicLikedMessages?: MessageWithReplies[];
 };
 
 export type NotificationWithDetails = Notification & {

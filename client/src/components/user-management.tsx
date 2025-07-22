@@ -178,9 +178,9 @@ export function UserManagement() {
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : displayUsers.length > 0 ? (
+          ) : Array.isArray(displayUsers) && displayUsers.length > 0 ? (
             <div className="space-y-3">
-              {displayUsers.map((user) => (
+              {Array.isArray(displayUsers) && displayUsers.map((user: any) => (
                 <div key={user.id} className="border rounded-lg p-4 hover:bg-muted transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -298,9 +298,9 @@ export function UserManagement() {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ) : userMessages.length > 0 ? (
+            ) : Array.isArray(userMessages) && userMessages.length > 0 ? (
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {userMessages.map((message: any) => (
+                {Array.isArray(userMessages) && userMessages.map((message: any) => (
                   <div key={message.id} className="border rounded-lg p-4">
                     <div className="flex items-start justify-between mb-2">
                       <Badge variant="secondary" className="text-xs">

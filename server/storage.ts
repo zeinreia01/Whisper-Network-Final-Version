@@ -71,6 +71,13 @@ export interface IStorage {
   // User profile operations
   updateUserProfile(userId: number, updates: UpdateUserProfile): Promise<User>;
   canUpdateDisplayName(userId: number): Promise<boolean>;
+  
+  // Message privacy operations
+  updateMessagePrivacy(messageId: number, userId: number, isOwnerPrivate: boolean): Promise<Message>;
+  
+  // Verified badge operations
+  updateUserVerificationStatus(userId: number, isVerified: boolean): Promise<User>;
+  updateAdminVerificationStatus(adminId: number, isVerified: boolean): Promise<Admin>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -711,6 +718,8 @@ export class DatabaseStorage implements IStorage {
         profilePicture: users.profilePicture,
         bio: users.bio,
         lastDisplayNameChange: users.lastDisplayNameChange,
+        isVerified: users.isVerified,
+        likedMessagesPrivacy: users.likedMessagesPrivacy,
         createdAt: users.createdAt,
         isActive: users.isActive,
       })
@@ -730,6 +739,8 @@ export class DatabaseStorage implements IStorage {
         profilePicture: users.profilePicture,
         bio: users.bio,
         lastDisplayNameChange: users.lastDisplayNameChange,
+        isVerified: users.isVerified,
+        likedMessagesPrivacy: users.likedMessagesPrivacy,
         createdAt: users.createdAt,
         isActive: users.isActive,
       })
@@ -888,6 +899,38 @@ export class DatabaseStorage implements IStorage {
     
     const daysSinceLastChange = (Date.now() - new Date(user.lastDisplayNameChange).getTime()) / (1000 * 60 * 60 * 24);
     return daysSinceLastChange >= 30;
+  }
+
+  // Message privacy operations
+  async updateMessagePrivacy(messageId: number, userId: number, isOwnerPrivate: boolean): Promise<Message> {
+    const [message] = await db
+      .update(messages)
+      .set({ isOwnerPrivate })
+      .where(and(
+        eq(messages.id, messageId),
+        eq(messages.userId, userId) // Only owner can update privacy
+      ))
+      .returning();
+    return message;
+  }
+
+  // Verified badge operations
+  async updateUserVerificationStatus(userId: number, isVerified: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isVerified })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateAdminVerificationStatus(adminId: number, isVerified: boolean): Promise<Admin> {
+    const [admin] = await db
+      .update(admins)
+      .set({ isVerified })
+      .where(eq(admins.id, adminId))
+      .returning();
+    return admin;
   }
 }
 
