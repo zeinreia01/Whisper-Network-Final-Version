@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { UserBadge } from "@/components/user-badge";
+import { ThreadedReplies } from "@/components/threaded-replies";
 import { MessageViewer } from "@/components/message-viewer";
 import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
@@ -587,124 +588,15 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       )}
 
       {showReplies && message.replies.length > 0 && (
-        <div className="border-t pt-4">
-          <div className="space-y-3">
-            {message.replies.map((reply) => (
-              <div key={reply.id} className="flex items-start space-x-2 sm:space-x-3 group">
-                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                  {reply.nickname.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center space-x-1">
-                        {/* Make nickname clickable for authenticated users */}
-                        {reply.userId && (user || admin) ? (
-                          <Link href={`/user/${reply.userId}`}>
-                            <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                              {reply.nickname}
-                            </button>
-                          </Link>
-                        ) : (
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
-                        )}
-                      </div>
-                      {/* Show user type badges */}
-                      {reply.adminId && <UserBadge userType="admin" variant="small" />}
-                      {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatTimeAgo(reply.createdAt!)}
-                      </span>
-                    </div>
-                    
-                    {/* Reply management controls */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 flex-shrink-0">
-                      {/* Admin controls */}
-                      {admin && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <MoreVertical className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedReplyId(reply.id);
-                                setShowWarningDialog(true);
-                              }}
-                              className="text-amber-600"
-                            >
-                              <AlertTriangle className="h-3 w-3 mr-2" />
-                              Send Warning
-                            </DropdownMenuItem>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem 
-                                  onSelect={(e) => e.preventDefault()}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="h-3 w-3 mr-2" />
-                                  Delete Reply
-                                </DropdownMenuItem>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Reply</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently delete this reply. This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteReplyMutation.mutate(reply.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-
-                      {/* User owns message - can delete replies on their message */}
-                      {user && message.userId === user.id && !admin && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Delete reply on your message">
-                              <Trash2 className="h-3 w-3 text-red-500" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Reply</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete this reply from your message. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteReplyMutation.mutate(reply.id)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete Reply
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{reply.content}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ThreadedReplies 
+          replies={message.replies}
+          messageId={message.id}
+          messageUserId={message.userId || undefined}
+          onWarning={(replyId) => {
+            setSelectedReplyId(replyId);
+            setShowWarningDialog(true);
+          }}
+        />
       )}
 
       {/* Warning Dialog */}

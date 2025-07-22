@@ -340,6 +340,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertReplySchema.parse(req.body);
       const reply = await storage.createReply(validatedData);
+      
+      // Create notification for the message author or parent reply author
+      if (validatedData.parentId) {
+        // This is a nested reply - notify the parent reply author
+        const parentReply = await storage.getReplyById(validatedData.parentId);
+        if (parentReply && (parentReply.userId || parentReply.adminId)) {
+          await storage.createNotification({
+            userId: parentReply.userId || undefined,
+            adminId: parentReply.adminId || undefined,
+            type: "reply",
+            messageId: validatedData.messageId,
+            replyId: reply.id,
+            fromUserId: validatedData.userId || undefined,
+            fromAdminId: validatedData.adminId || undefined,
+            content: `${validatedData.nickname} replied to your comment: "${validatedData.content.substring(0, 50)}${validatedData.content.length > 50 ? '...' : ''}"`,
+          });
+        }
+      } else {
+        // This is a root reply - notify the message author
+        const message = await storage.getMessageById(validatedData.messageId);
+        if (message && (message.userId || message.adminId)) {
+          await storage.createNotification({
+            userId: message.userId || undefined,
+            adminId: message.adminId || undefined,
+            type: "reply",
+            messageId: validatedData.messageId,
+            replyId: reply.id,
+            fromUserId: validatedData.userId || undefined,
+            fromAdminId: validatedData.adminId || undefined,
+            content: `${validatedData.nickname} replied to your message: "${validatedData.content.substring(0, 50)}${validatedData.content.length > 50 ? '...' : ''}"`,
+          });
+        }
+      }
+      
       res.status(201).json(reply);
     } catch (error) {
       if (error instanceof z.ZodError) {

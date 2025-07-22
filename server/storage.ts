@@ -241,6 +241,15 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
+  async getReplyById(id: number): Promise<Reply | null> {
+    const result = await db
+      .select()
+      .from(replies)
+      .where(eq(replies.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
   async deleteReply(id: number): Promise<void> {
     await db
       .delete(replies)

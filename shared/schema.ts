@@ -36,6 +36,7 @@ export const messages = pgTable("messages", {
 export const replies = pgTable("replies", {
   id: serial("id").primaryKey(),
   messageId: integer("message_id").references(() => messages.id).notNull(),
+  parentId: integer("parent_id"), // Self-reference for nested replies - will be configured in relations
   content: text("content").notNull(),
   nickname: text("nickname").notNull(),
   userId: integer("user_id").references(() => users.id), // Link to user account (optional)
@@ -116,7 +117,7 @@ export const messagesRelations = relations(messages, ({ many, one }) => ({
   }),
 }));
 
-export const repliesRelations = relations(replies, ({ one }) => ({
+export const repliesRelations = relations(replies, ({ one, many }) => ({
   message: one(messages, {
     fields: [replies.messageId],
     references: [messages.id],
@@ -136,6 +137,14 @@ export const repliesRelations = relations(replies, ({ one }) => ({
   mentionedAdmin: one(admins, {
     fields: [replies.mentionedAdminId],
     references: [admins.id],
+  }),
+  parent: one(replies, {
+    fields: [replies.parentId],
+    references: [replies.id],
+    relationName: "parent_child"
+  }),
+  children: many(replies, {
+    relationName: "parent_child"
   }),
 }));
 
@@ -276,7 +285,7 @@ export type LikedMessage = typeof likedMessages.$inferSelect;
 export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
 
 export type MessageWithReplies = Message & {
-  replies: Reply[];
+  replies: ReplyWithUser[];
   user?: User | null;
   admin?: Admin | null;
   reactions?: Reaction[];
@@ -289,6 +298,7 @@ export type ReplyWithUser = Reply & {
   admin?: Admin | null;
   mentionedUser?: User | null;
   mentionedAdmin?: Admin | null;
+  children?: ReplyWithUser[];
 };
 
 export type UserProfile = User & {
