@@ -75,17 +75,22 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   const category = categories.find(c => c.id === message.category);
   
   const createReplyMutation = useMutation({
-    mutationFn: async (data: { messageId: number; content: string; nickname: string }) => {
+    mutationFn: async (data: { messageId: number; content: string; nickname: string; parentId?: number }) => {
       const replyData = {
         ...data,
         userId: user?.id,
         adminId: admin?.id,
+        // Use authenticated nickname when user is logged in and hasn't changed it
+        nickname: (user || admin) && data.nickname === defaultNickname 
+          ? (user ? (user.displayName || user.username) : admin?.displayName) || data.nickname
+          : data.nickname,
       };
       const response = await apiRequest("POST", "/api/replies", replyData);
       return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages", message.id] });
       setReplyText("");
       setNickname(defaultNickname); // Reset to default nickname instead of empty
       setShowReplyForm(false);
@@ -292,6 +297,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
       messageId: message.id,
       content: replyText,
       nickname: nickname,
+      parentId: selectedReplyId || undefined, // Support nested replies
     });
   };
 
@@ -595,6 +601,11 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
           onWarning={(replyId) => {
             setSelectedReplyId(replyId);
             setShowWarningDialog(true);
+          }}
+          onReply={(parentId: number, parentNickname: string) => {
+            setSelectedReplyId(parentId);
+            setReplyText(`@${parentNickname} `);
+            setShowReplyForm(true);
           }}
         />
       )}

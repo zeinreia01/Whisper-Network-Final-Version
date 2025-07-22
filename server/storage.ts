@@ -24,6 +24,7 @@ export interface IStorage {
   // Reply operations
   createReply(reply: InsertReply): Promise<Reply>;
   getRepliesByMessageId(messageId: number): Promise<Reply[]>;
+  getReplyById(id: number): Promise<Reply | null>;
   deleteReply(id: number): Promise<void>;
   
   // Admin operations
@@ -143,18 +144,59 @@ export class DatabaseStorage implements IStorage {
           orderBy: desc(replies.createdAt),
           with: {
             user: true,
+            admin: true,
+            mentionedUser: true,
+            mentionedAdmin: true,
+            children: {
+              with: {
+                user: true,
+                admin: true,
+                mentionedUser: true,
+                mentionedAdmin: true,
+              },
+              orderBy: desc(replies.createdAt),
+            },
           },
         },
         user: true,
+        admin: true,
       },
     });
 
-    // Add reaction counts to messages
+    // Build nested replies structure and add reaction counts
     const messagesWithReactions = await Promise.all(
       result.map(async (message) => {
         const messageReactions = await this.getMessageReactions(message.id);
+        
+        // Organize replies in nested structure
+        const allReplies = message.replies;
+        const rootReplies = allReplies.filter(reply => !reply.parentId);
+        const childRepliesMap = new Map();
+        
+        // Group child replies by parent ID
+        allReplies.forEach(reply => {
+          if (reply.parentId) {
+            if (!childRepliesMap.has(reply.parentId)) {
+              childRepliesMap.set(reply.parentId, []);
+            }
+            childRepliesMap.get(reply.parentId).push(reply);
+          }
+        });
+        
+        // Attach children to their parents recursively
+        const attachChildren = (reply: any): any => {
+          const children = childRepliesMap.get(reply.id) || [];
+          return {
+            ...reply,
+            children: children.map(attachChildren),
+          };
+        };
+        
+        const nestedReplies = rootReplies.map(attachChildren);
+        
         return {
           ...message,
+          replies: nestedReplies,
           reactionCount: messageReactions.length,
           reactions: messageReactions,
         };
@@ -242,12 +284,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getReplyById(id: number): Promise<Reply | null> {
-    const result = await db
+    const [result] = await db
       .select()
       .from(replies)
       .where(eq(replies.id, id))
       .limit(1);
-    return result[0] || null;
+    return result || null;
   }
 
   async deleteReply(id: number): Promise<void> {
@@ -264,18 +306,58 @@ export class DatabaseStorage implements IStorage {
           orderBy: desc(replies.createdAt),
           with: {
             user: true,
+            admin: true,
+            mentionedUser: true,
+            mentionedAdmin: true,
+            children: {
+              with: {
+                user: true,
+                admin: true,
+                mentionedUser: true,
+                mentionedAdmin: true,
+              },
+              orderBy: desc(replies.createdAt),
+            },
           },
         },
         user: true,
+        admin: true,
       },
     });
 
     if (!result) return null;
 
+    // Build nested replies structure
+    const allReplies = result.replies;
+    const rootReplies = allReplies.filter(reply => !reply.parentId);
+    const childRepliesMap = new Map();
+    
+    // Group child replies by parent ID
+    allReplies.forEach(reply => {
+      if (reply.parentId) {
+        if (!childRepliesMap.has(reply.parentId)) {
+          childRepliesMap.set(reply.parentId, []);
+        }
+        childRepliesMap.get(reply.parentId).push(reply);
+      }
+    });
+    
+    // Attach children to their parents recursively
+    const attachChildren = (reply: any): any => {
+      const children = childRepliesMap.get(reply.id) || [];
+      return {
+        ...reply,
+        children: children.map(attachChildren),
+      };
+    };
+    
+    const nestedReplies = rootReplies.map(attachChildren);
+
     // Add reaction data
     const messageReactions = await this.getMessageReactions(result.id);
     return {
       ...result,
+      replies: nestedReplies,
       reactionCount: messageReactions.length,
       reactions: messageReactions,
     };

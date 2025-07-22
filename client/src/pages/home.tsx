@@ -72,16 +72,22 @@ export default function Home() {
       return;
     }
 
-    createMessageMutation.mutate({
+    // Prepare message data with proper authenticated user info
+    const messageData = {
       content,
       category,
       spotifyLink: spotifyLink || undefined,
       isPublic: true,
-      senderName: senderName || undefined,
       isAuthenticated: postAsAuthenticated,
       userId: postAsAuthenticated ? user?.id : undefined,
       adminId: postAsAuthenticated ? admin?.id : undefined,
-    });
+      // Set senderName based on authentication choice
+      senderName: postAsAuthenticated 
+        ? (user ? (user.displayName || user.username) : admin?.displayName)
+        : senderName || undefined,
+    };
+
+    createMessageMutation.mutate(messageData);
   };
 
   const handleSendPrivate = () => {
@@ -103,17 +109,23 @@ export default function Home() {
       return;
     }
 
-    createMessageMutation.mutate({
+    // Prepare message data with proper authenticated user info
+    const messageData = {
       content,
       category,
       spotifyLink: spotifyLink || undefined,
       isPublic: false,
       recipient,
-      senderName: senderName || undefined,
       isAuthenticated: postAsAuthenticated,
       userId: postAsAuthenticated ? user?.id : undefined,
       adminId: postAsAuthenticated ? admin?.id : undefined,
-    });
+      // Set senderName based on authentication choice
+      senderName: postAsAuthenticated 
+        ? (user ? (user.displayName || user.username) : admin?.displayName)
+        : senderName || undefined,
+    };
+
+    createMessageMutation.mutate(messageData);
   };
 
   const selectedCategory = categories.find(c => c.id === category);

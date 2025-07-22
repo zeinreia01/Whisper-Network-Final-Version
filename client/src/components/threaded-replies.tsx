@@ -40,6 +40,7 @@ interface ThreadedRepliesProps {
   messageId: number;
   messageUserId?: number;
   onWarning: (replyId: number) => void;
+  onReply?: (parentId: number, parentNickname: string) => void;
 }
 
 interface ReplyItemProps {
