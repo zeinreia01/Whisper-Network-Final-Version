@@ -30,6 +30,7 @@ export interface IStorage {
   // Admin operations
   createAdmin(admin: InsertAdmin): Promise<Admin>;
   getAdminByUsername(username: string): Promise<Admin | undefined>;
+  getAdminById(adminId: number): Promise<Admin | undefined>;
   getAllAdmins(): Promise<Admin[]>;
   updateAdminStatus(adminId: number, isActive: boolean): Promise<Admin>;
   
@@ -72,13 +73,15 @@ export interface IStorage {
   // User profile operations
   updateUserProfile(userId: number, updates: UpdateUserProfile): Promise<User>;
   canUpdateDisplayName(userId: number): Promise<boolean>;
+  updateUserVerificationStatus(userId: number, isVerified: boolean): Promise<User>;
+  updateAdminVerificationStatus(adminId: number, isVerified: boolean): Promise<Admin>;
+  deleteUserAccount(userId: number): Promise<void>;
+  deleteAdminAccount(adminId: number): Promise<void>;
   
   // Message privacy operations
   updateMessagePrivacy(messageId: number, userId: number, isOwnerPrivate: boolean): Promise<Message>;
   
-  // Verified badge operations
-  updateUserVerificationStatus(userId: number, isVerified: boolean): Promise<User>;
-  updateAdminVerificationStatus(adminId: number, isVerified: boolean): Promise<Admin>;
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -493,6 +496,15 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(admins)
       .where(eq(admins.username, username))
+      .limit(1);
+    return admin;
+  }
+
+  async getAdminById(adminId: number): Promise<Admin | undefined> {
+    const [admin] = await db
+      .select()
+      .from(admins)
+      .where(eq(admins.id, adminId))
       .limit(1);
     return admin;
   }
@@ -972,6 +984,20 @@ export class DatabaseStorage implements IStorage {
       updateData.profilePicture = updates.profilePicture;
     }
 
+    if (updates.bio !== undefined) {
+      updateData.bio = updates.bio;
+    }
+
+    // If no valid updates, return current user
+    if (Object.keys(updateData).length === 0) {
+      const [currentUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      return currentUser;
+    }
+
     const [user] = await db
       .update(users)
       .set(updateData)
@@ -992,20 +1018,6 @@ export class DatabaseStorage implements IStorage {
     return daysSinceLastChange >= 30;
   }
 
-  // Message privacy operations
-  async updateMessagePrivacy(messageId: number, userId: number, isOwnerPrivate: boolean): Promise<Message> {
-    const [message] = await db
-      .update(messages)
-      .set({ isOwnerPrivate })
-      .where(and(
-        eq(messages.id, messageId),
-        eq(messages.userId, userId) // Only owner can update privacy
-      ))
-      .returning();
-    return message;
-  }
-
-  // Verified badge operations
   async updateUserVerificationStatus(userId: number, isVerified: boolean): Promise<User> {
     const [user] = await db
       .update(users)
@@ -1023,6 +1035,76 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return admin;
   }
+
+  // Message privacy operations
+  async updateMessagePrivacy(messageId: number, userId: number, isOwnerPrivate: boolean): Promise<Message> {
+    const [message] = await db
+      .update(messages)
+      .set({ isOwnerPrivate })
+      .where(and(
+        eq(messages.id, messageId),
+        eq(messages.userId, userId) // Only owner can update privacy
+      ))
+      .returning();
+    return message;
+  }
+
+  // Account deletion operations (ADMIN ONLY - CRITICAL)
+  async deleteUserAccount(userId: number): Promise<void> {
+    // Delete all related data in correct order to maintain referential integrity
+    // 1. Delete notifications
+    await db.delete(notifications).where(or(
+      eq(notifications.userId, userId),
+      eq(notifications.fromUserId, userId)
+    ));
+    
+    // 2. Delete follows
+    await db.delete(follows).where(or(
+      eq(follows.followerId, userId),
+      eq(follows.followingId, userId)
+    ));
+    
+    // 3. Delete liked messages
+    await db.delete(likedMessages).where(eq(likedMessages.userId, userId));
+    
+    // 4. Delete reactions
+    await db.delete(reactions).where(eq(reactions.userId, userId));
+    
+    // 5. Delete replies (including nested ones)
+    await db.delete(replies).where(eq(replies.userId, userId));
+    
+    // 6. Delete messages
+    await db.delete(messages).where(eq(messages.userId, userId));
+    
+    // 7. Finally delete user account
+    await db.delete(users).where(eq(users.id, userId));
+  }
+
+  async deleteAdminAccount(adminId: number): Promise<void> {
+    // Delete all related data in correct order
+    // 1. Delete notifications
+    await db.delete(notifications).where(or(
+      eq(notifications.adminId, adminId),
+      eq(notifications.fromAdminId, adminId)
+    ));
+    
+    // 2. Delete liked messages
+    await db.delete(likedMessages).where(eq(likedMessages.adminId, adminId));
+    
+    // 3. Delete reactions
+    await db.delete(reactions).where(eq(reactions.adminId, adminId));
+    
+    // 4. Delete replies
+    await db.delete(replies).where(eq(replies.adminId, adminId));
+    
+    // 5. Delete messages
+    await db.delete(messages).where(eq(messages.adminId, adminId));
+    
+    // 6. Finally delete admin account
+    await db.delete(admins).where(eq(admins.id, adminId));
+  }
+
+
 }
 
 export const storage = new DatabaseStorage();

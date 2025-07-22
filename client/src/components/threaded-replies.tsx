@@ -246,7 +246,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
   );
 }
 
-export function ThreadedReplies({ replies, messageId, messageUserId, onWarning }: ThreadedRepliesProps) {
+export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, onReply }: ThreadedRepliesProps) {
   const { user, admin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();

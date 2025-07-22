@@ -835,6 +835,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Account deletion endpoints (ADMIN ONLY - CRITICAL)
+  app.delete("/api/users/:userId/account", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { adminUsername } = req.body;
+      
+      // Only ZEKE001 can delete user accounts
+      if (adminUsername !== "ZEKE001") {
+        return res.status(403).json({ message: "Only ZEKE001 can delete user accounts" });
+      }
+      
+      await storage.deleteUserAccount(parseInt(userId));
+      res.json({ message: "User account deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user account:", error);
+      res.status(500).json({ message: "Failed to delete user account" });
+    }
+  });
+
+  app.delete("/api/admins/:adminId/account", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const { adminUsername } = req.body;
+      
+      // Only ZEKE001 can delete admin accounts
+      if (adminUsername !== "ZEKE001") {
+        return res.status(403).json({ message: "Only ZEKE001 can delete admin accounts" });
+      }
+      
+      // Prevent self-deletion of ZEKE001
+      const adminToDelete = await storage.getAdminById(parseInt(adminId));
+      if (adminToDelete?.username === "ZEKE001") {
+        return res.status(400).json({ message: "Cannot delete the primary ZEKE001 admin account" });
+      }
+      
+      await storage.deleteAdminAccount(parseInt(adminId));
+      res.json({ message: "Admin account deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting admin account:", error);
+      res.status(500).json({ message: "Failed to delete admin account" });
+    }
+  });
+
   // Notification routes
   app.get("/api/notifications/user/:userId", async (req, res) => {
     try {
