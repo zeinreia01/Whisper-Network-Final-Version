@@ -35,9 +35,13 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
       if (user) {
-        return await apiRequest("DELETE", `/api/users/${user.id}`);
+        return await apiRequest("DELETE", `/api/users/${user.id}/account`, {
+          adminUsername: "ZEKE001" // Only ZEKE001 can delete accounts
+        });
       } else if (admin) {
-        return await apiRequest("DELETE", `/api/admins/${admin.id}`);
+        return await apiRequest("DELETE", `/api/admins/${admin.id}/account`, {
+          adminUsername: "ZEKE001" // Only ZEKE001 can delete accounts
+        });
       }
     },
     onSuccess: () => {
@@ -48,10 +52,10 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
       logout();
       onClose();
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to delete account. Please try again.",
+        description: error.message || "Failed to delete account. Please try again.",
         variant: "destructive",
       });
     },

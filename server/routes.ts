@@ -1023,7 +1023,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/users/:id/follow", async (req, res) => {
+  app.post("/api/users/:id/unfollow", async (req, res) => {
     try {
       const followingId = parseInt(req.params.id);
       const { followerId } = req.body;

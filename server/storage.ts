@@ -555,31 +555,48 @@ export class DatabaseStorage implements IStorage {
   // User management operations
   async deleteUser(userId: number): Promise<void> {
     // Delete in proper order to avoid foreign key constraints
-    // 1. Delete notifications
+    // 1. Delete notifications referencing this user's replies first
+    const userReplies = await db.select({ id: replies.id }).from(replies).where(eq(replies.userId, userId));
+    for (const reply of userReplies) {
+      await db.delete(notifications).where(eq(notifications.replyId, reply.id));
+    }
+    
+    // 2. Delete notifications referencing this user's messages  
+    const userMessages = await db.select({ id: messages.id }).from(messages).where(eq(messages.userId, userId));
+    for (const message of userMessages) {
+      await db.delete(notifications).where(eq(notifications.messageId, message.id));
+    }
+    
+    // 3. Delete other notifications
     await db.delete(notifications).where(or(
       eq(notifications.userId, userId),
       eq(notifications.fromUserId, userId)
     ));
     
-    // 2. Delete follows
+    // 4. Delete follows
     await db.delete(follows).where(or(
       eq(follows.followerId, userId),
       eq(follows.followingId, userId)
     ));
     
-    // 3. Delete liked messages
+    // 5. Delete liked messages
     await db.delete(likedMessages).where(eq(likedMessages.userId, userId));
     
-    // 4. Delete reactions by this user
+    // 6. Delete reactions on this user's messages first
+    for (const message of userMessages) {
+      await db.delete(reactions).where(eq(reactions.messageId, message.id));
+    }
+    
+    // 7. Delete reactions by this user
     await db.delete(reactions).where(eq(reactions.userId, userId));
     
-    // 5. Delete all replies by the user
+    // 8. Delete all replies by the user
     await db.delete(replies).where(eq(replies.userId, userId));
     
-    // 6. Delete all messages by the user
+    // 9. Delete all messages by the user
     await db.delete(messages).where(eq(messages.userId, userId));
     
-    // 7. Finally delete the user
+    // 10. Finally delete the user
     await db.delete(users).where(eq(users.id, userId));
   }
 

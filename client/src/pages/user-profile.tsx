@@ -49,7 +49,8 @@ export function UserProfilePage() {
   // Follow/Unfollow mutation
   const followMutation = useMutation({
     mutationFn: async ({ targetId, action }: { targetId: number; action: 'follow' | 'unfollow' }) => {
-      return apiRequest('POST', `/api/users/${targetId}/${action}`, {
+      const endpoint = action === 'follow' ? `/api/users/${targetId}/follow` : `/api/users/${targetId}/unfollow`;
+      return apiRequest('POST', endpoint, {
         followerId: currentUserId
       });
     },
