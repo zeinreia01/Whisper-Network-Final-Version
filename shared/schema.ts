@@ -229,7 +229,10 @@ export const insertLikedMessageSchema = createInsertSchema(likedMessages).omit({
 // Profile update schemas
 export const updateUserProfileSchema = z.object({
   displayName: z.string().min(2).max(50).optional(),
-  profilePicture: z.string().url().optional(),
+  profilePicture: z.string().optional().refine(
+    (val) => !val || val === "" || val.startsWith("data:image/") || z.string().url().safeParse(val).success,
+    { message: "Must be a valid URL or base64 image data" }
+  ),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCard } from "@/components/message-card";
 import { UserBadge } from "@/components/user-badge";
 import { useAuth } from "@/hooks/use-auth";
@@ -112,13 +113,19 @@ export function UserProfilePage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                    {profile.username.charAt(0).toUpperCase()}
-                  </div>
+                  <Avatar className="w-16 h-16 border-2 border-primary">
+                    <AvatarImage 
+                      src={profile.profilePicture || undefined} 
+                      alt={profile.displayName || profile.username}
+                    />
+                    <AvatarFallback className="bg-primary text-white text-2xl font-bold">
+                      {(profile.displayName || profile.username).charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <CardTitle className="text-2xl text-white flex items-center space-x-2">
                       <User className="w-6 h-6" />
-                      <span>{profile.username}</span>
+                      <span>{profile.displayName || profile.username}</span>
                       <UserBadge userType="user" variant="small" />
                     </CardTitle>
                     <p className="text-gray-400 flex items-center mt-1">
@@ -182,7 +189,7 @@ export function UserProfilePage() {
           {/* User's messages */}
           <div>
             <h2 className="text-xl font-semibold text-white mb-4">
-              Public Messages ({userMessages?.length || 0})
+              Public Messages ({Array.isArray(userMessages) ? userMessages.length : 0})
             </h2>
             
             {messagesLoading ? (
@@ -197,7 +204,7 @@ export function UserProfilePage() {
                   </Card>
                 ))}
               </div>
-            ) : userMessages && userMessages.length > 0 ? (
+            ) : Array.isArray(userMessages) && userMessages.length > 0 ? (
               <div className="space-y-6">
                 {userMessages.map((message: MessageWithReplies) => (
                   <MessageCard 

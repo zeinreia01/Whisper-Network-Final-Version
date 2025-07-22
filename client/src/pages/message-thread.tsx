@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Reply as ReplyIcon, Trash2, AlertTriangle, Info, Calendar, Music, Shield } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { MESSAGE_CATEGORIES } from "@shared/schema";
-import type { MessageWithReplies, Reply } from "@shared/schema";
+import type { MessageWithReplies, Reply, ReplyWithUser } from "@shared/schema";
 
 export default function MessageThread() {
   const { id } = useParams();
@@ -269,17 +270,38 @@ export default function MessageThread() {
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
-                        {/* Show admin permission tag */}
-                        {reply.adminId && (
-                          <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
-                            <Shield className="h-3 w-3 mr-1" />
-                            Whisper Listener
-                          </Badge>
+                        {/* Add avatar for replies from registered users */}
+                        {reply.userId && (reply as ReplyWithUser).user && (
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage 
+                              src={(reply as ReplyWithUser).user?.profilePicture || undefined} 
+                              alt={(reply as ReplyWithUser).user?.displayName || (reply as ReplyWithUser).user?.username}
+                            />
+                            <AvatarFallback className="bg-blue-600 text-white text-sm">
+                              {((reply as ReplyWithUser).user?.displayName || (reply as ReplyWithUser).user?.username || reply.nickname).charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
                         )}
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {reply.createdAt ? formatTimeAgo(reply.createdAt) : "Unknown date"}
-                        </span>
+                        {reply.adminId && (reply as ReplyWithUser).admin && (
+                          <Avatar className="w-8 h-8">
+                            <AvatarFallback className="bg-purple-600 text-white text-sm">
+                              {((reply as ReplyWithUser).admin?.displayName || reply.nickname).charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div>
+                          <span className="font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
+                          {/* Show admin permission tag */}
+                          {reply.adminId && (
+                            <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 ml-2">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Whisper Listener
+                            </Badge>
+                          )}
+                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                            {reply.createdAt ? formatTimeAgo(reply.createdAt) : "Unknown date"}
+                          </span>
+                        </div>
                       </div>
                       {admin && (
                         <div className="flex items-center gap-2">

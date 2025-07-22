@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -300,16 +301,32 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
 
       {message.senderName && (
         <div className="mb-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 font-medium">From: {message.senderName}</span>
-            {/* View profile button for authenticated sender */}
-            {message.userId && (user || admin) && (
-              <Link href={`/user/${message.userId}`}>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/10" title="View Profile">
-                  <User className="h-4 w-4 text-primary" />
-                </Button>
-              </Link>
+          <div className="flex items-center space-x-3">
+            {/* Show user avatar for authenticated senders */}
+            {message.userId && message.user && (
+              <Avatar className="w-8 h-8">
+                <AvatarImage 
+                  src={message.user.profilePicture || undefined} 
+                  alt={message.user.displayName || message.user.username}
+                />
+                <AvatarFallback className="bg-blue-600 text-white text-sm">
+                  {(message.user.displayName || message.user.username).charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
             )}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600 font-medium">
+                From: {message.user?.displayName || message.senderName}
+              </span>
+              {/* View profile button for authenticated sender */}
+              {message.userId && (user || admin) && (
+                <Link href={`/user/${message.userId}`}>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/10" title="View Profile">
+                    <User className="h-4 w-4 text-primary" />
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       )}
