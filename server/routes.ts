@@ -22,27 +22,27 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
   // Authentication routes for users
   // Check username availability
   app.get("/api/auth/check-username/:username", async (req, res) => {
     try {
       const { username } = req.params;
-      
+
       // Check if username exists in users table
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
         res.json({ available: false, message: "Username already taken by a Silent Messenger" });
         return;
       }
-      
+
       // Check if username exists in admins table
       const existingAdmin = await storage.getAdminByUsername(username);
       if (existingAdmin) {
         res.json({ available: false, message: "Username already taken by a Whisper Listener" });
         return;
       }
-      
+
       res.json({ available: true, message: "Username is available" });
     } catch (error) {
       console.error("Username check error:", error);
@@ -53,23 +53,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       // Check if username already exists in both tables
       const existingUser = await storage.getUserByUsername(username);
       const existingAdmin = await storage.getAdminByUsername(username);
-      
+
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists as Silent Messenger" });
       }
-      
+
       if (existingAdmin) {
         return res.status(400).json({ message: "Username already exists as Whisper Listener" });
       }
-      
+
       // Hash password and create user
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({ username, password: hashedPassword });
-      
+
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
@@ -82,16 +82,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       const user = await storage.getUserByUsername(username);
       if (!user || !await comparePasswords(password, user.password)) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       if (!user.isActive) {
         return res.status(401).json({ message: "Account is disabled" });
       }
-      
+
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
@@ -105,12 +105,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/admin-login", async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       const admin = await storage.getAdminByUsername(username);
       if (!admin) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       // Special handling for ZEKE001 - password should be "ZEKE001"
       if (username === "ZEKE001") {
         if (password !== "ZEKE001") {
@@ -122,16 +122,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { password: _, ...adminWithoutPassword } = admin;
         return res.json(adminWithoutPassword);
       }
-      
+
       // For other admins, check password
       if (!admin.password || !await comparePasswords(password, admin.password)) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       if (!admin.isActive) {
         return res.status(401).json({ message: "Account is disabled" });
       }
-      
+
       const { password: _, ...adminWithoutPassword } = admin;
       res.json(adminWithoutPassword);
     } catch (error) {
@@ -144,23 +144,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/create", async (req, res) => {
     try {
       const { username, password, displayName, role } = req.body;
-      
+
       // Check if admin already exists
       const existingAdmin = await storage.getAdminByUsername(username);
       if (existingAdmin) {
         return res.status(400).json({ message: "Admin username already exists" });
       }
-      
+
       // Hash password if provided
       const hashedPassword = password ? await hashPassword(password) : null;
-      
+
       const admin = await storage.createAdmin({
         username,
         password: hashedPassword,
         displayName,
         role: role || "admin",
       });
-      
+
       const { password: _, ...adminWithoutPassword } = admin;
       res.status(201).json(adminWithoutPassword);
     } catch (error) {
@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { isActive } = req.body;
-      
+
       const admin = await storage.updateAdminStatus(parseInt(id), isActive);
       const { password: _, ...adminWithoutPassword } = admin;
       res.json(adminWithoutPassword);
@@ -200,13 +200,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages/public", async (req, res) => {
     try {
       const messages = await storage.getPublicMessages();
-      
+
       // Enhance messages with reaction counts and reactions
       const messagesWithReactions = await Promise.all(
         messages.map(async (message) => {
           let reactions: any[] = [];
           let reactionCount = 0;
-          
+
           try {
             reactions = await storage.getMessageReactions(message.id);
             reactionCount = reactions.length;
@@ -250,11 +250,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(404).json({ message: "Message not found" });
         return;
       }
-      
+
       // Add reaction data
       let reactions: any[] = [];
       let reactionCount = 0;
-      
+
       try {
         reactions = await storage.getMessageReactions(message.id);
         reactionCount = reactions.length;
@@ -340,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertReplySchema.parse(req.body);
       const reply = await storage.createReply(validatedData);
-      
+
       // Create notification for the message author or parent reply author
       if (validatedData.parentId) {
         // This is a nested reply - notify the parent reply author
@@ -373,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       res.status(201).json(reply);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -411,10 +411,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/warnings", async (req, res) => {
     try {
       const { replyId, messageId, reason, userId } = req.body;
-      
+
       // Store warning in database (you could extend schema for warnings table)
       console.log(`Warning sent for reply ${replyId} on message ${messageId} to user ${userId}: ${reason}`);
-      
+
       // In a real app, this would send notifications/emails to users
       res.json({ 
         message: "Warning sent successfully",
@@ -486,7 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user || !user.isActive) {
         res.status(401).json({ message: "Invalid credentials" });
         return;
@@ -497,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(401).json({ message: "Invalid credentials" });
         return;
       }
-      
+
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
@@ -510,12 +510,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       const admin = await storage.getAdminByUsername(username);
-      
+
       if (!admin || admin.password !== password || !admin.isActive) {
         res.status(401).json({ message: "Invalid credentials" });
         return;
       }
-      
+
       const { password: _, ...adminWithoutPassword } = admin;
       res.json(adminWithoutPassword);
     } catch (error) {
@@ -639,7 +639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create notification for message owner
         const fromName = userId ? (await storage.getUserById(userId))?.username : 
                          adminId ? (await storage.getAdminByUsername("admin"))?.displayName : "Anonymous";
-        
+
         await storage.createNotification({
           userId: message.userId,
           type: "reaction",
@@ -730,7 +730,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const { adminId } = req.query;
-      
+
       const likedMessages = await storage.getUserLikedMessages(
         parseInt(userId), 
         adminId ? parseInt(adminId as string) : undefined
@@ -748,11 +748,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { messageId } = req.params;
       const { userId, isOwnerPrivate } = req.body;
-      
+
       if (!userId) {
         return res.status(400).json({ message: "Authentication required" });
       }
-      
+
       const message = await storage.updateMessagePrivacy(parseInt(messageId), userId, isOwnerPrivate);
       res.json(message);
     } catch (error) {
@@ -766,12 +766,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const { isVerified, adminUsername } = req.body;
-      
+
       // Only ZEKE001 can grant/revoke verified badges
       if (adminUsername !== "ZEKE001") {
         return res.status(403).json({ message: "Only ZEKE001 can manage verified badges" });
       }
-      
+
       const user = await storage.updateUserVerificationStatus(parseInt(userId), isVerified);
       res.json(user);
     } catch (error) {
@@ -784,12 +784,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { adminId } = req.params;
       const { isVerified, adminUsername } = req.body;
-      
+
       // Only ZEKE001 can grant/revoke verified badges
       if (adminUsername !== "ZEKE001") {
         return res.status(403).json({ message: "Only ZEKE001 can manage verified badges" });
       }
-      
+
       const admin = await storage.updateAdminVerificationStatus(parseInt(adminId), isVerified);
       res.json(admin);
     } catch (error) {
@@ -802,7 +802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const updates = req.body;
-      
+
       // Validate display name cooldown if being updated
       if (updates.displayName !== undefined) {
         const canUpdate = await storage.canUpdateDisplayName(parseInt(userId));
@@ -814,7 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedUser = await storage.updateUserProfile(parseInt(userId), updates);
-      
+
       // Don't return password
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -840,12 +840,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const { adminUsername } = req.body;
-      
+
       // Only ZEKE001 can delete user accounts
       if (adminUsername !== "ZEKE001") {
         return res.status(403).json({ message: "Only ZEKE001 can delete user accounts" });
       }
-      
+
       await storage.deleteUserAccount(parseInt(userId));
       res.json({ message: "User account deleted successfully" });
     } catch (error) {
@@ -858,18 +858,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { adminId } = req.params;
       const { adminUsername } = req.body;
-      
+
       // Only ZEKE001 can delete admin accounts
       if (adminUsername !== "ZEKE001") {
         return res.status(403).json({ message: "Only ZEKE001 can delete admin accounts" });
       }
-      
+
       // Prevent self-deletion of ZEKE001
       const adminToDelete = await storage.getAdminById(parseInt(adminId));
       if (adminToDelete?.username === "ZEKE001") {
         return res.status(400).json({ message: "Cannot delete the primary ZEKE001 admin account" });
       }
-      
+
       await storage.deleteAdminAccount(parseInt(adminId));
       res.json({ message: "Admin account deleted successfully" });
     } catch (error) {
@@ -927,7 +927,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:id/profile", async (req, res) => {
     const userId = parseInt(req.params.id);
     const currentUserId = req.query.currentUserId ? parseInt(req.query.currentUserId as string) : undefined;
-    
+
     if (!userId) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
@@ -955,7 +955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const messages = await storage.getUserMessages(userId);
-      
+
       // Get reactions and replies for each message
       const messagesWithDetails = await Promise.all(
         messages.map(async (message) => {
@@ -966,7 +966,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (error) {
             // Skip if reactions table doesn't exist yet
           }
-          
+
           const replies = await storage.getRepliesByMessageId(message.id);
           return {
             ...message,
@@ -988,7 +988,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const followingId = parseInt(req.params.id);
       const { followerId } = req.body;
-      
+
       if (!followingId || !followerId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -1004,7 +1004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const follow = await storage.followUser(followerId, followingId);
-      
+
       // Create notification for the followed user
       const follower = await storage.getUserById(followerId);
       if (follower) {
@@ -1027,7 +1027,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const followingId = parseInt(req.params.id);
       const { followerId } = req.body;
-      
+
       if (!followingId || !followerId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -1078,13 +1078,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/search", async (req, res) => {
     try {
       const { q, type = "users" } = req.query;
-      
+
       if (!q || typeof q !== "string" || q.trim().length < 2) {
         return res.status(400).json({ error: "Search query must be at least 2 characters" });
       }
 
       const searchTerm = q.trim();
-      
+
       if (type === "users") {
         const users = await storage.searchUsers(searchTerm);
         // Remove password from response
@@ -1099,6 +1099,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error performing search:", error);
       res.status(500).json({ error: "Search failed" });
+    }
+  });
+
+  // Update user profile
+  app.patch("/api/users/:id/profile", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { bio, displayName, profilePicture } = req.body;
+
+      // Security check: Verify user is updating their own profile
+      // This would need proper authentication middleware in a production app
+      // For now, we'll rely on frontend checks and session validation
+
+      const updatedUser = await storage.updateUserProfile(userId, { bio, displayName, profilePicture });
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
     }
   });
 

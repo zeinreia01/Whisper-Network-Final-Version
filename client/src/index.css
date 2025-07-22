@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-specific fixes */
+@media (max-width: 480px) {
+  .xs\:flex-row {
+    flex-direction: row;
+  }
+  
+  .xs\:inline {
+    display: inline;
+  }
+}
+
 :root {
   --background: hsl(210, 20%, 98%);
   --foreground: hsl(222, 47%, 11%);

@@ -132,19 +132,19 @@ export default function Admin() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title}>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <div className={`p-2 sm:p-3 rounded-lg ${stat.color} flex-shrink-0`}>
-                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Card key={stat.title} className="min-w-0">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                    <div className={`p-2 rounded-lg ${stat.color} flex-shrink-0 self-start sm:self-center`}>
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{stat.title}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">{stat.value}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">{stat.title}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -155,21 +155,21 @@ export default function Admin() {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="messages" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
+          <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+            <TabsTrigger value="messages" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
               <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden xs:inline sm:hidden">Msg</span>
               <span className="hidden sm:inline">Messages</span>
-              <span className="sm:hidden">Msg</span>
             </TabsTrigger>
-            <TabsTrigger value="user-management" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
+            <TabsTrigger value="user-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
               <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden xs:inline sm:hidden">Users</span>
               <span className="hidden sm:inline">User Management</span>
-              <span className="sm:hidden">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="admin-management" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm">
+            <TabsTrigger value="admin-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
               <Settings className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden xs:inline sm:hidden">Admin</span>
               <span className="hidden sm:inline">Admin Management</span>
-              <span className="sm:hidden">Admin</span>
             </TabsTrigger>
           </TabsList>
 
@@ -208,9 +208,10 @@ export default function Admin() {
                 {privateMessages.map((message) => (
                   <div key={message.id} className="border border-border rounded-lg p-4 sm:p-6">
                     <MessageCard message={message} showReplies={false} />
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 mt-4">
+                    <div className="flex flex-col xs:flex-row gap-2 mt-4">
                       <Button 
-                        className="bg-primary hover:bg-primary/90"
+                        size="sm"
+                        className="bg-primary hover:bg-primary/90 flex-1 xs:flex-none min-h-[40px]"
                         onClick={() => {
                           // TODO: Implement private reply functionality
                           toast({
@@ -222,14 +223,17 @@ export default function Admin() {
                         Reply Privately
                       </Button>
                       <Button 
-                        className="bg-accent hover:bg-accent/90"
+                        size="sm"
+                        className="bg-accent hover:bg-accent/90 flex-1 xs:flex-none min-h-[40px]"
                         onClick={() => makePublicMutation.mutate(message.id)}
                         disabled={makePublicMutation.isPending}
                       >
                         Make Public
                       </Button>
                       <Button 
+                        size="sm"
                         variant="outline"
+                        className="flex-1 xs:flex-none min-h-[40px]"
                         onClick={() => {
                           // TODO: Implement archive functionality
                           toast({

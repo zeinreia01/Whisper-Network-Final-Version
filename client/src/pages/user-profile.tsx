@@ -73,6 +73,10 @@ export function UserProfilePage() {
   // Bio update mutation
   const updateBioMutation = useMutation({
     mutationFn: async (bio: string) => {
+      // Security check: only allow profile owner to update bio
+      if (!isOwnProfile || currentUserId !== userId) {
+        throw new Error('Unauthorized: You can only edit your own bio');
+      }
       return apiRequest('PATCH', `/api/users/${userId}/profile`, { bio });
     },
     onSuccess: () => {
@@ -99,6 +103,16 @@ export function UserProfilePage() {
   };
 
   const handleBioUpdate = () => {
+    // Security check: only allow profile owner to update bio
+    if (!isOwnProfile || currentUserId !== userId) {
+      toast({
+        title: "Error",
+        description: "You can only edit your own bio",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (bioText.length > 200) {
       toast({
         title: "Error",
@@ -258,7 +272,7 @@ export function UserProfilePage() {
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium text-gray-900 dark:text-white">About</h4>
-                    {isOwnProfile && (
+                    {isOwnProfile && currentUserId === userId && (
                       <Button
                         variant="ghost"
                         size="sm"
