@@ -554,20 +554,33 @@ export class DatabaseStorage implements IStorage {
 
   // User management operations
   async deleteUser(userId: number): Promise<void> {
-    // First delete all replies by the user
-    await db
-      .delete(replies)
-      .where(eq(replies.userId, userId));
+    // Delete in proper order to avoid foreign key constraints
+    // 1. Delete notifications
+    await db.delete(notifications).where(or(
+      eq(notifications.userId, userId),
+      eq(notifications.fromUserId, userId)
+    ));
     
-    // Then delete all messages by the user
-    await db
-      .delete(messages)
-      .where(eq(messages.userId, userId));
+    // 2. Delete follows
+    await db.delete(follows).where(or(
+      eq(follows.followerId, userId),
+      eq(follows.followingId, userId)
+    ));
     
-    // Finally delete the user
-    await db
-      .delete(users)
-      .where(eq(users.id, userId));
+    // 3. Delete liked messages
+    await db.delete(likedMessages).where(eq(likedMessages.userId, userId));
+    
+    // 4. Delete reactions by this user
+    await db.delete(reactions).where(eq(reactions.userId, userId));
+    
+    // 5. Delete all replies by the user
+    await db.delete(replies).where(eq(replies.userId, userId));
+    
+    // 6. Delete all messages by the user
+    await db.delete(messages).where(eq(messages.userId, userId));
+    
+    // 7. Finally delete the user
+    await db.delete(users).where(eq(users.id, userId));
   }
 
   async getUserMessages(userId: number): Promise<MessageWithReplies[]> {

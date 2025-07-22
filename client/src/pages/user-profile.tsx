@@ -53,11 +53,11 @@ export function UserProfilePage() {
         followerId: currentUserId
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, { action }) => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
       toast({
         title: "Success",
-        description: `User ${profile?.isFollowing ? 'unfollowed' : 'followed'} successfully`,
+        description: `User ${action === 'unfollow' ? 'unfollowed' : 'followed'} successfully`,
       });
     },
     onError: () => {
@@ -228,16 +228,19 @@ export function UserProfilePage() {
                       <Button
                         onClick={handleFollow}
                         disabled={followMutation.isPending}
+                        variant={profile.isFollowing ? "outline" : "default"}
                         className={
                           profile.isFollowing
-                            ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                            : "bg-primary hover:bg-primary/90 text-white"
+                            ? "border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            : "bg-blue-600 hover:bg-blue-700 text-white"
                         }
                       >
-                        {profile.isFollowing ? (
+                        {followMutation.isPending ? (
+                          <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : profile.isFollowing ? (
                           <>
                             <UserMinus className="w-4 h-4 mr-2" />
-                            Following
+                            Unfollow
                           </>
                         ) : (
                           <>
