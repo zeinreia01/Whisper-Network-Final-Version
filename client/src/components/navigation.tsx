@@ -5,15 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AuthModal } from "@/components/auth-modal";
 import { AdminAuthModal } from "@/components/admin-auth-modal";
-
+import { GlobalSearch } from "@/components/global-search";
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
-import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search } from "lucide-react";
 
 export function Navigation() {
   const [location] = useLocation();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const { user, admin, logout } = useAuth();
 
   const navItems = [
@@ -101,6 +102,19 @@ export function Navigation() {
                 )}
               </div>
               
+              {/* Global search for authenticated users */}
+              {(user || admin) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-2 sm:px-3"
+                  onClick={() => setShowGlobalSearch(true)}
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-2">Search</span>
+                </Button>
+              )}
+              
               {/* Notifications for authenticated users */}
               {(user || admin) && <NotificationCenter />}
               
@@ -114,6 +128,12 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <Link href={`/user/${user.id}`}>
+                      <DropdownMenuItem>
+                        <User className="h-4 w-4 mr-2" />
+                        View My Profile
+                      </DropdownMenuItem>
+                    </Link>
                     <Link href="/personal">
                       <DropdownMenuItem>
                         <Settings className="h-4 w-4 mr-2" />
@@ -179,6 +199,7 @@ export function Navigation() {
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <AdminAuthModal isOpen={showAdminAuthModal} onClose={() => setShowAdminAuthModal(false)} />
+      <GlobalSearch isOpen={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} />
     </>
   );
 }

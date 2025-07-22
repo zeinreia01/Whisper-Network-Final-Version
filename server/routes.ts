@@ -942,6 +942,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Global search endpoint
+  app.get("/api/search", async (req, res) => {
+    try {
+      const { q, type = "users" } = req.query;
+      
+      if (!q || typeof q !== "string" || q.trim().length < 2) {
+        return res.status(400).json({ error: "Search query must be at least 2 characters" });
+      }
+
+      const searchTerm = q.trim();
+      
+      if (type === "users") {
+        const users = await storage.searchUsers(searchTerm);
+        // Remove password from response
+        const usersWithoutPassword = users.map(({ password, ...user }) => user);
+        res.json({ users: usersWithoutPassword });
+      } else if (type === "messages") {
+        const messages = await storage.searchPublicMessages(searchTerm);
+        res.json({ messages });
+      } else {
+        return res.status(400).json({ error: "Invalid search type. Use 'users' or 'messages'" });
+      }
+    } catch (error) {
+      console.error("Error performing search:", error);
+      res.status(500).json({ error: "Search failed" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

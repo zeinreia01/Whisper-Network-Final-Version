@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name"), // User's display name (can be changed with cooldown)
   profilePicture: text("profile_picture"), // URL or path to profile picture
+  bio: text("bio"), // User's bio/description (200 character limit)
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
@@ -233,6 +234,7 @@ export const updateUserProfileSchema = z.object({
     (val) => !val || val === "" || val.startsWith("data:image/") || z.string().url().safeParse(val).success,
     { message: "Must be a valid URL or base64 image data" }
   ),
+  bio: z.string().max(200).optional(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

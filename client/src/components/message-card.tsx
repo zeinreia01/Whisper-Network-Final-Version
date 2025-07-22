@@ -315,9 +315,17 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
               </Avatar>
             )}
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 font-medium">
-                From: {message.user?.displayName || message.senderName}
-              </span>
+              {message.userId && (user || admin) ? (
+                <Link href={`/user/${message.userId}`}>
+                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium hover:text-primary dark:hover:text-primary cursor-pointer transition-colors">
+                    From: {message.user?.displayName || message.senderName}
+                  </span>
+                </Link>
+              ) : (
+                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  From: {message.user?.displayName || message.senderName}
+                </span>
+              )}
               {/* View profile button for authenticated sender */}
               {message.userId && (user || admin) && (
                 <Link href={`/user/${message.userId}`}>
