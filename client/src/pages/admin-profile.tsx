@@ -76,17 +76,17 @@ export function AdminProfilePage() {
         description: "Your admin profile has been updated successfully.",
       });
       setIsEditing(false);
-      
+
       // Update form values with new data
       setDisplayName(updatedAdmin.displayName || "");
       setBio(updatedAdmin.bio || "");
       setProfilePicture(updatedAdmin.profilePicture || "");
       setProfileImagePreview(updatedAdmin.profilePicture || null);
-      
+
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/can-update-display-name`] });
       queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/profile`] });
-      
+
       // Force a re-login to update auth context
       window.location.reload();
     },
@@ -129,7 +129,7 @@ export function AdminProfilePage() {
 
         // Draw and compress
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         // Convert to base64 with compression (0.8 quality for JPEG)
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
         resolve(compressedBase64);

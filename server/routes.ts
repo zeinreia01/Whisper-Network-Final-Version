@@ -847,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.delete("/api/admins/:adminId/account", async (req, res) => {
-    try {
+    try{
       const { adminId } = req.params;
       const { adminUsername } = req.body;
 
@@ -1169,14 +1169,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(adminWithoutPassword);
     } catch (error) {
       console.error("Admin profile update error:", error);
-      
+
       // Handle specific error types
       if (error instanceof Error) {
         if (error.message.includes('too large')) {
           return res.status(413).json({ message: "Request payload too large. Please use a smaller image." });
         }
       }
-      
+
       res.status(500).json({ message: "Failed to update admin profile" });
     }
   });
@@ -1186,7 +1186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const adminId = parseInt(req.params.id);
       const admin = await storage.getAdminById(adminId);
-      
+
       if (!admin) {
         return res.status(404).json({ message: "Admin not found" });
       }
@@ -1206,7 +1206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // Get admin profile by ID
   app.get("/api/admins/:id/profile", async (req, res) => {
@@ -1222,36 +1222,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Admin not found" });
       }
 
-      // Get admin's message statistics
-      const messages = await storage.getAdminMessages(adminId);
-      const messageCount = messages.length;
-      
-      // Get reply count
-      const replies = await storage.getAdminReplies(adminId);
-      const replyCount = replies.length;
-
-      // Get total reactions received
-      let totalReactions = 0;
-      try {
-        for (const message of messages) {
-          const reactions = await storage.getMessageReactions(message.id);
-          totalReactions += reactions.length;
-        }
-      } catch (error) {
-        // Skip if reactions table doesn't exist yet
-      }
-
-      // Don't return password
-      const { password, ...adminProfile } = admin;
-      res.json({
-        ...adminProfile,
-        messageCount,
-        replyCount,
-        totalReactions,
-      });
+      // Remove password before sending
+      const { password, ...adminWithoutPassword } = admin;
+      res.json(adminWithoutPassword);
     } catch (error) {
       console.error("Error fetching admin profile:", error);
       res.status(500).json({ error: "Failed to fetch admin profile" });
+    }
+  });
+
+  // Get admin messages
+  app.get("/api/admins/:id/messages", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+
+      if (!adminId || isNaN(adminId)) {
+        return res.status(400).json({ error: "Invalid admin ID" });
+      }
+
+      const messages = await storage.getAdminMessages(adminId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching admin messages:", error);
+      res.status(500).json({ error: "Failed to fetch admin messages" });
+    }
+  });
+
+  // Get admin replies
+  app.get("/api/admins/:id/replies", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+
+      if (!adminId || isNaN(adminId)) {
+        return res.status(400).json({ error: "Invalid admin ID" });
+      }
+
+      const replies = await storage.getAdminReplies(adminId);
+      res.json(replies);
+    } catch (error) {
+      console.error("Error fetching admin replies:", error);
+      res.status(500).json({ error: "Failed to fetch admin replies" });
     }
   });
 
