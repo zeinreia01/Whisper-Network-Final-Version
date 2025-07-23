@@ -228,9 +228,11 @@
   background-color: hsl(var(--muted-foreground));
 }
 
-/* Mobile responsive breakpoints */
-@screen xs {
-  @apply min-w-0;
+/* Mobile responsive breakpoints - using standard responsive syntax */
+@media (min-width: 475px) {
+  .xs\:min-w-0 {
+    min-width: 0;
+  }
 }
 
 /* Prevent horizontal overflow on mobile */
