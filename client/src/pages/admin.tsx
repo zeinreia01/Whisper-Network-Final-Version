@@ -115,19 +115,19 @@ export default function Admin() {
     <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="mb-8 sm:mb-12">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start sm:items-center gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground break-words">Whisper Listener Dashboard</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground break-words">Whisper Network Admin</h1>
             </div>
             <div className="flex-shrink-0">
               <Button
                 onClick={handleLogout}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-w-[80px]"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden xs:inline">Logout</span>
+                <span>Logout</span>
               </Button>
             </div>
           </div>
@@ -160,27 +160,23 @@ export default function Admin() {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="messages" className="w-full">
-          <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1 min-w-[500px]">
-              <TabsTrigger value="messages" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1 min-w-[400px]">
+              <TabsTrigger value="messages" className="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1 text-xs sm:text-sm min-h-[44px]">
                 <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="hidden xs:inline sm:hidden">Msg</span>
-                <span className="hidden sm:inline">Messages</span>
+                <span className="truncate">Messages</span>
               </TabsTrigger>
-              <TabsTrigger value="user-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+              <TabsTrigger value="user-management" className="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1 text-xs sm:text-sm min-h-[44px]">
                 <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="hidden xs:inline sm:hidden">Users</span>
-                <span className="hidden sm:inline">User Management</span>
+                <span className="truncate">Users</span>
               </TabsTrigger>
-              <TabsTrigger value="verification" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+              <TabsTrigger value="verification" className="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1 text-xs sm:text-sm min-h-[44px]">
                 <Zap className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="hidden xs:inline sm:hidden">Verify</span>
-                <span className="hidden sm:inline">Verification</span>
+                <span className="truncate">Verify</span>
               </TabsTrigger>
-              <TabsTrigger value="admin-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+              <TabsTrigger value="admin-management" className="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1 text-xs sm:text-sm min-h-[44px]">
                 <Settings className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="hidden xs:inline sm:hidden">Admin</span>
-                <span className="hidden sm:inline">Admin Management</span>
+                <span className="truncate">Admin</span>
               </TabsTrigger>
             </TabsList>
           </div>

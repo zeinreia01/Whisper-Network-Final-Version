@@ -14,7 +14,8 @@ import {
   CheckCircle, 
   Trash2, 
   MessageCircle,
-  Calendar
+  Calendar,
+  Star
 } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import type { User } from "@shared/schema";

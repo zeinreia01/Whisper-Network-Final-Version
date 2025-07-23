@@ -228,10 +228,16 @@
   background-color: hsl(var(--muted-foreground));
 }
 
-/* Mobile responsive breakpoints - using standard responsive syntax */
+/* Mobile responsive breakpoints */
 @media (min-width: 475px) {
-  .xs\:min-w-0 {
-    min-width: 0;
+  .xs\:inline {
+    display: inline;
+  }
+  .xs\:flex-row {
+    flex-direction: row;
+  }
+  .xs\:flex-none {
+    flex: none;
   }
 }
 
