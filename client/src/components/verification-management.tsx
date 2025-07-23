@@ -175,11 +175,15 @@ export function VerificationManagement() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium truncate">{user.displayName || user.username}</p>
                             {user.isVerified && (
-                              <div className="flex items-center gap-1 bg-blue-500/10 text-blue-700 px-2 py-1 rounded-full text-xs">
-                                <Zap className="w-3 h-3" />
-                                Verified
-                              </div>
-                            )}
+                          <div className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full text-xs font-medium border border-blue-200 dark:border-blue-800 flex-shrink-0">
+                            <div className="inline-flex items-center justify-center w-3 h-3 bg-blue-500 rounded-full">
+                              <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            Verified
+                          </div>
+                        )}
                           </div>
                           <p className="text-sm text-gray-600 truncate">@{user.username}</p>
                           <p className="text-xs text-gray-500">ID: {user.id}</p>
@@ -241,9 +245,13 @@ export function VerificationManagement() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium truncate">{adminUser.displayName}</p>
-                            {adminUser.isVerified && (
-                              <div className="flex items-center gap-1 bg-purple-500/10 text-purple-700 px-2 py-1 rounded-full text-xs">
-                                <ShieldCheck className="w-3 h-3" />
+                            {adminUser.isVerified && adminUser.username !== "ZEKE001" && (
+                              <div className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full text-xs font-medium border border-blue-200 dark:border-blue-800 flex-shrink-0">
+                                <div className="inline-flex items-center justify-center w-3 h-3 bg-blue-500 rounded-full">
+                                  <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
                                 Verified
                               </div>
                             )}

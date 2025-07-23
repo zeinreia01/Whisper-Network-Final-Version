@@ -1,5 +1,4 @@
-
-<old_str>import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,20 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { ArrowLeft, Camera, Upload, X, Clock, Shield } from "lucide-react";
-import { Link } from "wouter";</old_str>
-<new_str>import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -139,15 +126,15 @@ export function AdminProfilePage() {
     if (!admin) return;
 
     const updates: any = {};
-    
+
     if (displayName !== admin.displayName) {
       updates.displayName = displayName;
     }
-    
+
     if (bio !== (admin.bio || "")) {
       updates.bio = bio;
     }
-    
+
     if (profilePicture !== (admin.profilePicture || "")) {
       updates.profilePicture = profilePicture;
     }
@@ -350,4 +337,4 @@ export function AdminProfilePage() {
   );
 }
 
-export default AdminProfilePage;</old_str>
+export default AdminProfilePage;
