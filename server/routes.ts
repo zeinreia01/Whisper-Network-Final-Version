@@ -1079,9 +1079,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (type === "users") {
         const users = await storage.searchUsers(searchTerm);
+        const admins = await storage.searchAdmins(searchTerm);
         // Remove password from response
         const usersWithoutPassword = users.map(({ password, ...user }) => user);
-        res.json({ users: usersWithoutPassword });
+        const adminsWithoutPassword = admins.map(({ password, ...admin }) => admin);
+        res.json({ users: usersWithoutPassword, admins: adminsWithoutPassword });
       } else if (type === "messages") {
         const messages = await storage.searchPublicMessages(searchTerm);
         res.json({ messages });
@@ -1109,6 +1111,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user profile:", error);
       res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Admin profile routes
+  app.patch("/api/admins/:id/profile", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+      const { displayName, profilePicture, bio } = req.body;
+
+      const admin = await storage.getAdminById(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // Check display name change cooldown
+      if (displayName && displayName !== admin.displayName) {
+        const lastChange = admin.lastDisplayNameChange;
+        if (lastChange) {
+          const daysSinceLastChange = Math.floor((Date.now() - new Date(lastChange).getTime()) / (1000 * 60 * 60 * 24));
+          if (daysSinceLastChange < 30) {
+            return res.status(400).json({ 
+              message: `Display name can only be changed once every 30 days. Wait ${30 - daysSinceLastChange} more days.` 
+            });
+          }
+        }
+      }
+
+      const updatedAdmin = await storage.updateAdminProfile(adminId, {
+        displayName,
+        profilePicture, 
+        bio,
+        lastDisplayNameChange: displayName && displayName !== admin.displayName ? new Date() : undefined,
+      });
+
+      // Return admin without password
+      const { password: _, ...adminWithoutPassword } = updatedAdmin;
+      res.json(adminWithoutPassword);
+    } catch (error) {
+      console.error("Admin profile update error:", error);
+      res.status(500).json({ message: "Failed to update admin profile" });
+    }
+  });
+
+  // Check admin display name update cooldown
+  app.get("/api/admins/:id/can-update-display-name", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+      const admin = await storage.getAdminById(adminId);
+      
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      const lastChange = admin.lastDisplayNameChange;
+      let canUpdate = true;
+
+      if (lastChange) {
+        const daysSinceLastChange = Math.floor((Date.now() - new Date(lastChange).getTime()) / (1000 * 60 * 60 * 24));
+        canUpdate = daysSinceLastChange >= 30;
+      }
+
+      res.json({ canUpdate });
+    } catch (error) {
+      console.error("Cooldown check error:", error);
+      res.status(500).json({ message: "Failed to check cooldown status" });
+    }
+  });
+
+  // Admin profile viewing
+  app.get("/api/admins/:id/profile", async (req, res) => {
+    const adminId = parseInt(req.params.id);
+
+    if (!adminId || isNaN(adminId)) {
+      return res.status(400).json({ error: "Invalid admin ID" });
+    }
+
+    try {
+      const admin = await storage.getAdminById(adminId);
+      if (!admin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+
+      // Get admin's message statistics
+      const messages = await storage.getAdminMessages(adminId);
+      const messageCount = messages.length;
+      
+      // Get reply count
+      const replies = await storage.getAdminReplies(adminId);
+      const replyCount = replies.length;
+
+      // Get total reactions received
+      let totalReactions = 0;
+      try {
+        for (const message of messages) {
+          const reactions = await storage.getMessageReactions(message.id);
+          totalReactions += reactions.length;
+        }
+      } catch (error) {
+        // Skip if reactions table doesn't exist yet
+      }
+
+      // Don't return password
+      const { password, ...adminProfile } = admin;
+      res.json({
+        ...adminProfile,
+        messageCount,
+        replyCount,
+        totalReactions,
+      });
+    } catch (error) {
+      console.error("Error fetching admin profile:", error);
+      res.status(500).json({ error: "Failed to fetch admin profile" });
     }
   });
 

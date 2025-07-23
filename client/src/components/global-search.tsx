@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, User, Users, MessageSquare } from "lucide-react";
+import { Search, User, Users, MessageSquare, Shield } from "lucide-react";
 import { Link } from "wouter";
 import { formatTimeAgo } from "@/lib/utils";
 import type { User as UserType } from "@shared/schema";
@@ -148,6 +148,47 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                     <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No users found matching "{searchQuery}"</p>
                   </div>
+                )}
+                
+                {/* Admin search results */}
+                {searchResults.admins?.length > 0 && (
+                  <>
+                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-t border-gray-200 dark:border-gray-700">
+                      Whisper Listeners
+                    </div>
+                    {searchResults.admins.map((admin: any) => (
+                      <Link key={`admin-${admin.id}`} href={`/admin/${admin.id}`} onClick={handleUserClick}>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer transition-colors">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={admin.profilePicture || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
+                              {admin.displayName.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                {admin.displayName}
+                              </span>
+                              <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Whisper Listener
+                              </Badge>
+                            </div>
+                            {admin.bio && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                {admin.bio}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500 dark:text-gray-500">
+                              Joined {admin.createdAt ? formatTimeAgo(admin.createdAt) : 'Unknown'}
+                            </p>
+                          </div>
+                          <Shield className="w-4 h-4 text-purple-400 dark:text-purple-500" />
+                        </div>
+                      </Link>
+                    ))}
+                  </>
                 )}
               </div>
             ) : searchResults && activeTab === "messages" ? (

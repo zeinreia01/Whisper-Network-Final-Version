@@ -40,6 +40,10 @@ export interface IStorage {
   getAdminById(adminId: number): Promise<Admin | undefined>;
   getAllAdmins(): Promise<Admin[]>;
   updateAdminStatus(adminId: number, isActive: boolean): Promise<Admin>;
+  updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; lastDisplayNameChange?: Date }): Promise<Admin>;
+  getAdminMessages(adminId: number): Promise<MessageWithReplies[]>;
+  getAdminReplies(adminId: number): Promise<Reply[]>;
+  searchAdmins(query: string): Promise<Admin[]>;
 
   // Recipients operations - now returns admin display names
   getRecipients(): Promise<string[]>;
@@ -636,6 +640,81 @@ export class DatabaseStorage implements IStorage {
       .where(ilike(users.username, searchTerm))
       .orderBy(desc(users.createdAt));
     return result;
+  }
+
+  async searchAdmins(query: string): Promise<Admin[]> {
+    if (!query.trim()) {
+      return this.getAllAdmins();
+    }
+
+    const searchTerm = `%${query.toLowerCase()}%`;
+    const result = await db
+      .select()
+      .from(admins)
+      .where(
+        or(
+          ilike(admins.username, searchTerm),
+          ilike(admins.displayName, searchTerm)
+        )
+      )
+      .orderBy(desc(admins.createdAt));
+    return result;
+  }
+
+  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; lastDisplayNameChange?: Date }): Promise<Admin> {
+    const [updatedAdmin] = await db
+      .update(admins)
+      .set(updates)
+      .where(eq(admins.id, adminId))
+      .returning();
+    
+    if (!updatedAdmin) {
+      throw new Error("Admin not found");
+    }
+    
+    return updatedAdmin;
+  }
+
+  async getAdminMessages(adminId: number): Promise<MessageWithReplies[]> {
+    const adminMessages = await db.query.messages.findMany({
+      where: eq(messages.adminId, adminId),
+      orderBy: desc(messages.createdAt),
+      with: {
+        replies: {
+          orderBy: desc(replies.createdAt),
+          with: {
+            user: true,
+            admin: true,
+          },
+        },
+        user: true,
+        admin: true,
+      },
+    });
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      adminMessages.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
+  }
+
+  async getAdminReplies(adminId: number): Promise<Reply[]> {
+    const adminReplies = await db
+      .select()
+      .from(replies)
+      .where(eq(replies.adminId, adminId))
+      .orderBy(desc(replies.createdAt));
+
+    return adminReplies;
   }
 
   async getUserProfile(userId: number, currentUserId?: number): Promise<UserProfile | null> {

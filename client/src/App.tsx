@@ -16,6 +16,7 @@ import Login from "@/pages/login";
 import { UserProfilePage } from "@/pages/user-profile";
 import PersonalArchivePage from "@/pages/personal-archive";
 import PersonalPage from "@/pages/personal";
+import AdminProfilePage from "@/pages/admin-profile";
 import { useState, useEffect } from "react";
 
 function Router() {
@@ -48,6 +49,8 @@ function Router() {
         <Route path="/user/:id" component={UserProfilePage} />
         <Route path="/personal-archive" component={PersonalArchivePage} />
         <Route path="/personal" component={PersonalPage} />
+        <Route path="/admin-profile" component={AdminProfilePage} />
+        <Route path="/admin/:id" component={AdminProfilePage} />
         <Route path="/login" component={Login} />
         <Route component={NotFound} />
       </Switch>

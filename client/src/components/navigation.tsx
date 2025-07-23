@@ -29,7 +29,7 @@ export function Navigation() {
           <div className="flex justify-between items-center h-14">
             {/* Logo section - moved closer to center on mobile */}
             <div className="flex items-center flex-shrink-0">
-              <Link href="/">
+              <Link href="/landing">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight">
                   Whisper Network
                 </h2>
@@ -164,6 +164,10 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate("/admin-profile")}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Profile Settings
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={logout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out

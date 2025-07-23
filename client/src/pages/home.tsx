@@ -136,7 +136,10 @@ export default function Home() {
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">Share Your Voice</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Create a message to share with the community or keep private for admin review
+            {admin 
+              ? "Create network announcements and communicate with the community"
+              : "Create a message to share with the community or keep private for admin review"
+            }
           </p>
         </div>
 
@@ -257,7 +260,7 @@ export default function Home() {
                       disabled={createMessageMutation.isPending}
                       className="flex-1 bg-primary hover:bg-primary/90"
                     >
-                      {createMessageMutation.isPending ? "Sending..." : "Send Message"}
+                      {createMessageMutation.isPending ? "Creating..." : (admin ? "Make Announcement" : "Send Message")}
                     </Button>
                     <Button 
                       onClick={() => {

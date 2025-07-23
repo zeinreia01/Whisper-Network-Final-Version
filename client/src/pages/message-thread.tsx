@@ -19,7 +19,13 @@ import type { MessageWithReplies, Reply, ReplyWithUser } from "@shared/schema";
 
 export default function MessageThread() {
   const { id } = useParams();
-  const [replyForm, setReplyForm] = useState({ content: "", nickname: "" });
+  const [replyForm, setReplyForm] = useState({ 
+    content: "", 
+    nickname: "",
+    parentId: null as number | null,
+    mentionedUserId: null as number | null,
+    mentionedAdminId: null as number | null,
+  });
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [deleteReplyId, setDeleteReplyId] = useState<number | null>(null);
   const { admin, user } = useAuth();
@@ -40,20 +46,29 @@ export default function MessageThread() {
   });
 
   const addReplyMutation = useMutation({
-    mutationFn: async (data: { content: string; nickname: string }) => {
+    mutationFn: async (data: { content: string; nickname: string; parentId?: number | null; mentionedUserId?: number | null; mentionedAdminId?: number | null }) => {
       const replyData = {
         messageId: parseInt(id!),
         content: data.content,
         nickname: data.nickname,
         userId: user?.id,
         adminId: admin?.id,
+        parentId: data.parentId,
+        mentionedUserId: data.mentionedUserId,
+        mentionedAdminId: data.mentionedAdminId,
       };
       return await apiRequest("POST", "/api/replies", replyData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages", id] });
       const defaultNickname = user ? user.username : admin ? admin.displayName : "";
-      setReplyForm({ content: "", nickname: defaultNickname });
+      setReplyForm({ 
+        content: "", 
+        nickname: defaultNickname,
+        parentId: null,
+        mentionedUserId: null,
+        mentionedAdminId: null,
+      });
       toast({
         title: "Reply added",
         description: "Your reply has been posted successfully.",
@@ -213,12 +228,30 @@ export default function MessageThread() {
           </div>
 
           {/* Reply Form */}
-          <Card>
+          <Card id="reply-form">
             <CardHeader>
               <h3 className="text-lg font-medium flex items-center gap-2">
                 <ReplyIcon className="w-5 h-5" />
-                Add Your Reply
+                {replyForm.parentId ? "Reply to Comment" : "Add Your Reply"}
               </h3>
+              {replyForm.parentId && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Replying to a comment</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setReplyForm(prev => ({ 
+                      ...prev, 
+                      parentId: null, 
+                      mentionedUserId: null, 
+                      mentionedAdminId: null,
+                      content: ""
+                    }))}
+                  >
+                    Cancel Reply
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmitReply} className="space-y-4">
@@ -327,6 +360,28 @@ export default function MessageThread() {
                                 </span>
                               </div>
                               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{reply.content}</p>
+                              
+                              {/* Reply actions */}
+                              <div className="flex items-center gap-2 mt-2 text-sm">
+                                <button
+                                  onClick={() => {
+                                    const mentionText = `@${reply.nickname} `;
+                                    setReplyForm(prev => ({
+                                      ...prev,
+                                      content: mentionText,
+                                      parentId: reply.id,
+                                      mentionedUserId: reply.userId,
+                                      mentionedAdminId: reply.adminId
+                                    }));
+                                    // Scroll to reply form
+                                    document.querySelector('#reply-form')?.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                  className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                                >
+                                  <ReplyIcon className="w-3 h-3" />
+                                  Reply
+                                </button>
+                              </div>
                             </div>
                           </div>
                           

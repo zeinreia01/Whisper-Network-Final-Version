@@ -52,8 +52,11 @@ export const admins = pgTable("admins", {
   username: text("username").notNull().unique(),
   password: text("password"), // Optional password for non-ZEKE001 accounts
   displayName: text("display_name").notNull().unique(), // What shows in recipient options
+  profilePicture: text("profile_picture"), // URL or path to profile picture
+  bio: text("bio"), // Admin's bio/description (200 character limit)
   role: text("role").notNull().default("admin"), // admin, moderator, support, community_manager
   isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
+  lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
 });
