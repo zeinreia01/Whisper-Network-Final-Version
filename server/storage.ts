@@ -1018,6 +1018,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions));
   }
 
+  ```text
   async isMessageLiked(userId: number, adminId: number | undefined, messageId: number): Promise<boolean> {
     const conditions = [eq(likedMessages.messageId, messageId)];
 

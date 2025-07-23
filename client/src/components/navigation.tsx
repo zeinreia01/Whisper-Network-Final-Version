@@ -29,11 +29,15 @@ export function Navigation() {
           <div className="flex justify-between items-center h-14">
             {/* Logo section - moved closer to center on mobile */}
             <div className="flex items-center flex-shrink-0">
-              <Link href="/">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight">
-                  Whisper Network
-                </h2>
-              </Link>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('hasVisitedWhisperingNetwork');
+                  window.location.reload();
+                }}
+                className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight hover:text-purple-600 transition-colors"
+              >
+                Whisper Network
+              </button>
             </div>
 
             {/* Navigation items - responsive design */}

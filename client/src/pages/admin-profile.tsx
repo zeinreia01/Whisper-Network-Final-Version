@@ -350,16 +350,22 @@ export function AdminProfilePage() {
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
                     {isEditing ? (
-                      <Textarea
-                        id="bio"
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        placeholder="Tell users about yourself..."
-                        className="max-w-md resize-none"
-                        rows={3}
-                      />
+                      <div className="space-y-1">
+                        <Textarea
+                          id="bio"
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          placeholder="Tell users about yourself..."
+                          className="max-w-md resize-none"
+                          rows={3}
+                          maxLength={200}
+                        />
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {bio.length}/200 characters
+                        </div>
+                      </div>
                     ) : (
-                      <p className="text-gray-600 dark:text-gray-300">
+                      <p className="text-gray-600 dark:text-gray-300 max-w-md">
                         {admin.bio || "No bio added yet."}
                       </p>
                     )}

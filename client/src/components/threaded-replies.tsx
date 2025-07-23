@@ -92,7 +92,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
           style={{ left: `${(level - 1) * 24 + 16}px` }}
         />
       )}
-      
+
       {/* Reply content */}
       <div 
         className="flex items-start space-x-3 group relative"
@@ -102,7 +102,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
         <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm relative z-10">
           {reply.nickname.charAt(0).toUpperCase()}
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="bg-muted/30 rounded-lg px-3 py-2 mb-2">
@@ -126,7 +126,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
                   {formatTimeAgo(reply.createdAt!)}
                 </span>
               </div>
-              
+
               {/* Reply management controls */}
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1">
                 {/* Admin controls */}
@@ -206,11 +206,11 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
                 )}
               </div>
             </div>
-            
+
             {/* Reply content */}
             <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
           </div>
-          
+
           {/* Reply action */}
           {level < MAX_NESTING_LEVEL && (user || admin) && (
             <Button
@@ -267,7 +267,7 @@ export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, 
     // Second pass: build the tree structure
     flatReplies.forEach(reply => {
       const replyWithChildren = replyMap.get(reply.id)!;
-      
+
       if (reply.parentId) {
         const parent = replyMap.get(reply.parentId);
         if (parent) {
@@ -352,19 +352,71 @@ export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, 
         <MessageSquare className="h-4 w-4" />
         <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
       </div>
-      
+
       {/* Threaded replies */}
       <div className="space-y-3">
         {threadedReplies.map((reply) => (
-          <ReplyItem
-            key={reply.id}
-            reply={reply}
-            messageId={messageId}
-            messageUserId={messageUserId}
-            level={0}
-            onWarning={onWarning}
-            onReply={handleReplyClick}
-          />
+          
+          <div className="relative">
+      {/* Threading line - Only show if not at root level */}
+      
+
+      {/* Reply content */}
+      <div 
+        className="flex items-start space-x-3 group relative"
+        
+      >
+        {/* Avatar */}
+        <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm relative z-10">
+          {reply.nickname.charAt(0).toUpperCase()}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="bg-muted/30 rounded-lg px-3 py-2 mb-2">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center space-x-2">
+                {/* Make nickname clickable for authenticated users */}
+                {reply.userId ? (
+              <Link href={`/user/${reply.userId}`}>
+                <span className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline cursor-pointer">
+                  {reply.nickname}
+                </span>
+              </Link>
+            ) : reply.adminId ? (
+              <Link href={`/admins/${reply.adminId}/profile`}>
+                <span className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline cursor-pointer">
+                  {reply.nickname}
+                </span>
+              </Link>
+            ) : (
+                  <span className="text-sm font-medium text-foreground">{reply.nickname}</span>
+                )}
+                {/* User type badges */}
+                {reply.adminId && <UserBadge userType="admin" variant="small" />}
+                {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
+                <span className="text-xs text-muted-foreground">
+                  {formatTimeAgo(reply.createdAt!)}
+                </span>
+              </div>
+
+              {/* Reply management controls */}
+              
+            </div>
+
+            {/* Reply content */}
+            <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
+          </div>
+
+          {/* Reply action */}
+          
+        </div>
+      </div>
+
+      {/* Nested replies */}
+      
+    </div>
         ))}
       </div>
 
@@ -383,7 +435,7 @@ export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, 
               Cancel
             </Button>
           </div>
-          
+
           <div className="space-y-3">
             <Input
               placeholder={defaultNickname ? `Replying as: ${defaultNickname}` : "Your nickname..."}
