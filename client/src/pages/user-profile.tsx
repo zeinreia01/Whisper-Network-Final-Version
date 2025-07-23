@@ -34,15 +34,14 @@ export function UserProfilePage() {
     queryKey: [`/api/users/${userId}/profile`, currentUserId],
     queryFn: async () => {
       const url = `/api/users/${userId}/profile${currentUserId ? `?currentUserId=${currentUserId}` : ''}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch profile');
-      return response.json();
+      return apiRequest('GET', url);
     },
     enabled: !!userId && (!!user || !!admin),
   });
 
   const { data: userMessages, isLoading: messagesLoading } = useQuery({
     queryKey: [`/api/users/${userId}/messages`],
+    queryFn: () => apiRequest('GET', `/api/users/${userId}/messages`),
     enabled: !!userId && (!!user || !!admin),
   });
 

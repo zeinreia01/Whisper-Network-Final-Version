@@ -765,15 +765,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/users/:userId/verification", async (req, res) => {
     try {
       const { userId } = req.params;
-      const { isVerified, adminUsername } = req.body;
-
-      // Only ZEKE001 can grant/revoke verified badges
-      if (adminUsername !== "ZEKE001") {
-        return res.status(403).json({ message: "Only ZEKE001 can manage verified badges" });
-      }
+      const { isVerified } = req.body;
 
       const user = await storage.updateUserVerificationStatus(parseInt(userId), isVerified);
-      res.json(user);
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error updating user verification:", error);
       res.status(500).json({ message: "Failed to update verification status" });
@@ -783,15 +779,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/admins/:adminId/verification", async (req, res) => {
     try {
       const { adminId } = req.params;
-      const { isVerified, adminUsername } = req.body;
-
-      // Only ZEKE001 can grant/revoke verified badges
-      if (adminUsername !== "ZEKE001") {
-        return res.status(403).json({ message: "Only ZEKE001 can manage verified badges" });
-      }
+      const { isVerified } = req.body;
 
       const admin = await storage.updateAdminVerificationStatus(parseInt(adminId), isVerified);
-      res.json(admin);
+      const { password, ...adminWithoutPassword } = admin;
+      res.json(adminWithoutPassword);
     } catch (error) {
       console.error("Error updating admin verification:", error);
       res.status(500).json({ message: "Failed to update verification status" });

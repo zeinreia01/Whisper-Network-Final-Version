@@ -181,7 +181,7 @@ export function UserManagement() {
             </div>
           ) : Array.isArray(displayUsers) && displayUsers.length > 0 ? (
             <div className="space-y-3">
-              {Array.isArray(displayUsers) && displayUsers.map((user: any) => (
+              {displayUsers.map((user: any) => (
               <div key={user.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-4">
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   <div className="flex items-center gap-2 min-w-0">
