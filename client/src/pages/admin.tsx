@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCard } from "@/components/message-card";
 import { AdminManagement } from "@/components/admin-management";
 import { UserManagement } from "@/components/user-management";
+import { VerificationManagement } from "@/components/verification-management";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -114,17 +115,21 @@ export default function Admin() {
     <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="mb-8 sm:mb-12">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Whisper Listener Dashboard</h1>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 self-start sm:self-center"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start sm:items-center gap-4 mb-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground break-words">Whisper Listener Dashboard</h1>
+            </div>
+            <div className="flex-shrink-0">
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden xs:inline">Logout</span>
+              </Button>
+            </div>
           </div>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Private messages from Silent Messengers and community guidance
@@ -155,23 +160,30 @@ export default function Admin() {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="messages" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto p-1">
-            <TabsTrigger value="messages" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
-              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="hidden xs:inline sm:hidden">Msg</span>
-              <span className="hidden sm:inline">Messages</span>
-            </TabsTrigger>
-            <TabsTrigger value="user-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
-              <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="hidden xs:inline sm:hidden">Users</span>
-              <span className="hidden sm:inline">User Management</span>
-            </TabsTrigger>
-            <TabsTrigger value="admin-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
-              <Settings className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="hidden xs:inline sm:hidden">Admin</span>
-              <span className="hidden sm:inline">Admin Management</span>
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1 min-w-[500px]">
+              <TabsTrigger value="messages" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="hidden xs:inline sm:hidden">Msg</span>
+                <span className="hidden sm:inline">Messages</span>
+              </TabsTrigger>
+              <TabsTrigger value="user-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="hidden xs:inline sm:hidden">Users</span>
+                <span className="hidden sm:inline">User Management</span>
+              </TabsTrigger>
+              <TabsTrigger value="verification" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="hidden xs:inline sm:hidden">Verify</span>
+                <span className="hidden sm:inline">Verification</span>
+              </TabsTrigger>
+              <TabsTrigger value="admin-management" className="flex items-center justify-center gap-1 py-3 px-1 text-xs sm:text-sm min-h-[44px]">
+                <Settings className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="hidden xs:inline sm:hidden">Admin</span>
+                <span className="hidden sm:inline">Admin Management</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="messages" className="mt-4 sm:mt-6">
             <Card>
@@ -257,10 +269,13 @@ export default function Admin() {
             <UserManagement />
           </TabsContent>
 
+          <TabsContent value="verification" className="mt-4 sm:mt-6">
+            <VerificationManagement />
+          </TabsContent>
+
           <TabsContent value="admin-management" className="mt-4 sm:mt-6">
             <AdminManagement />
           </TabsContent>
-
 
         </Tabs>
       </div>

@@ -31,11 +31,11 @@ export function Navigation() {
             <div className="flex items-center flex-shrink-0">
               <Link href="/">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight">
-                  Whispering Network
+                  Whisper Network
                 </h2>
               </Link>
             </div>
-            
+
             {/* Navigation items - responsive design */}
             <div className="flex items-center space-x-1">
               {/* Desktop navigation */}
@@ -53,7 +53,7 @@ export function Navigation() {
                     </button>
                   </Link>
                 ))}
-                
+
                 {admin && (
                   <Link href="/admin">
                     <button
@@ -85,7 +85,7 @@ export function Navigation() {
                     </button>
                   </Link>
                 ))}
-                
+
                 {admin && (
                   <Link href="/admin">
                     <button
@@ -101,7 +101,7 @@ export function Navigation() {
                   </Link>
                 )}
               </div>
-              
+
               {/* Global search for authenticated users */}
               {(user || admin) && (
                 <Button
@@ -114,10 +114,10 @@ export function Navigation() {
                   <span className="hidden sm:inline ml-2">Search</span>
                 </Button>
               )}
-              
+
               {/* Notifications for authenticated users */}
               {(user || admin) && <NotificationCenter />}
-              
+
               {/* User authentication section */}
               {user ? (
                 <DropdownMenu>

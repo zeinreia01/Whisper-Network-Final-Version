@@ -7,7 +7,7 @@
   .xs\:flex-row {
     flex-direction: row;
   }
-  
+
   .xs\:inline {
     display: inline;
   }
@@ -95,48 +95,48 @@
 }
 
 @layer utilities {
-  
+
   .glass-effect {
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.9);
   }
-  
+
   .dark .glass-effect {
     backdrop-filter: blur(10px);
     background: rgba(34, 34, 40, 0.9);
   }
-  
+
   .message-card {
     transition: all 0.3s ease;
   }
-  
+
   .message-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   }
-  
+
   /* Mobile-specific improvements */
   @media (max-width: 640px) {
     .message-card {
       margin-bottom: 1rem;
     }
-    
+
     .message-card:hover {
       transform: none; /* Disable hover transform on mobile for better touch interaction */
     }
-    
+
     /* Ensure text wraps properly on mobile */
     .message-card p {
       word-wrap: break-word;
       overflow-wrap: break-word;
     }
-    
+
     /* Improve button spacing on mobile */
     .message-card button {
       min-height: 44px; /* Better touch targets */
     }
   }
-  
+
   .category-dot {
     width: 8px;
     height: 8px;
@@ -144,45 +144,45 @@
     display: inline-block;
     margin-right: 8px;
   }
-  
+
   .category-hope {
     background-color: var(--hope);
   }
-  
+
   .category-reflection {
     background-color: var(--reflection);
   }
-  
+
   .category-gratitude {
     background-color: var(--gratitude);
   }
-  
+
   .category-support {
     background-color: var(--support);
   }
-  
+
   .category-dreams {
     background-color: var(--dreams);
   }
-  
+
   .high-contrast {
     filter: contrast(1.2) brightness(1.1);
   }
-  
+
   .large-text {
     font-size: 1.2em !important;
   }
-  
+
   .reduced-motion * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
   }
-  
+
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
   }
@@ -208,4 +208,41 @@
     transform: translateY(0); 
     opacity: 1; 
   }
+}
+
+/* Custom scrollbar styles for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground));
+}
+
+/* Mobile responsive breakpoints */
+@screen xs {
+  @apply min-w-0;
+}
+
+/* Prevent horizontal overflow on mobile */
+.mobile-safe {
+  @apply overflow-x-auto;
+}
+
+/* Admin tabs scrollable container */
+.admin-tabs-container {
+  @apply overflow-x-auto;
+}
+
+.admin-tabs-container .tabs-list {
+  @apply min-w-max;
 }

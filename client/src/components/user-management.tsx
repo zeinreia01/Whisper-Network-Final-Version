@@ -181,92 +181,49 @@ export function UserManagement() {
           ) : Array.isArray(displayUsers) && displayUsers.length > 0 ? (
             <div className="space-y-3">
               {Array.isArray(displayUsers) && displayUsers.map((user: any) => (
-                <div key={user.id} className="border rounded-lg p-4 hover:bg-muted transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <h4 className="font-medium text-gray-900">{user.username}</h4>
-                          <Badge 
-                            variant={user.isActive ? "default" : "secondary"}
-                            className={user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
-                          >
-                            {user.isActive ? "Active" : "Inactive"}
+              <div key={user.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-4">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium truncate">{user.displayName || user.username}</p>
+                        {user.isVerified && (
+                          <Badge className="bg-blue-500/10 text-blue-700 flex items-center gap-1 flex-shrink-0">
+                            <Star className="w-3 h-3" />
+                            Verified
                           </Badge>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <span className="flex items-center space-x-1">
-                            <Calendar className="w-3 h-3" />
-                            <span>Joined {formatTimeAgo(user.createdAt!)}</span>
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedUser(user)}
-                            className="h-auto p-0 text-primary hover:text-primary/80"
-                          >
-                            <MessageCircle className="w-3 h-3 mr-1" />
-                            View Messages
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleUserStatus(user.id, user.isActive)}
-                        disabled={toggleUserStatusMutation.isPending}
-                      >
-                        {user.isActive ? (
-                          <>
-                            <Ban className="w-3 h-3 mr-1" />
-                            Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Activate
-                          </>
                         )}
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            disabled={deleteUserMutation.isPending}
-                          >
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete User Account</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete the user "{user.username}" and all their messages and replies. 
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteUser(user.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete User
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      </div>
+                      <p className="text-sm text-gray-600 truncate">@{user.username}</p>
+                      <p className="text-xs text-gray-500">ID: {user.id}</p>
                     </div>
                   </div>
+                  <Badge variant={user.isActive ? "default" : "secondary"} className="flex-shrink-0">
+                    {user.isActive ? "Active" : "Inactive"}
+                  </Badge>
                 </div>
-              ))}
+                <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 flex-shrink-0">
+                  <Button
+                    onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)}
+                    variant={user.isActive ? "destructive" : "default"}
+                    size="sm"
+                    disabled={toggleUserStatusMutation.isPending}
+                    className="min-h-[36px]"
+                  >
+                    {user.isActive ? "Deactivate" : "Activate"}
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteUser(user.id)}
+                    variant="destructive"
+                    size="sm"
+                    disabled={deleteUserMutation.isPending}
+                    className="min-h-[36px]"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
