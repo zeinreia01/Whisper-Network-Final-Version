@@ -65,12 +65,22 @@ export function AdminProfilePage() {
         description: "Your admin profile has been updated successfully.",
       });
       setIsEditing(false);
-      // Update the auth context with new admin data
-      queryClient.setQueryData([`/api/admins/${admin?.id}/can-update-display-name`], () => ({ canUpdate: false }));
-      // Invalidate relevant queries
+      
+      // Update form values with new data
+      setDisplayName(updatedAdmin.displayName || "");
+      setBio(updatedAdmin.bio || "");
+      setProfilePicture(updatedAdmin.profilePicture || "");
+      setProfileImagePreview(updatedAdmin.profilePicture || null);
+      
+      // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/can-update-display-name`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/profile`] });
+      
+      // Force a re-login to update auth context
+      window.location.reload();
     },
     onError: (error: any) => {
+      console.error("Profile update error:", error);
       toast({
         title: "Update failed",
         description: error.message || "Failed to update profile",
