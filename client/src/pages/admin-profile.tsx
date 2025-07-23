@@ -1,4 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+
+<old_str>import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { ArrowLeft, Camera, Upload, X, Clock, Shield } from "lucide-react";
+import { Link } from "wouter";</old_str>
+<new_str>import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,40 +42,68 @@ export function AdminProfilePage() {
   // Get display name cooldown status
   const { data: cooldownStatus } = useQuery({
     queryKey: [`/api/admins/${admin?.id}/can-update-display-name`],
-    queryFn: async (): Promise<{ canUpdate: boolean }> => {
-      if (!admin) throw new Error("Not an admin");
-      const response = await fetch(`/api/admins/${admin.id}/can-update-display-name`);
-      if (!response.ok) throw new Error("Failed to check cooldown");
-      return response.json();
-    },
-    enabled: !!admin,
+    queryFn: () => apiRequest(`/api/admins/${admin?.id}/can-update-display-name`),
+    enabled: !!admin?.id,
   });
 
-  // Initialize form values
+  // Initialize form values when admin data loads
   useEffect(() => {
     if (admin) {
-      setDisplayName(admin.displayName || admin.username);
+      setDisplayName(admin.displayName || "");
       setBio(admin.bio || "");
       setProfilePicture(admin.profilePicture || "");
       setProfileImagePreview(admin.profilePicture || null);
     }
   }, [admin]);
 
-  // Handle file upload
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updates: any) => {
+      const response = await fetch(`/api/admins/${admin?.id}/profile`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update profile");
+      }
+
+      return response.json();
+    },
+    onSuccess: (updatedAdmin) => {
+      toast({
+        title: "Profile updated",
+        description: "Your admin profile has been updated successfully.",
+      });
+      setIsEditing(false);
+      // Update the auth context with new admin data
+      queryClient.setQueryData([`/api/admins/${admin?.id}/can-update-display-name`], () => ({ canUpdate: false }));
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/can-update-display-name`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle file upload for profile picture
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file type",
-        description: "Please select an image file (JPEG, PNG, GIF, WebP)",
+        description: "Please select an image file.",
         variant: "destructive",
       });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
       return;
     }
 
@@ -68,82 +111,29 @@ export function AdminProfilePage() {
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 5MB",
+        description: "Please select an image smaller than 5MB.",
         variant: "destructive",
       });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
       return;
     }
 
-    // Create a preview URL and convert to base64
+    // Convert to base64 for storage
     const reader = new FileReader();
     reader.onload = (e) => {
-      if (e.target?.result) {
-        const result = e.target.result as string;
-        setProfileImagePreview(result);
-        setProfilePicture(result); // Store as base64 data URL for API
-        
-        toast({
-          title: "Image selected",
-          description: "Click 'Save Changes' to update your profile picture",
-        });
-      }
-    };
-    reader.onerror = () => {
-      toast({
-        title: "Upload failed",
-        description: "There was an error reading the image file",
-        variant: "destructive",
-      });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      const base64String = e.target?.result as string;
+      setProfilePicture(base64String);
+      setProfileImagePreview(base64String);
     };
     reader.readAsDataURL(file);
   };
 
-  const removeProfileImage = () => {
-    setProfileImagePreview(null);
+  const handleRemoveProfilePicture = () => {
     setProfilePicture("");
+    setProfileImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async (updates: { displayName?: string; profilePicture?: string; bio?: string }) => {
-      if (!admin) throw new Error("Not authenticated as admin");
-      
-      const response = await apiRequest("PATCH", `/api/admins/${admin.id}/profile`, updates);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update profile");
-      }
-      return response.json();
-    },
-    onSuccess: (updatedAdmin) => {
-      // Update the auth context with the new admin data
-      const currentAuth = JSON.parse(localStorage.getItem("whispering-admin") || "{}");
-      const updatedAuth = { ...currentAuth, ...updatedAdmin };
-      localStorage.setItem("whispering-admin", JSON.stringify(updatedAuth));
-      
-      queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/can-update-display-name`] });
-      setIsEditing(false);
-      toast({
-        title: "Profile updated",
-        description: "Your admin profile has been updated successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Update failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleSaveChanges = () => {
     if (!admin) return;
@@ -229,106 +219,93 @@ export function AdminProfilePage() {
                       </Button>
                     </div>
                   )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    {admin.displayName}
-                  </h3>
-                  <Badge className="bg-purple-100 dark:bg-purple-600 text-purple-800 dark:text-white mb-3">
-                    <Shield className="w-3 h-3 mr-1" />
-                    Whisper Listener
-                  </Badge>
-                  {isEditing && (
-                    <div className="flex flex-wrap gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Photo
-                      </Button>
-                      {profileImagePreview && (
-                        <Button 
-                          variant="outline" 
+
+                <div className="flex-1 space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <Badge className="bg-purple-100 dark:bg-purple-600 text-purple-800 dark:text-white">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Whisper Listener
+                    </Badge>
+                    {admin.isVerified && (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Display Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Display Name</Label>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <Input
+                          id="displayName"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          disabled={!canUpdateDisplayName}
+                          placeholder="Enter display name"
+                          className="max-w-md"
+                        />
+                        {!canUpdateDisplayName && daysSinceLastChange !== null && (
+                          <div className="flex items-center text-sm text-orange-600 dark:text-orange-400">
+                            <Clock className="w-4 h-4 mr-1" />
+                            <span>Can change again in {30 - daysSinceLastChange} days</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-lg font-semibold">{admin.displayName}</p>
+                    )}
+                  </div>
+
+                  {/* Bio */}
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    {isEditing ? (
+                      <Textarea
+                        id="bio"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        placeholder="Tell users about yourself..."
+                        className="max-w-md resize-none"
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="text-gray-600 dark:text-gray-300">
+                        {admin.bio || "No bio added yet."}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Profile Picture URL (for editing) */}
+                  {isEditing && profileImagePreview && (
+                    <div className="space-y-2">
+                      <Label>Profile Picture Preview</Label>
+                      <div className="flex items-center space-x-2">
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          Image uploaded successfully
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
                           size="sm"
-                          onClick={removeProfileImage}
-                          className="border-red-300 dark:border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          onClick={handleRemoveProfilePicture}
                         >
-                          <X className="w-4 h-4 mr-2" />
+                          <X className="w-4 h-4 mr-1" />
                           Remove
                         </Button>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Hidden File Input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/*"
-                className="hidden"
-              />
-
-              {/* Display Name */}
-              <div className="space-y-3">
-                <Label className="text-gray-700 dark:text-gray-300 font-medium">Display Name</Label>
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <Input
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="Enter display name (2-50 characters)"
-                      maxLength={50}
-                      disabled={!canUpdateDisplayName}
-                      className="bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                    />
-                    {!canUpdateDisplayName && (
-                      <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-                        <p className="text-sm text-amber-800 dark:text-amber-400 flex items-center space-x-2">
-                          <Clock className="w-4 h-4" />
-                          <span>
-                            Display name can only be changed once every 30 days.
-                            {daysSinceLastChange !== null && (
-                              ` Wait ${30 - daysSinceLastChange} more days.`
-                            )}
-                          </span>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                    <p className="text-gray-900 dark:text-white font-medium">
-                      {admin.displayName}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Bio */}
-              <div className="space-y-3">
-                <Label className="text-gray-700 dark:text-gray-300 font-medium">Bio</Label>
-                {isEditing ? (
-                  <Textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell the community about yourself (optional, max 200 characters)"
-                    maxLength={200}
-                    rows={3}
-                    className="bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                  />
-                ) : (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                    <p className="text-gray-900 dark:text-white">
-                      {admin.bio || "No bio set"}
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Action Buttons */}
@@ -373,4 +350,4 @@ export function AdminProfilePage() {
   );
 }
 
-export default AdminProfilePage;
+export default AdminProfilePage;</old_str>

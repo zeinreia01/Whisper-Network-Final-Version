@@ -1226,6 +1226,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin profile update endpoint
+  app.patch("/api/admins/:id/profile", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+      const { displayName, profilePicture, bio } = req.body;
+
+      const admin = await storage.getAdminById(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // Check display name change cooldown
+      if (displayName && displayName !== admin.displayName) {
+        const lastChange = admin.lastDisplayNameChange;
+        if (lastChange) {
+          const daysSinceLastChange = Math.floor((Date.now() - new Date(lastChange).getTime()) / (1000 * 60 * 60 * 24));
+          if (daysSinceLastChange < 30) {
+            return res.status(400).json({ 
+              message: `Display name can only be changed once every 30 days. Wait ${30 - daysSinceLastChange} more days.` 
+            });
+          }
+        }
+      }
+
+      const updatedAdmin = await storage.updateAdminProfile(adminId, {
+        displayName,
+        profilePicture, 
+        bio,
+        lastDisplayNameChange: displayName && displayName !== admin.displayName ? new Date() : undefined,
+      });
+
+      // Return admin without password
+      const { password: _, ...adminWithoutPassword } = updatedAdmin;
+      res.json(adminWithoutPassword);
+    } catch (error) {
+      console.error("Admin profile update error:", error);
+      res.status(500).json({ message: "Failed to update admin profile" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

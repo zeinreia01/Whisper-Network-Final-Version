@@ -164,7 +164,7 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate("/admin-profile")}>
+                    <DropdownMenuItem onClick={() => navigate("/admin/profile")}>
                       <Settings className="h-4 w-4 mr-2" />
                       Profile Settings
                     </DropdownMenuItem>

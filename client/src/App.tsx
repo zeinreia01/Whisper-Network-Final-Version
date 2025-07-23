@@ -48,11 +48,10 @@ function Router() {
         <Route path="/admin" component={Admin} />
         <Route path="/message/:id" component={MessageThread} />
         <Route path="/user/:id" component={UserProfilePage} />
-        <Route path="/personal-archive" component={PersonalArchivePage} />
+        <Route path="/admin-profile/:id" component={AdminProfileViewPage} />
+        <Route path="/admin/profile" component={AdminProfilePage} />
         <Route path="/personal" component={PersonalPage} />
-        <Route path="/admin-profile" component={AdminProfilePage} />
-        <Route path="/admin/:id" component={AdminProfilePage} />
-        <Route path="/login" component={Login} />
+        <Route path="/personal-archive" component={PersonalArchivePage} />
         <Route component={NotFound} />
       </Switch>
     </div>
