@@ -641,65 +641,70 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserProfile(userId: number, currentUserId?: number): Promise<UserProfile | null> {
-    const user = await this.getUserById(userId);
-    if (!user) return null;
-
-    const userMessages = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.userId, userId));
-
-    const userReplies = await db
-      .select()
-      .from(replies)
-      .where(eq(replies.userId, userId));
-
-    // Count reactions on all user messages
-    let totalReactions = 0;
     try {
-      for (const message of userMessages) {
-        const messageReactions = await db
-          .select()
-          .from(reactions)
-          .where(eq(reactions.messageId, message.id));
-        totalReactions += messageReactions.length;
+      const user = await this.getUserById(userId);
+      if (!user) return null;
+
+      const userMessages = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.userId, userId));
+
+      const userReplies = await db
+        .select()
+        .from(replies)
+        .where(eq(replies.userId, userId));
+
+      // Count reactions on all user messages
+      let totalReactions = 0;
+      try {
+        for (const message of userMessages) {
+          const messageReactions = await db
+            .select()
+            .from(reactions)
+            .where(eq(reactions.messageId, message.id));
+          totalReactions += messageReactions.length;
+        }
+      } catch (error) {
+        // Skip if reactions table doesn't exist yet
+        totalReactions = 0;
       }
-    } catch (error) {
-      // Skip if reactions table doesn't exist yet
-      totalReactions = 0;
-    }
 
-    // Get follow stats
-    let followersCount = 0;
-    let followingCount = 0;
-    try {
-      const stats = await this.getFollowStats(userId);
-      followersCount = stats.followersCount;
-      followingCount = stats.followingCount;
-    } catch (error) {
-      // Skip if follows table doesn't exist yet
-    }
-
-    // Check if current user is following this user
-    let isFollowing = false;
-    try {
-      if (currentUserId && currentUserId !== userId) {
-        isFollowing = await this.isFollowing(currentUserId, userId);
+      // Get follow stats
+      let followersCount = 0;
+      let followingCount = 0;
+      try {
+        const stats = await this.getFollowStats(userId);
+        followersCount = stats.followersCount;
+        followingCount = stats.followingCount;
+      } catch (error) {
+        // Skip if follows table doesn't exist yet
       }
-    } catch (error) {
-      // Skip if follows table doesn't exist yet
-      isFollowing = false;
-    }
 
-    return {
-      ...user,
-      messageCount: userMessages.length,
-      replyCount: userReplies.length,
-      totalReactions,
-      followersCount,
-      followingCount,
-      isFollowing,
-    };
+      // Check if current user is following this user
+      let isFollowing = false;
+      try {
+        if (currentUserId && currentUserId !== userId) {
+          isFollowing = await this.isFollowing(currentUserId, userId);
+        }
+      } catch (error) {
+        // Skip if follows table doesn't exist yet
+        isFollowing = false;
+      }
+
+      return {
+        ...user,
+        messageCount: userMessages.length,
+        replyCount: userReplies.length,
+        totalReactions,
+        followersCount,
+        followingCount,
+        isFollowing,
+      };
+    } catch (error) {
+      console.error("Error in getUserProfile:", error);
+      return null;
+    }
   }
 
   // Reaction operations

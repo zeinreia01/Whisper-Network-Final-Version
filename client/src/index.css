@@ -228,16 +228,147 @@
   background-color: hsl(var(--muted-foreground));
 }
 
-/* Mobile responsive breakpoints */
-@media (min-width: 475px) {
-  .xs\:inline {
-    display: inline;
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 0.5rem;
   }
-  .xs\:flex-row {
-    flex-direction: row;
+
+  .admin-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-  .xs\:flex-none {
-    flex: none;
+
+  .admin-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .user-management-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .user-management-buttons button {
+    width: 100%;
+    min-height: 2.5rem;
+  }
+
+  /* Fix navigation overlap */
+  .navigation-container {
+    position: relative;
+    z-index: 50;
+  }
+
+  .admin-user-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+    z-index: 100;
+  }
+}
+
+/* Prevent horizontal overflow on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: 100vw;
+  }
+
+  .user-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-actions {
+    margin-top: 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .verification-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Improve button spacing on mobile */
+  .mobile-button-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .mobile-button-full {
+    grid-column: span 2;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 475px) {
+  .navigation-container {
+    padding: 0.5rem;
+    position: relative;
+  }
+
+  .admin-dropdown {
+    position: absolute;
+    right: 0.5rem;
+    top: calc(100% + 0.5rem);
+    min-width: 200px;
+    z-index: 50;
+  }
+
+  .mobile-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .user-management-card {
+    padding: 0.75rem;
+  }
+
+  .verification-card {
+    padding: 0.75rem;
+  }
+
+  /* Prevent button text overflow */
+  .mobile-text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Fix stats grid on very small screens */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 375px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 475px) {
+    .stats-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 }
 

@@ -106,7 +106,9 @@ export function UserManagement() {
   };
 
   const handleDeleteUser = (userId: number) => {
-    deleteUserMutation.mutate(userId);
+    if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      deleteUserMutation.mutate(userId);
+    }
   };
 
   const handleToggleUserStatus = (userId: number, currentStatus: boolean) => {
@@ -195,32 +197,32 @@ export function UserManagement() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 truncate">@{user.username}</p>
-                      <p className="text-xs text-gray-500">ID: {user.id}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">@{user.username}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">ID: {user.id}</p>
                     </div>
                   </div>
                   <Badge variant={user.isActive ? "default" : "secondary"} className="flex-shrink-0">
                     {user.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
-                <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0">
                   <Button
                     onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)}
                     variant={user.isActive ? "destructive" : "default"}
                     size="sm"
                     disabled={toggleUserStatusMutation.isPending}
-                    className="min-h-[36px]"
+                    className="min-h-[36px] text-xs sm:text-sm"
                   >
-                    {user.isActive ? "Deactivate" : "Activate"}
+                    {toggleUserStatusMutation.isPending ? "..." : user.isActive ? "Deactivate" : "Activate"}
                   </Button>
                   <Button
                     onClick={() => handleDeleteUser(user.id)}
                     variant="destructive"
                     size="sm"
                     disabled={deleteUserMutation.isPending}
-                    className="min-h-[36px]"
+                    className="min-h-[36px] text-xs sm:text-sm"
                   >
-                    Delete
+                    {deleteUserMutation.isPending ? "..." : "Delete"}
                   </Button>
                 </div>
               </div>

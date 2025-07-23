@@ -36,7 +36,7 @@ export function UserProfilePage() {
       const url = `/api/users/${userId}/profile${currentUserId ? `?currentUserId=${currentUserId}` : ''}`;
       return apiRequest('GET', url);
     },
-    enabled: !!userId && (!!user || !!admin),
+    enabled: !!userId && userId > 0 && (!!user || !!admin),
   });
 
   const { data: userMessages, isLoading: messagesLoading } = useQuery({

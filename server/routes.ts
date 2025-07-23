@@ -920,7 +920,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = parseInt(req.params.id);
     const currentUserId = req.query.currentUserId ? parseInt(req.query.currentUserId as string) : undefined;
 
-    if (!userId) {
+    if (!userId || isNaN(userId)) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
