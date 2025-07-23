@@ -30,18 +30,22 @@ export function UserProfilePage() {
   const currentUserId = user?.id || admin?.id;
   const isOwnProfile = currentUserId === userId;
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: [`/api/users/${userId}/profile`, currentUserId],
     queryFn: async () => {
       const url = `/api/users/${userId}/profile${currentUserId ? `?currentUserId=${currentUserId}` : ''}`;
-      return apiRequest('GET', url);
+      const response = await apiRequest('GET', url);
+      return await response.json();
     },
     enabled: !!userId && userId > 0 && (!!user || !!admin),
   });
 
-  const { data: userMessages, isLoading: messagesLoading } = useQuery({
+  const { data: userMessages, isLoading: messagesLoading } = useQuery<MessageWithReplies[]>({
     queryKey: [`/api/users/${userId}/messages`],
-    queryFn: () => apiRequest('GET', `/api/users/${userId}/messages`),
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/users/${userId}/messages`);
+      return await response.json();
+    },
     enabled: !!userId && (!!user || !!admin),
   });
 

@@ -1,15 +1,13 @@
-import { messages, replies, admins, users, reactions, notifications, follows, likedMessages, type Message, type Reply, type Admin, type User, type Reaction, type Notification, type Follow, type LikedMessage, type InsertMessage, type InsertReply, type InsertAdmin, type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, type InsertLikedMessage, type MessageWithReplies, type UserProfile, type NotificationWithDetails, type UpdateUserProfile } from "@shared/schema";
-import { db } from "./db";
-import { users, messages, replies, admins, reactions, notifications, follows, likedMessages } from "@shared/schema";
-import { eq, desc, asc, and, or, like, isNull, sql } from "drizzle-orm";
-import type { 
-  InsertUser, User, InsertMessage, Message, InsertReply, Reply, InsertAdmin, Admin,
-  InsertReaction, Reaction, InsertNotification, Notification, InsertFollow, Follow,
-  InsertLikedMessage, LikedMessage, UpdateUserProfile, MessageWithReplies, 
-  ReplyWithUser, UserProfile, NotificationWithDetails
+import { 
+  messages, replies, admins, users, reactions, notifications, follows, likedMessages,
+  type Message, type Reply, type Admin, type User, type Reaction, type Notification, 
+  type Follow, type LikedMessage, type InsertMessage, type InsertReply, type InsertAdmin, 
+  type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, 
+  type InsertLikedMessage, type MessageWithReplies, type UserProfile, 
+  type NotificationWithDetails, type UpdateUserProfile, type ReplyWithUser
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, ilike, or, and } from "drizzle-orm";
+import { eq, desc, asc, and, or, like, isNull, sql, ilike } from "drizzle-orm";
 
 export interface IStorage {
   // User operations

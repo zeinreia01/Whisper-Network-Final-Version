@@ -16,7 +16,7 @@ import { ThreadedReplies } from "@/components/threaded-replies";
 import { MessageViewer } from "@/components/message-viewer";
 import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark, MessageSquare } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { getSpotifyDisplayName } from "@/lib/spotify";
@@ -566,7 +566,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         <ThreadedReplies
           replies={replies}
           messageId={message.id}
-          messageUserId={message.userId}
+          messageUserId={message.userId ?? undefined}
           onWarning={(replyId) => {
             setSelectedReplyId(replyId);
             setShowWarningDialog(true);
