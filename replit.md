@@ -1,8 +1,8 @@
-# Whispering Network
+# Whisper Network
 
 ## Overview
 
-Whispering Network is a comprehensive full-stack web application designed as a compassionate digital sanctuary for anonymous emotional expression. Built with React/TypeScript frontend and Express.js backend, using PostgreSQL with Drizzle ORM, the platform enables secure anonymous messaging with robust moderation, user identity protection, and comprehensive safety features. Ready for deployment on Render with complete admin oversight capabilities and user-friendly onboarding.
+Whisper Network is a comprehensive full-stack web application designed as a compassionate digital sanctuary for anonymous emotional expression. Built with React/TypeScript frontend and Express.js backend, using PostgreSQL with Drizzle ORM, the platform enables secure anonymous messaging with robust moderation, user identity protection, and comprehensive safety features. Ready for deployment on Render with complete admin oversight capabilities and user-friendly onboarding.
 
 ## User Preferences
 

@@ -23,7 +23,7 @@ export function InfoDialog({ trigger }: InfoDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Heart className="h-5 w-5 text-primary" />
-            <span>Welcome to Whispering Network</span>
+            <span>Welcome to Whisper Network</span>
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="h-[60vh] max-h-[70vh] pr-4 overflow-y-auto">
@@ -33,11 +33,11 @@ export function InfoDialog({ trigger }: InfoDialogProps) {
             <section>
               <h3 className="text-lg font-semibold mb-3 flex items-center">
                 <Users className="h-4 w-4 mr-2 text-blue-600" />
-                What is Whispering Network?
+                What is Whisper Network?
               </h3>
               <div className="space-y-2 text-sm text-gray-700">
                 <p>
-                  Whispering Network is a compassionate digital sanctuary for anonymous emotional expression. 
+                  Whisper Network is a compassionate digital sanctuary for anonymous emotional expression. 
                   Here, you can share your thoughts, feelings, and experiences in a safe, supportive environment 
                   where your privacy is protected and your voice matters.
                 </p>

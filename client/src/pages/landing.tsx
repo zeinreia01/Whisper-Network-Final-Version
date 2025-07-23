@@ -21,7 +21,7 @@ export default function Landing({ onEnter }: LandingProps) {
           {/* Main Title */}
           <div className="space-y-4">
             <h1 className="text-5xl lg:text-6xl font-light text-foreground tracking-tight">
-              Whispering Network
+              Whisper Network
             </h1>
             <div className="w-16 h-px bg-border mx-auto"></div>
           </div>
@@ -77,7 +77,7 @@ export default function Landing({ onEnter }: LandingProps) {
                     In the dance between darkness and light, between speaking and listening, we discover that sometimes the most profound connections happen when we remove the masks and simply exist as we are—imperfect, searching, beautifully human."
                   </blockquote>
                   <div className="mt-6 text-right">
-                    <p className="text-gray-600 dark:text-gray-400 font-serif">— Zeke, Creator of Whispering Network</p>
+                    <p className="text-gray-600 dark:text-gray-400 font-serif">— Zeke, Creator of Whisper Network</p>
                   </div>
                 </div>
 

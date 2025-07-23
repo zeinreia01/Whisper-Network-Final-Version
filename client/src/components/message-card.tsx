@@ -419,26 +419,28 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
       )}
 
       {/* Mobile-optimized action bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 mb-4 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 mb-4 gap-2 sm:gap-3">
         {/* Primary actions row */}
-        <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="flex items-center flex-wrap gap-2 sm:gap-3">
           <button
             onClick={() => setShowReplyForm(!showReplyForm)}
-            className="hover:text-primary transition-colors flex-shrink-0"
+            className="hover:text-primary transition-colors flex-shrink-0 px-2 py-1"
+            style={{ minHeight: '44px', minWidth: '44px' }}
           >
             Reply
           </button>
-          <span className="flex-shrink-0">{message.replies.length} replies</span>
+          <span className="flex-shrink-0 px-1">{message.replies.length} replies</span>
 
           {/* Heart reaction button - visible to everyone but prompts login for non-authenticated */}
           <button
             onClick={handleHeartClick}
             disabled={reactionMutation.isPending}
-            className={`flex items-center space-x-1 transition-colors flex-shrink-0 ${
+            className={`flex items-center space-x-1 transition-colors flex-shrink-0 px-2 py-1 ${
               hasReacted 
                 ? 'text-red-500 hover:text-red-600' 
                 : 'hover:text-red-500'
             }`}
+            style={{ minHeight: '44px', minWidth: '44px' }}
           >
             <Heart 
               className={`w-4 h-4 ${hasReacted ? 'fill-current' : ''}`} 
@@ -451,12 +453,13 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
             <button
               onClick={handleArchiveClick}
               disabled={likeMutation.isPending}
-              className={`flex items-center space-x-1 transition-colors flex-shrink-0 ${
+              className={`flex items-center space-x-1 transition-colors flex-shrink-0 px-2 py-1 ${
                 hasLiked 
                   ? 'text-blue-500 hover:text-blue-600' 
                   : 'hover:text-blue-500'
               }`}
               title="Save to personal archive"
+              style={{ minHeight: '44px', minWidth: '44px' }}
             >
               <Bookmark 
                 className={`w-4 h-4 ${hasLiked ? 'fill-current' : ''}`} 
@@ -466,12 +469,12 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         </div>
 
         {/* Secondary actions row */}
-        <div className="flex items-center space-x-1 sm:space-x-2">
-          <div className="flex items-center space-x-1">
+        <div className="flex items-center flex-wrap gap-1 sm:gap-2">
+          <div className="flex items-center gap-1">
             <MessageViewer 
               message={message}
               trigger={
-                <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-8">
+                <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-9 px-2">
                   <Eye className="w-3 h-3 mr-1" />
                   <span className="hidden sm:inline">View Whisper</span>
                   <span className="sm:hidden">View</span>
@@ -479,7 +482,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
               }
             />
             <Link href={`/message/${message.id}`}>
-              <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-8">
+              <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-9 px-2">
                 <ExternalLink className="w-3 h-3 mr-1" />
                 <span className="hidden sm:inline">View Thread</span>
                 <span className="sm:hidden">Thread</span>
@@ -491,7 +494,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
           {admin && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -542,7 +545,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
           {((user && message.userId === user.id) || (admin && message.adminId === admin.id)) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Manage your message">
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0" title="Manage your message">
                   <Shield className="h-4 w-4 text-blue-600" />
                 </Button>
               </DropdownMenuTrigger>
@@ -561,7 +564,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         </div>
       </div>
 
-      {/* Threaded Replies Section */}
+      {/* Threaded Replies Section - Only show if explicitly requested (message thread page) */}
       {showThreaded && replies && replies.length > 0 && (
         <ThreadedReplies
           replies={replies}
@@ -574,7 +577,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         />
       )}
 
-      {/* Simple Replies Section - Only show if not using threaded view */}
+      {/* Simple Replies Preview - Only show on dashboard, not in thread view */}
       {showReplies && !showThreaded && replies && replies.length > 0 && (
         <div className="border-t pt-4 space-y-3">
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">

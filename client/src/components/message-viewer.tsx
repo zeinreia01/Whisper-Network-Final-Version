@@ -54,7 +54,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       downloadContainer.innerHTML = `
         <div style="text-align: center; margin-bottom: 32px;">
           <h1 style="font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px 0; font-family: 'Times New Roman', serif;">
-            Whispering Network
+            Whisper Network
           </h1>
           <p style="color: #94a3b8; font-size: 14px; margin: 0; font-family: 'Times New Roman', serif;">
             A place where voices unite and hearts connect
@@ -194,7 +194,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           {/* Header with branding */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-              Whispering Network
+              Whisper Network
             </h1>
             <p className="text-gray-300 dark:text-gray-300 text-sm font-serif">A place where voices unite and hearts connect</p>
           </div>
@@ -260,7 +260,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           {/* Footer */}
           <div className="text-center mt-8 pt-6 border-t border-gray-600 dark:border-gray-600">
             <p className="text-xs text-gray-400 dark:text-gray-400 font-serif">
-              This whisper was shared on Whispering Network • {new Date(message.createdAt!).toLocaleDateString()}
+              This whisper was shared on Whisper Network • {new Date(message.createdAt!).toLocaleDateString()}
             </p>
           </div>
         </div>
