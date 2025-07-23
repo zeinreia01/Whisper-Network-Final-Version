@@ -50,35 +50,59 @@ export function PersonalPage() {
   // Handle file upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!file) return;
 
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select an image file (JPG, PNG, GIF, etc.).",
-          variant: "destructive",
-        });
-        return;
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPEG, PNG, GIF, WebP)",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
+      return;
+    }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    // Create preview URL and convert to base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        const result = e.target.result as string;
         setProfileImagePreview(result);
         setProfilePicture(result);
-      };
-      reader.readAsDataURL(file);
-    }
+
+        toast({
+          title: "Image selected",
+          description: "Click 'Save Changes' to update your profile picture",
+        });
+      }
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Upload failed",
+        description: "There was an error reading the image file",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const removeProfileImage = () => {
@@ -92,7 +116,7 @@ export function PersonalPage() {
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: { displayName?: string; profilePicture?: string }) => {
       if (!user) throw new Error("Not authenticated as user");
-      
+
       // Validate the updates
       try {
         updateUserProfileSchema.parse(updates);
@@ -112,7 +136,7 @@ export function PersonalPage() {
       const currentAuth = JSON.parse(localStorage.getItem("whispering-user") || "{}");
       const updatedAuth = { ...currentAuth, ...updatedUser };
       localStorage.setItem("whispering-user", JSON.stringify(updatedAuth));
-      
+
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/can-update-display-name`] });
       setIsEditing(false);
       toast({
@@ -133,11 +157,11 @@ export function PersonalPage() {
 
   const handleSaveProfile = () => {
     const updates: { displayName?: string; profilePicture?: string } = {};
-    
+
     if (displayName !== (user?.displayName || user?.username)) {
       updates.displayName = displayName;
     }
-    
+
     if (profilePicture !== (user?.profilePicture || "")) {
       updates.profilePicture = profilePicture || undefined;
     }

@@ -585,7 +585,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
             <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
           </div>
           <div className="space-y-3">
-            {replies.map((reply) => (
+            {replies.slice(0, 2).map((reply) => (
               <div key={reply.id} className="flex items-start space-x-3 group">
                 <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm">
                   {reply.nickname.charAt(0).toUpperCase()}
@@ -666,6 +666,11 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 </div>
               </div>
             ))}
+          {replies.length > 2 && (
+                  <div className="text-xs text-muted-foreground ml-8">
+                    +{replies.length - 2} more replies
+                  </div>
+                )}
           </div>
         </div>
       )}

@@ -537,7 +537,61 @@ export class DatabaseStorage implements IStorage {
     return admin;
   }
 
+  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; lastDisplayNameChange?: Date }): Promise<Admin> {
+    const [updatedAdmin] = await db
+      .update(admins)
+      .set(updates)
+      .where(eq(admins.id, adminId))
+      .returning();
 
+    if (!updatedAdmin) {
+      throw new Error("Admin not found");
+    }
+
+    return updatedAdmin;
+  }
+
+  async getAdminMessages(adminId: number): Promise<MessageWithReplies[]> {
+    const adminMessages = await db.query.messages.findMany({
+      where: eq(messages.adminId, adminId),
+      orderBy: desc(messages.createdAt),
+      with: {
+        replies: {
+          orderBy: desc(replies.createdAt),
+          with: {
+            user: true,
+            admin: true,
+          },
+        },
+        user: true,
+        admin: true,
+      },
+    });
+
+    // Add reaction counts to messages
+    const messagesWithReactions = await Promise.all(
+      adminMessages.map(async (message) => {
+        const messageReactions = await this.getMessageReactions(message.id);
+        return {
+          ...message,
+          reactionCount: messageReactions.length,
+          reactions: messageReactions,
+        };
+      })
+    );
+
+    return messagesWithReactions;
+  }
+
+  async getAdminReplies(adminId: number): Promise<Reply[]> {
+    const adminReplies = await db
+      .select()
+      .from(replies)
+      .where(eq(replies.adminId, adminId))
+      .orderBy(desc(replies.createdAt));
+
+    return adminReplies;
+  }
 
   async getUserReplies(userId: number): Promise<Reply[]> {
     const result = await db
@@ -659,62 +713,6 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(desc(admins.createdAt));
     return result;
-  }
-
-  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; lastDisplayNameChange?: Date }): Promise<Admin> {
-    const [updatedAdmin] = await db
-      .update(admins)
-      .set(updates)
-      .where(eq(admins.id, adminId))
-      .returning();
-    
-    if (!updatedAdmin) {
-      throw new Error("Admin not found");
-    }
-    
-    return updatedAdmin;
-  }
-
-  async getAdminMessages(adminId: number): Promise<MessageWithReplies[]> {
-    const adminMessages = await db.query.messages.findMany({
-      where: eq(messages.adminId, adminId),
-      orderBy: desc(messages.createdAt),
-      with: {
-        replies: {
-          orderBy: desc(replies.createdAt),
-          with: {
-            user: true,
-            admin: true,
-          },
-        },
-        user: true,
-        admin: true,
-      },
-    });
-
-    // Add reaction counts to messages
-    const messagesWithReactions = await Promise.all(
-      adminMessages.map(async (message) => {
-        const messageReactions = await this.getMessageReactions(message.id);
-        return {
-          ...message,
-          reactionCount: messageReactions.length,
-          reactions: messageReactions,
-        };
-      })
-    );
-
-    return messagesWithReactions;
-  }
-
-  async getAdminReplies(adminId: number): Promise<Reply[]> {
-    const adminReplies = await db
-      .select()
-      .from(replies)
-      .where(eq(replies.adminId, adminId))
-      .orderBy(desc(replies.createdAt));
-
-    return adminReplies;
   }
 
   async getUserProfile(userId: number, currentUserId?: number): Promise<UserProfile | null> {

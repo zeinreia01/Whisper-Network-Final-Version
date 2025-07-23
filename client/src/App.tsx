@@ -17,6 +17,7 @@ import { UserProfilePage } from "@/pages/user-profile";
 import PersonalArchivePage from "@/pages/personal-archive";
 import PersonalPage from "@/pages/personal";
 import AdminProfilePage from "@/pages/admin-profile";
+import AdminProfileViewPage from "@/pages/admin-profile-view";
 import { useState, useEffect } from "react";
 
 function Router() {

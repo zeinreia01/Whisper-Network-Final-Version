@@ -149,7 +149,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                     <p>No users found matching "{searchQuery}"</p>
                   </div>
                 )}
-                
+
                 {/* Admin search results */}
                 {searchResults.admins?.length > 0 && (
                   <>

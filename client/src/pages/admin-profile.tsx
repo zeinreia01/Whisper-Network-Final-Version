@@ -86,7 +86,7 @@ export function AdminProfilePage() {
         setProfilePicture(result); // Store as base64 data URL for API
         
         toast({
-          title: "Image uploaded",
+          title: "Image selected",
           description: "Click 'Save Changes' to update your profile picture",
         });
       }
