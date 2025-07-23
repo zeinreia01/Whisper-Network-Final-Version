@@ -47,9 +47,19 @@ export function AdminProfilePage() {
   // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: any) => {
+      // Show uploading state for profile picture updates
+      if (updates.profilePicture) {
+        toast({
+          title: "Uploading",
+          description: "Saving your profile picture...",
+        });
+      }
+
       const response = await fetch(`/api/admins/${admin?.id}/profile`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(updates),
       });
 
@@ -90,8 +100,48 @@ export function AdminProfilePage() {
     },
   });
 
+  // Compress and resize image
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        // Set canvas size to desired dimensions (e.g., 400x400 max)
+        const maxSize = 400;
+        let { width, height } = img;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Convert to base64 with compression (0.8 quality for JPEG)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        resolve(compressedBase64);
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // Handle file upload for profile picture
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -105,24 +155,41 @@ export function AdminProfilePage() {
       return;
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (10MB limit before compression)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 5MB.",
+        description: "Please select an image smaller than 10MB.",
         variant: "destructive",
       });
       return;
     }
 
-    // Convert to base64 for storage
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64String = e.target?.result as string;
-      setProfilePicture(base64String);
-      setProfileImagePreview(base64String);
-    };
-    reader.readAsDataURL(file);
+    try {
+      toast({
+        title: "Processing image",
+        description: "Compressing and optimizing your image...",
+      });
+
+      // Compress the image
+      const compressedBase64 = await compressImage(file);
+      setProfilePicture(compressedBase64);
+      setProfileImagePreview(compressedBase64);
+
+      toast({
+        title: "Image ready",
+        description: "Click 'Save Changes' to update your profile picture",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "There was an error processing the image file",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const handleRemoveProfilePicture = () => {
@@ -298,24 +365,33 @@ export function AdminProfilePage() {
                     )}
                   </div>
 
-                  {/* Profile Picture URL (for editing) */}
-                  {isEditing && profileImagePreview && (
+                  {/* Profile Picture Upload Status */}
+                  {isEditing && (
                     <div className="space-y-2">
-                      <Label>Profile Picture Preview</Label>
-                      <div className="flex items-center space-x-2">
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          Image uploaded successfully
+                      <Label>Profile Picture</Label>
+                      {profileImagePreview ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 text-sm text-green-600 dark:text-green-400">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Image ready for upload
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRemoveProfilePicture}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Remove
+                          </Button>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleRemoveProfilePicture}
-                        >
-                          <X className="w-4 h-4 mr-1" />
-                          Remove
-                        </Button>
-                      </div>
+                      ) : (
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          Click "Upload Photo" to select a new profile picture
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

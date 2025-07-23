@@ -1120,9 +1120,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const adminId = parseInt(req.params.id);
       const { displayName, profilePicture, bio } = req.body;
 
+      // Validate admin ID
+      if (!adminId || isNaN(adminId)) {
+        return res.status(400).json({ message: "Invalid admin ID" });
+      }
+
       const admin = await storage.getAdminById(adminId);
       if (!admin) {
         return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // Validate profile picture size if provided
+      if (profilePicture && typeof profilePicture === 'string') {
+        // Check if base64 string is too large (approx 1MB after base64 encoding)
+        const sizeInBytes = (profilePicture.length * 3) / 4;
+        if (sizeInBytes > 1024 * 1024) { // 1MB limit
+          return res.status(400).json({ 
+            message: "Profile picture is too large. Please choose a smaller image." 
+          });
+        }
       }
 
       // Check display name change cooldown
@@ -1138,18 +1154,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const updatedAdmin = await storage.updateAdminProfile(adminId, {
-        displayName,
-        profilePicture, 
-        bio,
-        lastDisplayNameChange: displayName && displayName !== admin.displayName ? new Date() : undefined,
-      });
+      const updateData: any = {};
+      if (displayName !== undefined) updateData.displayName = displayName;
+      if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
+      if (bio !== undefined) updateData.bio = bio;
+      if (displayName && displayName !== admin.displayName) {
+        updateData.lastDisplayNameChange = new Date();
+      }
+
+      const updatedAdmin = await storage.updateAdminProfile(adminId, updateData);
 
       // Return admin without password
       const { password: _, ...adminWithoutPassword } = updatedAdmin;
       res.json(adminWithoutPassword);
     } catch (error) {
       console.error("Admin profile update error:", error);
+      
+      // Handle specific error types
+      if (error instanceof Error) {
+        if (error.message.includes('too large')) {
+          return res.status(413).json({ message: "Request payload too large. Please use a smaller image." });
+        }
+      }
+      
       res.status(500).json({ message: "Failed to update admin profile" });
     }
   });
