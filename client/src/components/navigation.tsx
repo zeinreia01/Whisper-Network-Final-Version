@@ -164,10 +164,12 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate("/admin/profile")}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Profile Settings
-                    </DropdownMenuItem>
+                    <Link href="/admin/profile">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Profile Settings
+                      </DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem onClick={logout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out

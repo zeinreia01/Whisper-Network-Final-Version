@@ -13,12 +13,13 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Camera, Upload, X, Clock, Shield } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export function AdminProfilePage() {
   const { admin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -163,8 +164,23 @@ export function AdminProfilePage() {
 
   if (!admin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Please log in as an admin to view this page.</p>
+      <div className="min-h-screen bg-background py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Link href="/admin">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Admin Panel
+              </Button>
+            </Link>
+          </div>
+          <Card>
+            <CardContent className="text-center py-12">
+              <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+              <p className="text-gray-600">Please log in as an admin to view this page.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

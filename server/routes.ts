@@ -1183,13 +1183,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get admin profile by ID
   app.get("/api/admins/:id/profile", async (req, res) => {
-    const adminId = parseInt(req.params.id);
-
-    if (!adminId || isNaN(adminId)) {
-      return res.status(400).json({ error: "Invalid admin ID" });
-    }
-
     try {
+      const adminId = parseInt(req.params.id);
+
+      if (!adminId || isNaN(adminId)) {
+        return res.status(400).json({ error: "Invalid admin ID" });
+      }
+
       const admin = await storage.getAdminById(adminId);
       if (!admin) {
         return res.status(404).json({ error: "Admin not found" });
