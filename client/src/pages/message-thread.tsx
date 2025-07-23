@@ -335,44 +335,44 @@ export default function MessageThread() {
               <AlertDialogDescription asChild>
                 <div className="space-y-4 text-left">
                   <p>Welcome to Whispering Network! To maintain a safe and supportive environment for all Silent Messengers, please follow these guidelines:</p>
-                  
+
                   <div className="space-y-3">
                     <div>
                       <h4 className="font-semibold text-gray-900">✓ Be Respectful</h4>
                       <p className="text-sm text-gray-600">Treat everyone with kindness and respect. Different perspectives are welcome.</p>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No Bullying or Harassment</h4>
                       <p className="text-sm text-gray-600">Any form of bullying, harassment, or personal attacks will not be tolerated.</p>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No NSFW Content</h4>
                       <p className="text-sm text-gray-600">Keep all content appropriate for all ages. No explicit sexual content or graphic violence.</p>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No Hate Speech</h4>
                       <p className="text-sm text-gray-600">Discriminatory language based on race, gender, religion, sexual orientation, or other characteristics is prohibited.</p>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold text-gray-900">✓ Constructive Communication</h4>
                       <p className="text-sm text-gray-600">Aim to be helpful and constructive in your responses. Offer support when possible.</p>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No Spam or Self-Promotion</h4>
                       <p className="text-sm text-gray-600">Avoid repetitive content or excessive self-promotion.</p>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold text-gray-900">🔒 Privacy Respect</h4>
                       <p className="text-sm text-gray-600">Don't share personal information or try to identify anonymous users.</p>
                     </div>
                   </div>
-                  
+
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm text-blue-800">
                       <strong>Remember:</strong> Whisper Listeners are here to help maintain a safe space. 

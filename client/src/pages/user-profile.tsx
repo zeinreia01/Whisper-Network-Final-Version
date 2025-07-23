@@ -211,15 +211,15 @@ export function UserProfilePage() {
                         alt={profile.displayName || profile.username}
                       />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl font-bold">
-                        {(profile.displayName || profile.username).charAt(0).toUpperCase()}
+                        {(profile.displayName || profile.username || 'U').charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <CardTitle className="text-2xl text-gray-900 dark:text-white flex items-center space-x-2">
-                        <span>{profile.displayName || profile.username}</span>
+                        <span>{profile.displayName || profile.username || 'Unknown User'}</span>
                         <UserBadge userType="user" variant="small" />
                       </CardTitle>
-                      {profile.displayName && (
+                      {profile.displayName && profile.username && (
                         <p className="text-gray-600 dark:text-gray-400">@{profile.username}</p>
                       )}
                       <p className="text-gray-500 dark:text-gray-400 flex items-center mt-1 text-sm">

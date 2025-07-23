@@ -25,10 +25,10 @@ import type { MessageWithReplies } from "@shared/schema";
 interface MessageCardProps {
   message: MessageWithReplies;
   showReplies?: boolean;
-  showAdminControls?: boolean;
+  showThreaded?: boolean;
 }
 
-export function MessageCard({ message, showReplies = true, showAdminControls = false }: MessageCardProps) {
+export function MessageCard({ message, showReplies = true, showThreaded = false }: MessageCardProps) {
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -45,7 +45,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
 
   // Auto-fill nickname for logged-in users
   const defaultNickname = user ? user.username : admin ? admin.displayName : "";
-  
+
   // Initialize nickname when component mounts and reset on auth changes
   useEffect(() => {
     if (defaultNickname) {
@@ -73,7 +73,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
   }, [user, admin, message.id]);
 
   const category = categories.find(c => c.id === message.category);
-  
+
   const createReplyMutation = useMutation({
     mutationFn: async (data: { messageId: number; content: string; nickname: string; parentId?: number }) => {
       const replyData = {
@@ -115,7 +115,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         adminId: admin?.id,
         type: "heart"
       };
-      
+
       if (add) {
         const response = await apiRequest("POST", `/api/messages/${message.id}/reactions`, data);
         return await response.json();
@@ -147,7 +147,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         userId: user?.id,
         adminId: admin?.id,
       };
-      
+
       if (add) {
         const response = await apiRequest("POST", `/api/messages/${message.id}/like`, data);
         return await response.json();
@@ -314,6 +314,8 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
     return 'Just now';
   };
 
+  const { replies } = message;
+
   return (
     <div className="message-card bg-card rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-xl transition-all duration-300">
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -353,7 +355,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
                   alt={message.user.displayName || message.user.username}
                 />
                 <AvatarFallback className="bg-blue-600 text-white text-sm">
-                  {(message.user.displayName || message.user.username).charAt(0).toUpperCase()}
+                  {(message.user.displayName || message.user.username)?.charAt(0)?.toUpperCase() || ''}
                 </AvatarFallback>
               </Avatar>
             )}
@@ -427,7 +429,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
             Reply
           </button>
           <span className="flex-shrink-0">{message.replies.length} replies</span>
-          
+
           {/* Heart reaction button - visible to everyone but prompts login for non-authenticated */}
           <button
             onClick={handleHeartClick}
@@ -462,7 +464,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
             </button>
           )}
         </div>
-        
+
         {/* Secondary actions row */}
         <div className="flex items-center space-x-1 sm:space-x-2">
           <div className="flex items-center space-x-1">
@@ -484,7 +486,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
               </Button>
             </Link>
           </div>
-          
+
           {/* Admin Controls */}
           {admin && (
             <DropdownMenu>
@@ -535,7 +537,7 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          
+
           {/* User owns message - allow message privacy management */}
           {((user && message.userId === user.id) || (admin && message.adminId === admin.id)) && (
             <DropdownMenu>
@@ -559,8 +561,115 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
         </div>
       </div>
 
-      {showReplyForm && (
-        <div className="border-t pt-4 mb-4">
+      {/* Threaded Replies Section */}
+      {showThreaded && replies && replies.length > 0 && (
+        <ThreadedReplies
+          replies={replies}
+          messageId={message.id}
+          messageUserId={message.userId}
+          onWarning={(replyId) => {
+            setSelectedReplyId(replyId);
+            setShowWarningDialog(true);
+          }}
+        />
+      )}
+
+      {/* Simple Replies Section - Only show if not using threaded view */}
+      {showReplies && !showThreaded && replies && replies.length > 0 && (
+        <div className="border-t pt-4 space-y-3">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <MessageSquare className="h-4 w-4" />
+            <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
+          </div>
+          <div className="space-y-3">
+            {replies.map((reply) => (
+              <div key={reply.id} className="flex items-start space-x-3 group">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm">
+                  {reply.nickname.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="bg-muted/30 rounded-lg px-3 py-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-2">
+                        {reply.userId && (user || admin) ? (
+                          <Link href={`/user/${reply.userId}`}>
+                            <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                              {reply.nickname}
+                            </button>
+                          </Link>
+                        ) : (
+                          <span className="text-sm font-medium text-foreground">{reply.nickname}</span>
+                        )}
+                        {reply.adminId && <UserBadge userType="admin" variant="small" />}
+                        {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
+                        <span className="text-xs text-muted-foreground">
+                          {formatTimeAgo(reply.createdAt!)}
+                        </span>
+                      </div>
+                      {admin && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <MoreVertical className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedReplyId(reply.id);
+                                  setShowWarningDialog(true);
+                                }}
+                                className="text-amber-600"
+                              >
+                                <AlertTriangle className="h-3 w-3 mr-2" />
+                                Send Warning
+                              </DropdownMenuItem>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem 
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-2" />
+                                    Delete Reply
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Reply</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently delete this reply. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteReplyMutation.mutate(reply.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reply Form - Only show if not using threaded view */}
+      {showReplies && !showThreaded && (user || admin) && (
+        <div className="border-t pt-4">
           <div className="space-y-3">
             <Input
               placeholder={defaultNickname ? `Replying as: ${defaultNickname}` : "Your nickname..."}
@@ -570,44 +679,19 @@ export function MessageCard({ message, showReplies = true, showAdminControls = f
               className={defaultNickname ? "bg-muted text-muted-foreground" : ""}
             />
             <Input
-              placeholder="Write your reply..."
+              placeholder="Write a reply..."
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
             />
-            <div className="flex space-x-2">
-              <Button 
-                onClick={handleReply}
-                disabled={createReplyMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {createReplyMutation.isPending ? "Sending..." : "Send Reply"}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowReplyForm(false)}
-              >
-                Cancel
-              </Button>
-            </div>
+            <Button 
+              onClick={handleReply}
+              disabled={createReplyMutation.isPending}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {createReplyMutation.isPending ? "Sending..." : "Send Reply"}
+            </Button>
           </div>
         </div>
-      )}
-
-      {showReplies && message.replies.length > 0 && (
-        <ThreadedReplies 
-          replies={message.replies}
-          messageId={message.id}
-          messageUserId={message.userId || undefined}
-          onWarning={(replyId) => {
-            setSelectedReplyId(replyId);
-            setShowWarningDialog(true);
-          }}
-          onReply={(parentId: number, parentNickname: string) => {
-            setSelectedReplyId(parentId);
-            setReplyText(`@${parentNickname} `);
-            setShowReplyForm(true);
-          }}
-        />
       )}
 
       {/* Warning Dialog */}
