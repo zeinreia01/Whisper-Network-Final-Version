@@ -538,9 +538,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; lastDisplayNameChange?: Date }): Promise<Admin> {
+    const updateData: any = {};
+
+    if (updates.displayName !== undefined) updateData.displayName = updates.displayName;
+    if (updates.profilePicture !== undefined) updateData.profilePicture = updates.profilePicture;
+    if (updates.bio !== undefined) updateData.bio = updates.bio;
+    if (updates.lastDisplayNameChange !== undefined) updateData.lastDisplayNameChange = updates.lastDisplayNameChange;
+
     const [updatedAdmin] = await db
       .update(admins)
-      .set(updates)
+      .set(updateData)
       .where(eq(admins.id, adminId))
       .returning();
 
@@ -580,17 +587,15 @@ export class DatabaseStorage implements IStorage {
       })
     );
 
-    return messagesWithReactions;
+    return adminMessages;
   }
 
   async getAdminReplies(adminId: number): Promise<Reply[]> {
-    const adminReplies = await db
+    return await db
       .select()
       .from(replies)
       .where(eq(replies.adminId, adminId))
       .orderBy(desc(replies.createdAt));
-
-    return adminReplies;
   }
 
   async getUserReplies(userId: number): Promise<Reply[]> {
@@ -1223,7 +1228,19 @@ export class DatabaseStorage implements IStorage {
     await db.delete(admins).where(eq(admins.id, adminId));
   }
 
-
+  async searchAdmins(searchTerm: string): Promise<Admin[]> {
+    const result = await db
+      .select()
+      .from(admins)
+      .where(
+        or(
+          ilike(admins.username, `%${searchTerm}%`),
+          ilike(admins.displayName, `%${searchTerm}%`)
+        )
+      )
+      .orderBy(desc(admins.createdAt));
+    return result;
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -176,10 +176,15 @@ export default function MessageThread() {
         </div>
 
         {/* Main Message */}
-        <Card className="mb-8">
+        <Card className={`mb-8 ${message.adminId ? 'border-l-4 border-l-purple-500 bg-purple-50/50 dark:bg-purple-900/10' : ''}`}>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
+                {message.adminId && (
+                  <Badge className="bg-purple-600 text-white">
+                    📢 Announcement
+                  </Badge>
+                )}
                 <Badge variant="outline" className={`${getCategoryStyle(message.category)} border`}>
                   {message.category}
                 </Badge>
@@ -305,7 +310,7 @@ export default function MessageThread() {
                     {index < message.replies.length - 1 && (
                       <div className="absolute left-6 top-16 bottom-0 w-0.5 bg-border opacity-30" />
                     )}
-                    
+
                     <Card className="relative ml-0">
                       <CardContent className="p-4 sm:p-6">
                         <div className="flex justify-between items-start mb-4">
@@ -317,7 +322,7 @@ export default function MessageThread() {
                                 <div className="absolute top-0 left-1.5 w-0.5 h-2 bg-border -translate-y-2" />
                               )}
                             </div>
-                            
+
                             {/* Avatar */}
                             {reply.userId && (reply as ReplyWithUser).user && (
                               <Avatar className="w-8 h-8">
@@ -344,7 +349,7 @@ export default function MessageThread() {
                                 </AvatarFallback>
                               </Avatar>
                             )}
-                            
+
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <span className="font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
@@ -360,7 +365,7 @@ export default function MessageThread() {
                                 </span>
                               </div>
                               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{reply.content}</p>
-                              
+
                               {/* Reply actions */}
                               <div className="flex items-center gap-2 mt-2 text-sm">
                                 <button
@@ -384,7 +389,7 @@ export default function MessageThread() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {admin && (
                             <div className="flex items-center gap-2 ml-2">
                               <Button

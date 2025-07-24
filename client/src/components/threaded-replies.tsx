@@ -385,7 +385,7 @@ export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, 
                 </span>
               </Link>
             ) : reply.adminId ? (
-              <Link href={`/admins/${reply.adminId}/profile`}>
+              <Link href={`/admin/${reply.adminId}/profile`}>
                 <span className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline cursor-pointer">
                   {reply.nickname}
                 </span>
