@@ -1265,6 +1265,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Honorable mentions routes
+  app.get("/api/honorable-mentions", async (req, res) => {
+    try {
+      const mentions = await storage.getHonorableMentions();
+      res.json(mentions);
+    } catch (error) {
+      console.error("Error fetching honorable mentions:", error);
+      res.status(500).json({ message: "Failed to fetch honorable mentions" });
+    }
+  });
+
+  app.post("/api/honorable-mentions", async (req, res) => {
+    try {
+      const { name, emoji } = req.body;
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+
+      const mention = await storage.createHonorableMention({
+        name: name.trim(),
+        emoji: emoji?.trim() || null,
+        order: 0,
+      });
+
+      res.status(201).json(mention);
+    } catch (error) {
+      console.error("Error creating honorable mention:", error);
+      res.status(500).json({ message: "Failed to create honorable mention" });
+    }
+  });
+
+  app.put("/api/honorable-mentions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, emoji } = req.body;
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+
+      const mention = await storage.updateHonorableMention(parseInt(id), {
+        name: name.trim(),
+        emoji: emoji?.trim() || null,
+      });
+
+      res.json(mention);
+    } catch (error) {
+      console.error("Error updating honorable mention:", error);
+      res.status(500).json({ message: "Failed to update honorable mention" });
+    }
+  });
+
+  app.delete("/api/honorable-mentions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteHonorableMention(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting honorable mention:", error);
+      res.status(500).json({ message: "Failed to delete honorable mention" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

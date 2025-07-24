@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, MessageCircle, Heart } from "lucide-react";
+import { HonorableMentionsModal } from "@/components/honorable-mentions-modal";
 
 interface LandingProps {
   onEnter: () => void;
@@ -99,8 +100,8 @@ export default function Landing({ onEnter }: LandingProps) {
                   </div>
                 </div>
 
-                <div className="text-center bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-700">
-                  <p className="text-gray-600 dark:text-gray-400 italic">
+                <div className="text-center bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 pink:from-pink-100 pink:to-red-100 rounded-xl p-6 border border-purple-200 dark:border-purple-700 pink:border-pink-200">
+                  <p className="text-gray-600 dark:text-gray-400 pink:text-pink-700 italic">
                     "In every whisper shared, in every heart that listens, in every moment of genuine connection—
                     we prove that humanity's greatest strength lies not in being seen, but in truly seeing others."
                   </p>
@@ -108,6 +109,11 @@ export default function Landing({ onEnter }: LandingProps) {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Honorable Mentions Button at the bottom */}
+        <div className="mt-12 text-center">
+          <HonorableMentionsModal />
         </div>
       </div>
     </div>

@@ -1,9 +1,9 @@
 import { 
-  messages, replies, admins, users, reactions, notifications, follows, likedMessages,
+  messages, replies, admins, users, reactions, notifications, follows, likedMessages, honorableMentions,
   type Message, type Reply, type Admin, type User, type Reaction, type Notification, 
-  type Follow, type LikedMessage, type InsertMessage, type InsertReply, type InsertAdmin, 
+  type Follow, type LikedMessage, type HonorableMention, type InsertMessage, type InsertReply, type InsertAdmin, 
   type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, 
-  type InsertLikedMessage, type MessageWithReplies, type UserProfile, 
+  type InsertLikedMessage, type InsertHonorableMention, type MessageWithReplies, type UserProfile, 
   type NotificationWithDetails, type UpdateUserProfile, type ReplyWithUser
 } from "@shared/schema";
 import { db } from "./db";
@@ -92,7 +92,11 @@ export interface IStorage {
   // Message privacy operations
   updateMessagePrivacy(messageId: number, userId: number, isOwnerPrivate: boolean): Promise<Message>;
 
-
+  // Honorable mentions operations
+  getHonorableMentions(): Promise<HonorableMention[]>;
+  createHonorableMention(mention: InsertHonorableMention): Promise<HonorableMention>;
+  updateHonorableMention(id: number, updates: { name: string; emoji?: string | null }): Promise<HonorableMention>;
+  deleteHonorableMention(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1240,6 +1244,42 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(desc(admins.createdAt));
     return result;
+  }
+  // Honorable mentions operations
+  async getHonorableMentions(): Promise<HonorableMention[]> {
+    return await db
+      .select()
+      .from(honorableMentions)
+      .orderBy(asc(honorableMentions.order), asc(honorableMentions.createdAt));
+  }
+
+  async createHonorableMention(mentionData: InsertHonorableMention): Promise<HonorableMention> {
+    const [mention] = await db
+      .insert(honorableMentions)
+      .values({
+        ...mentionData,
+        updatedAt: new Date(),
+      })
+      .returning();
+    return mention;
+  }
+
+  async updateHonorableMention(id: number, updates: { name: string; emoji?: string | null }): Promise<HonorableMention> {
+    const [mention] = await db
+      .update(honorableMentions)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(honorableMentions.id, id))
+      .returning();
+    return mention;
+  }
+
+  async deleteHonorableMention(id: number): Promise<void> {
+    await db
+      .delete(honorableMentions)
+      .where(eq(honorableMentions.id, id));
   }
 }
 

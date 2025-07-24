@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name"), // User's display name (can be changed with cooldown)
   profilePicture: text("profile_picture"), // URL or path to profile picture
+  backgroundPhoto: text("background_photo"), // URL or path to background profile photo
   bio: text("bio"), // User's bio/description (200 character limit)
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
@@ -53,6 +54,7 @@ export const admins = pgTable("admins", {
   password: text("password"), // Optional password for non-ZEKE001 accounts
   displayName: text("display_name").notNull().unique(), // What shows in recipient options
   profilePicture: text("profile_picture"), // URL or path to profile picture
+  backgroundPhoto: text("background_photo"), // URL or path to background profile photo
   bio: text("bio"), // Admin's bio/description (200 character limit)
   role: text("role").notNull().default("admin"), // admin, moderator, support, community_manager
   isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
@@ -102,6 +104,21 @@ export const likedMessages = pgTable("liked_messages", {
   messageId: integer("message_id").references(() => messages.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Honorable mentions table for the gratitude modal
+export const honorableMentions = pgTable("honorable_mentions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  emoji: text("emoji"), // Optional emoji for the person
+  order: integer("order").notNull().default(0), // Order of display
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Create insert and select schemas for honorable mentions
+export const insertHonorableMentionSchema = createInsertSchema(honorableMentions);
+export type InsertHonorableMention = z.infer<typeof insertHonorableMentionSchema>;
+export type HonorableMention = typeof honorableMentions.$inferSelect;
 
 export const usersRelations = relations(users, ({ many }) => ({
   messages: many(messages),
