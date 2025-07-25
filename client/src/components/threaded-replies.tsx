@@ -341,7 +341,7 @@ export function ThreadedReplies({
   }
 
   // For preview mode, only show first 2 replies
-  const displayReplies = isPreview && !showAll ? validReplies.slice(0, 2) : validReplies;
+  const displayReplies = !showAll ? validReplies.slice(0, 2) : validReplies;
 
   // Organize replies into a threaded structure
   const threadedReplies = React.useMemo(() => {

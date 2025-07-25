@@ -613,7 +613,6 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
           messageId={message.id}
           messageUserId={message.userId ?? undefined}
           onWarning={handleWarning}
-          isPreview={true}
         />
       )}
 

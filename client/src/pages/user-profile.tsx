@@ -49,12 +49,7 @@ export function UserProfilePage() {
     enabled: !!userId && (!!user || !!admin),
   });
 
-  const handleFollow = () => {
-    if (!user || !userId) return;
-    
-    const action = profile?.isFollowing ? 'unfollow' : 'follow';
-    followMutation.mutate({ targetId: userId, action });
-  };
+
 
   // Follow/Unfollow mutation
   const followMutation = useMutation({
@@ -116,11 +111,7 @@ export function UserProfilePage() {
     },
   });
 
-  const handleFollow = () => {
-    if (!currentUserId) return;
-    const action = profile?.isFollowing ? 'unfollow' : 'follow';
-    followMutation.mutate({ targetId: userId, action });
-  };
+
 
   const handleBioUpdate = () => {
     // Security check: only allow profile owner to update bio
@@ -278,7 +269,11 @@ export function UserProfilePage() {
                       </Link>
                     ) : (
                       <Button
-                        onClick={handleFollow}
+                        onClick={() => {
+                          if (!user || !userId) return;
+                          const action = profile?.isFollowing ? 'unfollow' : 'follow';
+                          followMutation.mutate({ targetId: userId, action });
+                        }}
                         disabled={followMutation.isPending}
                         variant={profile?.isFollowing ? "outline" : "default"}
                         className={
