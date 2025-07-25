@@ -359,6 +359,26 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 </AvatarFallback>
               </Avatar>
             )}
+            {/* Show admin avatar for authenticated admins */}
+            {message.adminId && message.admin && (
+              <Avatar className="w-8 h-8">
+                <AvatarImage 
+                  src={message.admin.profilePicture || undefined} 
+                  alt={message.admin.displayName}
+                />
+                <AvatarFallback className="bg-purple-600 text-white text-sm">
+                  {message.admin.displayName?.charAt(0)?.toUpperCase() || 'A'}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            {/* Show generic avatar for anonymous posts */}
+            {!message.userId && !message.adminId && (
+              <Avatar className="w-8 h-8">
+                <AvatarFallback className="bg-gray-600 text-white text-sm">
+                  {message.senderName?.charAt(0)?.toUpperCase() || 'A'}
+                </AvatarFallback>
+              </Avatar>
+            )}
             <div className="flex items-center space-x-2">
               {/* Show authenticated user information with clickable username */}
               {message.userId && message.user && (user || admin) ? (

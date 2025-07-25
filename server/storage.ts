@@ -1000,7 +1000,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Liked messages operations (personal archive)
-  async likeMessage(userId: number, adminId: number | undefined, messageId: number): Promise<LikedMessage> {
+async likeMessage(userId: number, adminId: number | undefined, messageId: number): Promise<LikedMessage> {
     const [liked] = await db
       .insert(likedMessages)
       .values({
