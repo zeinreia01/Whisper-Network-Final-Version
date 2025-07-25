@@ -57,22 +57,30 @@ export default function AdminProfile() {
   const followMutation = useMutation({
     mutationFn: async ({ targetId, action }: { targetId: number; action: 'follow' | 'unfollow' }) => {
       const endpoint = action === 'follow' ? `/api/admins/${targetId}/follow` : `/api/admins/${targetId}/unfollow`;
-      return apiRequest('POST', endpoint, {
+      const response = await apiRequest('POST', endpoint, {
         followerId: currentUserId
       });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to ${action} admin`);
+      }
+      return response.json();
     },
     onSuccess: (_, { action }) => {
       // Invalidate all related queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: [`/api/admins/${adminId}/profile`] });
+      queryClient.refetchQueries({ queryKey: [`/api/admins/${adminId}/profile`] });
       toast({
-        title: "Success",
-        description: `${action === 'unfollow' ? 'Unfollowed' : 'Followed'} successfully`,
+        title: action === 'unfollow' ? "Unfollowed" : "Now Following",
+        description: action === 'unfollow'
+          ? `You unfollowed ${profile?.displayName}`
+          : `You are now following ${profile?.displayName}`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to update follow status",
+        description: error.message || "Failed to update follow status",
         variant: "destructive",
       });
     },

@@ -992,11 +992,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: followingId,
           type: "follow",
           fromUserId: followerId,
-          content: `${follower.username} started following you`,
+          content: `${follower.displayName || follower.username} started following you`,
         });
       }
 
-      res.json(follow);
+      res.json({ success: true, follow });
     } catch (error) {
       console.error("Error following user:", error);
       res.status(500).json({ error: "Failed to follow user" });
@@ -1013,6 +1013,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      // Check if already following
+      const isAlreadyFollowing = await storage.isFollowingAdmin(followerId, adminId);
+      if (isAlreadyFollowing) {
+        return res.status(400).json({ error: "Already following this admin" });
+      }
+
       const follow = await storage.followAdmin(followerId, adminId);
 
       // Create notification for the followed admin
@@ -1022,11 +1028,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           adminId: adminId,
           type: "follow",
           fromUserId: followerId,
-          content: `${follower.username} started following you`,
+          content: `${follower.displayName || follower.username} started following you`,
         });
       }
 
-      res.json(follow);
+      res.json({ success: true, follow });
     } catch (error) {
       console.error("Error following admin:", error);
       res.status(500).json({ error: "Failed to follow admin" });

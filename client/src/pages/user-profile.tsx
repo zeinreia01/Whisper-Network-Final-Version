@@ -56,7 +56,7 @@ export function UserProfilePage() {
     mutationFn: async ({ targetId, action }: { targetId: number; action: 'follow' | 'unfollow' }) => {
       const endpoint = action === 'follow' ? `/api/users/${targetId}/follow` : `/api/users/${targetId}/unfollow`;
       const response = await apiRequest("POST", endpoint, {
-        followerId: user?.id
+        followerId: currentUserId
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -64,14 +64,14 @@ export function UserProfilePage() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, { action }) => {
       // Invalidate and refetch the profile to get updated follow status
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`] });
-      queryClient.refetchQueries({ queryKey: [`/api/users/${userId}/profile`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
+      queryClient.refetchQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
 
       toast({
-        title: profile?.isFollowing ? "Unfollowed" : "Now Following",
-        description: profile?.isFollowing 
+        title: action === 'unfollow' ? "Unfollowed" : "Now Following",
+        description: action === 'unfollow'
           ? `You unfollowed ${profile?.displayName || profile?.username}` 
           : `You are now following ${profile?.displayName || profile?.username}`,
       });
@@ -267,10 +267,10 @@ export function UserProfilePage() {
                           Edit Profile
                         </Button>
                       </Link>
-                    ) : (
+                    ) : (user || admin) ? (
                       <Button
                         onClick={() => {
-                          if (!user || !userId) return;
+                          if ((!user && !admin) || !userId) return;
                           const action = profile?.isFollowing ? 'unfollow' : 'follow';
                           followMutation.mutate({ targetId: userId, action });
                         }}
@@ -299,7 +299,7 @@ export function UserProfilePage() {
                           </>
                         )}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
