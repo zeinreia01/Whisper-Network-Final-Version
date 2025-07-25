@@ -4,6 +4,7 @@ import { CategoryFilter } from "@/components/category-filter";
 import { SearchBar } from "@/components/search-bar";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { apiRequest } from "@/lib/queryClient";
 import type { MessageWithReplies } from "@shared/schema";
 
 export default function Dashboard() {

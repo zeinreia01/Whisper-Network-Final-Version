@@ -49,6 +49,13 @@ export function UserProfilePage() {
     enabled: !!userId && (!!user || !!admin),
   });
 
+  const handleFollow = () => {
+    if (!user || !userId) return;
+    
+    const action = profile?.isFollowing ? 'unfollow' : 'follow';
+    followMutation.mutate({ targetId: userId, action });
+  };
+
   // Follow/Unfollow mutation
   const followMutation = useMutation({
     mutationFn: async ({ targetId, action }: { targetId: number; action: 'follow' | 'unfollow' }) => {
@@ -273,9 +280,9 @@ export function UserProfilePage() {
                       <Button
                         onClick={handleFollow}
                         disabled={followMutation.isPending}
-                        variant={profile.isFollowing ? "outline" : "default"}
+                        variant={profile?.isFollowing ? "outline" : "default"}
                         className={
-                          profile.isFollowing
+                          profile?.isFollowing
                             ? "border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-400 dark:hover:border-red-600"
                             : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
                         }

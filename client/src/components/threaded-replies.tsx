@@ -250,15 +250,14 @@ export function ThreadedReplies({
   replies, 
   messageId, 
   messageUserId, 
-  onWarning, 
-  isPreview = false,
-  maxDepth = 3 
+  onWarning 
 }: ThreadedRepliesProps) {
   const [showAll, setShowAll] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
   const [parentReplyId, setParentReplyId] = useState<number | null>(null);
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<{ id: number; nickname: string } | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -326,6 +325,14 @@ export function ThreadedReplies({
     });
   };
 
+  const onReply = (parentId: number, parentNickname: string) => {
+    setReplyingTo({ id: parentId, nickname: parentNickname });
+    setParentReplyId(parentId);
+    setShowReplyForm(true);
+    setReplyText("");
+    setNickname(defaultNickname);
+  };
+
   // Ensure replies is an array and handle nested structure properly
   const validReplies = Array.isArray(replies) ? replies.filter(reply => reply && reply.id) : [];
 
@@ -354,17 +361,11 @@ export function ThreadedReplies({
     // Second pass: organize into threads
     replies.forEach(reply => {
       const threadedReply = replyMap.get(reply.id)!;
-      if (reply.parentId) {
+      if (reply.parentId && replyMap.has(reply.parentId)) {
         const parent = replyMap.get(reply.parentId);
         if (parent) {
-          if (parent.children) {
-            parent.children.push(threadedReply);
-          } else {
-            parent.children = [threadedReply];
-          }
-        } else {
-          // Parent not found, treat as root
-          rootReplies.push(threadedReply);
+          parent.children = parent.children || [];
+          parent.children.push(threadedReply);
         }
       } else {
         rootReplies.push(threadedReply);
@@ -384,7 +385,7 @@ export function ThreadedReplies({
 
       {/* Threaded replies */}
       <div className="space-y-3">
-        {(isPreview ? threadedReplies.slice(0, 2) : threadedReplies).map((reply) => (
+        {threadedReplies.map((reply) => (
           <ReplyItem
             key={reply.id}
             reply={reply}
@@ -395,18 +396,6 @@ export function ThreadedReplies({
             onReply={onReply}
           />
         ))}
-
-        {/* Show "more replies" indicator in preview mode */}
-        {isPreview && replies.length > 2 && (
-          <div className="text-xs text-muted-foreground ml-8 border-t pt-2">
-            +{replies.length - 2} more replies - 
-            <Link href={`/message/${messageId}`}>
-              <Button variant="link" className="text-xs p-0 h-auto ml-1">
-                View full thread
-              </Button>
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* Reply form */}
