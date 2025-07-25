@@ -24,30 +24,33 @@ interface AdminProfile extends Admin {
 
 export default function AdminProfile() {
   const params = useParams();
-  const adminId = parseInt(params.id as string);
+  // If no id in params, use current admin's id (for /admin-profile route)
+  const adminId = params.id ? parseInt(params.id as string) : undefined;
   const { user, admin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const currentUserId = user?.id;
-  const isOwnProfile = admin?.id === adminId;
+  const currentAdminId = admin?.id;
+  const targetAdminId = adminId || currentAdminId; // Use current admin if no id provided
+  const isOwnProfile = targetAdminId === currentAdminId;
 
   const { data: profile, isLoading: profileLoading } = useQuery<AdminProfile>({
-    queryKey: [`/api/admins/${adminId}/profile`, currentUserId],
+    queryKey: [`/api/admins/${targetAdminId}/profile`, currentUserId],
     queryFn: async () => {
-      const url = `/api/admins/${adminId}/profile${currentUserId ? `?currentUserId=${currentUserId}` : ''}`;
+      const url = `/api/admins/${targetAdminId}/profile${currentUserId ? `?currentUserId=${currentUserId}` : ''}`;
       const response = await apiRequest('GET', url);
       return await response.json();
     },
-    enabled: !!adminId && adminId > 0 && (!!user || !!admin),
+    enabled: !!targetAdminId && targetAdminId > 0 && (!!user || !!admin),
   });
 
   const { data: adminMessages, isLoading: messagesLoading } = useQuery<MessageWithReplies[]>({
-    queryKey: [`/api/admins/${adminId}/messages`],
+    queryKey: [`/api/admins/${targetAdminId}/messages`],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/admins/${adminId}/messages`);
+      const response = await apiRequest('GET', `/api/admins/${targetAdminId}/messages`);
       return await response.json();
     },
-    enabled: !!adminId && (!!user || !!admin),
+    enabled: !!targetAdminId && (!!user || !!admin),
   });
 
   // Follow/Unfollow mutation for admin
@@ -174,7 +177,7 @@ export default function AdminProfile() {
                   {/* Action buttons */}
                   <div className="flex space-x-2">
                     {isOwnProfile ? (
-                      <Link href="/admin">
+                      <Link href="/admin-personal">
                         <Button variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                           <Settings className="w-4 h-4 mr-2" />
                           Edit Profile

@@ -17,6 +17,7 @@ import { UserProfilePage } from "@/pages/user-profile";
 import PersonalArchivePage from "@/pages/personal-archive";
 import PersonalPage from "@/pages/personal";
 import AdminProfilePage from "@/pages/admin-profile";
+import AdminPersonalPage from "@/pages/admin-personal";
 import AdminProfileViewPage from "@/pages/admin-profile-view";
 import { useState, useEffect } from "react";
 
@@ -50,6 +51,7 @@ function Router() {
         <Route path="/user/:id" component={UserProfilePage} />
         <Route path="/admin/:id" component={AdminProfilePage} />
         <Route path="/admin-profile" component={AdminProfilePage} />
+        <Route path="/admin-personal" component={AdminPersonalPage} />
         <Route path="/personal" component={PersonalPage} />
         <Route path="/personal-archive" component={PersonalArchivePage} />
         <Route component={NotFound} />

@@ -41,6 +41,7 @@ interface ThreadedRepliesProps {
   messageUserId?: number;
   onWarning: (replyId: number) => void;
   onReply?: (parentId: number, parentNickname: string) => void;
+  showAll?: boolean; // Add prop to control showing all replies vs preview
 }
 
 interface ReplyItemProps {
@@ -250,9 +251,10 @@ export function ThreadedReplies({
   replies, 
   messageId, 
   messageUserId, 
-  onWarning 
+  onWarning,
+  showAll = false
 }: ThreadedRepliesProps) {
-  const [showAll, setShowAll] = useState(false);
+
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
   const [parentReplyId, setParentReplyId] = useState<number | null>(null);
@@ -385,7 +387,7 @@ export function ThreadedReplies({
 
       {/* Threaded replies */}
       <div className="space-y-3">
-        {threadedReplies.map((reply) => (
+        {(showAll ? threadedReplies : threadedReplies.slice(0, 2)).map((reply) => (
           <ReplyItem
             key={reply.id}
             reply={reply}
@@ -396,6 +398,17 @@ export function ThreadedReplies({
             onReply={onReply}
           />
         ))}
+        
+        {/* Show "View all replies" link when in preview mode and there are more replies */}
+        {!showAll && threadedReplies.length > 2 && (
+          <div className="text-center pt-2">
+            <Link href={`/message/${messageId}`}>
+              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                View all {threadedReplies.length} replies →
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Reply form */}

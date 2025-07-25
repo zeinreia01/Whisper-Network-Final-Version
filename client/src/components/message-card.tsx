@@ -593,12 +593,13 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         </div>
       </div>
 
-      {/* Threaded Replies Section - Only show if explicitly requested (message thread page) */}
+      {/* Threaded Replies Section - Only show if explicitly requested (message thread page) - SHOW ALL REPLIES */}
       {showThreaded && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
         <ThreadedReplies
           replies={message.replies}
           messageId={message.id}
           messageUserId={message.userId ?? undefined}
+          showAll={true}
           onWarning={(replyId) => {
             setSelectedReplyId(replyId);
             setShowWarningDialog(true);
@@ -606,12 +607,13 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         />
       )}
 
-      {/* Replies Preview - Only show on dashboard, not in thread view */}
+      {/* Replies Preview - Only show on dashboard, not in thread view - SHOW ONLY 2 REPLIES */}
       {showReplies && !showThreaded && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
         <ThreadedReplies
           replies={message.replies}
           messageId={message.id}
           messageUserId={message.userId ?? undefined}
+          showAll={false}
           onWarning={handleWarning}
         />
       )}
