@@ -590,9 +590,9 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
       </div>
 
       {/* Threaded Replies Section - Only show if explicitly requested (message thread page) */}
-      {showThreaded && replies && replies.length > 0 && (
+      {showThreaded && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
         <ThreadedReplies
-          replies={replies}
+          replies={message.replies}
           messageId={message.id}
           messageUserId={message.userId ?? undefined}
           onWarning={(replyId) => {
@@ -603,9 +603,9 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
       )}
 
       {/* Replies Preview - Only show on dashboard, not in thread view */}
-      {showReplies && !showThreaded && replies && replies.length > 0 && (
+      {showReplies && !showThreaded && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
         <ThreadedReplies
-          replies={replies}
+          replies={message.replies}
           messageId={message.id}
           messageUserId={message.userId ?? undefined}
           onWarning={handleWarning}

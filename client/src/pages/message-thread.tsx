@@ -40,9 +40,20 @@ export default function MessageThread() {
     }
   }, [user, admin]);
 
-  const { data: message, isLoading } = useQuery<MessageWithReplies>({
-    queryKey: ["/api/messages", id],
+  const { data: message, isLoading, error } = useQuery<MessageWithReplies>({
+    queryKey: [`/api/messages/${id}`],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/messages/${id}`);
+      if (!response.ok) {
+        throw new Error('Message not found');
+      }
+      const data = await response.json();
+      console.log('Message data:', data); // Debug log
+      return data;
+    },
     enabled: !!id,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const addReplyMutation = useMutation({

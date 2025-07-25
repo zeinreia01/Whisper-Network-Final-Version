@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,80 +250,59 @@ export function ThreadedReplies({
   replies, 
   messageId, 
   messageUserId, 
-  onWarning,
-  onReply,
-  isPreview = false
-}: ThreadedRepliesProps & { isPreview?: boolean }) {
-  const { user, admin } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [replyingTo, setReplyingTo] = useState<{ id: number; nickname: string } | null>(null);
+  onWarning, 
+  isPreview = false,
+  maxDepth = 3 
+}: ThreadedRepliesProps) {
+  const [showAll, setShowAll] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
+  const [parentReplyId, setParentReplyId] = useState<number | null>(null);
+  const [showReplyForm, setShowReplyForm] = useState(false);
 
-  // Build threaded structure from flat replies
-  const buildThreadedReplies = (flatReplies: ReplyWithUser[]): ReplyWithUser[] => {
-    const replyMap = new Map<number, ReplyWithUser>();
-    const rootReplies: ReplyWithUser[] = [];
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { admin, user } = useAuth();
 
-    // First pass: create map and initialize children arrays
-    flatReplies.forEach(reply => {
-      replyMap.set(reply.id, { ...reply, children: [] });
-    });
+  // Auto-fill nickname for logged-in users
+  const defaultNickname = user ? user.username : admin ? admin.displayName : "";
 
-    // Second pass: build the tree structure
-    flatReplies.forEach(reply => {
-      const replyWithChildren = replyMap.get(reply.id)!;
-
-      if (reply.parentId) {
-        const parent = replyMap.get(reply.parentId);
-        if (parent) {
-          parent.children!.push(replyWithChildren);
-        }
-      } else {
-        rootReplies.push(replyWithChildren);
-      }
-    });
-
-    return rootReplies;
-  };
-
-  const threadedReplies = buildThreadedReplies(replies);
-
-  // Get default nickname for authenticated users
-  const defaultNickname = user?.displayName || user?.username || admin?.displayName || "";
+  // Initialize nickname when component mounts
+  useEffect(() => {
+    if ((user || admin) && defaultNickname) {
+      setNickname(defaultNickname);
+    }
+  }, [defaultNickname, user, admin]);
 
   const createReplyMutation = useMutation({
-    mutationFn: async (data: { 
-      messageId: number; 
-      parentId?: number;
-      content: string; 
-      nickname: string; 
-      userId?: number; 
-      adminId?: number 
-    }) => {
-      const response = await apiRequest("POST", "/api/replies", data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create reply');
-      }
+    mutationFn: async (data: { messageId: number; content: string; nickname: string; parentId?: number }) => {
+      const replyData = {
+        ...data,
+        userId: user?.id,
+        adminId: admin?.id,
+        nickname: (user || admin) && data.nickname === defaultNickname 
+          ? (user ? (user.displayName || user.username) : admin?.displayName) || data.nickname
+          : data.nickname,
+      };
+      const response = await apiRequest("POST", "/api/replies", replyData);
       return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/messages/${messageId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages", messageId] });
       setReplyText("");
       setNickname(defaultNickname);
-      setReplyingTo(null);
+      setParentReplyId(null);
+      setShowReplyForm(false);
       toast({
         title: "Reply sent!",
         description: "Your reply has been added to the conversation.",
       });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Error",
-        description: error.message || "Failed to send reply. Please try again.",
+        description: "Failed to send reply. Please try again.",
         variant: "destructive",
       });
     },
@@ -341,30 +320,21 @@ export function ThreadedReplies({
 
     createReplyMutation.mutate({
       messageId,
-      parentId: replyingTo?.id,
       content: replyText,
-      nickname,
-      userId: user?.id,
-      adminId: admin?.id,
+      nickname: nickname,
+      parentId: parentReplyId || undefined,
     });
   };
 
-  const handleReplyClick = (parentId: number, parentNickname: string) => {
-    setReplyingTo({ id: parentId, nickname: parentNickname });
-    setNickname(defaultNickname);
-    
-    // Scroll to reply form smoothly
-    setTimeout(() => {
-      const replyForm = document.querySelector('.reply-form-container');
-      if (replyForm) {
-        replyForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
+  // Ensure replies is an array and handle nested structure properly
+  const validReplies = Array.isArray(replies) ? replies.filter(reply => reply && reply.id) : [];
 
-  if (threadedReplies.length === 0) {
+  if (validReplies.length === 0) {
     return null;
   }
+
+  // For preview mode, only show first 2 replies
+  const displayReplies = isPreview && !showAll ? validReplies.slice(0, 2) : validReplies;
 
   return (
     <div className="border-t pt-4 space-y-4">
@@ -386,7 +356,7 @@ export function ThreadedReplies({
             onReply={onReply}
           />
         ))}
-        
+
         {/* Show "more replies" indicator in preview mode */}
         {isPreview && replies.length > 2 && (
           <div className="text-xs text-muted-foreground ml-8 border-t pt-2">

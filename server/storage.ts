@@ -157,32 +157,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublicMessages(): Promise<MessageWithReplies[]> {
-    const result = await db.query.messages.findMany({
-      where: eq(messages.isPublic, true),
-      orderBy: desc(messages.createdAt),
-      with: {
-        replies: {
-          orderBy: desc(replies.createdAt),
-          with: {
-            user: true,
-            admin: true,
-            mentionedUser: true,
-            mentionedAdmin: true,
-            children: {
-              with: {
-                user: true,
-                admin: true,
-                mentionedUser: true,
-                mentionedAdmin: true,
+    try {
+      const result = await db.query.messages.findMany({
+        where: eq(messages.isPublic, true),
+        orderBy: desc(messages.createdAt),
+        with: {
+          replies: {
+            orderBy: desc(replies.createdAt),
+            with: {
+              user: true,
+              admin: true,
+              mentionedUser: true,
+              mentionedAdmin: true,
+              children: {
+                with: {
+                  user: true,
+                  admin: true,
+                  mentionedUser: true,
+                  mentionedAdmin: true,
+                },
+                orderBy: asc(replies.createdAt),
               },
-              orderBy: asc(replies.createdAt),
             },
           },
+          user: true,
+          admin: true,
         },
-        user: true,
-        admin: true,
-      },
-    });
+      });
+
+      console.log(`Loaded ${result.length} public messages`); // Debug log
 
     // Build nested replies structure and add reaction counts
     const messagesWithReactions = await Promise.all(
