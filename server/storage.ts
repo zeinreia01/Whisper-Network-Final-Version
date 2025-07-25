@@ -185,7 +185,12 @@ export class DatabaseStorage implements IStorage {
         },
       });
 
-      console.log(`Loaded ${result.length} public messages`); // Debug log
+    } catch (error) {
+      console.error('Error loading public messages:', error);
+      return [];
+    }
+
+    console.log(`Loaded ${result.length} public messages`); // Debug log
 
     // Build nested replies structure and add reaction counts
     const messagesWithReactions = await Promise.all(
@@ -995,7 +1000,8 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: users.id,
         username: users.username,
-        password: users.password,
+        password: users.password,<previous_generation>```text
+<replit_final_file>
         displayName: users.displayName,
         profilePicture: users.profilePicture,
         backgroundPhoto: users.backgroundPhoto,
