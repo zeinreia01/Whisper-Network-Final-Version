@@ -1,10 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema } from "@shared/schema";
+import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 const scryptAsync = promisify(scrypt);
 
@@ -585,21 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User profile routes
-  app.get("/api/users/:id/profile", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const profile = await storage.getUserProfile(parseInt(id));
-      if (!profile) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      const { password, ...profileWithoutPassword } = profile;
-      res.json(profileWithoutPassword);
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      res.status(500).json({ message: "Failed to fetch user profile" });
-    }
-  });
+  // User profile routes - removed duplicate route
 
   app.get("/api/users/:id/messages", async (req, res) => {
     try {
