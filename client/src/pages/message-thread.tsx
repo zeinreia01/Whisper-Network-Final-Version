@@ -50,6 +50,7 @@ export default function MessageThread() {
       }
       const data = await response.json();
       console.log('Message data:', data); // Debug log
+      console.log('Total replies in message:', data.replies ? data.replies.length : 0);
       return data;
     },
     enabled: !!id,
@@ -332,20 +333,27 @@ export default function MessageThread() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="border-t pt-4">
-                <ThreadedReplies
-                  replies={message.replies}
-                  messageId={message.id}
-                  messageUserId={message.userId ?? undefined}
-                  showAll={true}
-                  onWarning={(replyId) => {
-                    sendWarningMutation.mutate({
-                      replyId,
-                      reason: "Your reply was flagged for violating community guidelines. Please review our guidelines and be respectful in future interactions."
-                    });
-                  }}
-                />
-              </div>
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-medium">
+                    All Replies ({message.replies.length})
+                  </h3>
+                </CardHeader>
+                <CardContent>
+                  <ThreadedReplies
+                    replies={message.replies}
+                    messageId={message.id}
+                    messageUserId={message.userId ?? undefined}
+                    showAll={true}
+                    onWarning={(replyId) => {
+                      sendWarningMutation.mutate({
+                        replyId,
+                        reason: "Your reply was flagged for violating community guidelines. Please review our guidelines and be respectful in future interactions."
+                      });
+                    }}
+                  />
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>

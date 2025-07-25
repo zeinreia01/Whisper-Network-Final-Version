@@ -346,10 +346,12 @@ export function ThreadedReplies({
   const threadedReplies = React.useMemo(() => {
     if (!replies || replies.length === 0) return [];
 
+    console.log('Processing replies for threading:', replies.length, 'showAll:', showAll);
+
     const replyMap = new Map<number, ReplyWithUser>();
     const rootReplies: ReplyWithUser[] = [];
 
-    // First pass: create reply objects
+    // First pass: create reply objects with children array
     replies.forEach(reply => {
       replyMap.set(reply.id, {
         ...reply,
@@ -367,12 +369,14 @@ export function ThreadedReplies({
           parent.children.push(threadedReply);
         }
       } else {
+        // This is a root-level reply
         rootReplies.push(threadedReply);
       }
     });
 
+    console.log('Threaded replies processed:', rootReplies.length, 'root replies');
     return rootReplies;
-  }, [replies]);
+  }, [replies, showAll]);
 
 
   return (
