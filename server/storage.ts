@@ -541,12 +541,13 @@ export class DatabaseStorage implements IStorage {
     return admin;
   }
 
-  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; lastDisplayNameChange?: Date }): Promise<Admin> {
+  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; backgroundPhoto?: string; lastDisplayNameChange?: Date }): Promise<Admin> {
     const updateData: any = {};
 
     if (updates.displayName !== undefined) updateData.displayName = updates.displayName;
     if (updates.profilePicture !== undefined) updateData.profilePicture = updates.profilePicture;
     if (updates.bio !== undefined) updateData.bio = updates.bio;
+    if (updates.backgroundPhoto !== undefined) updateData.backgroundPhoto = updates.backgroundPhoto;
     if (updates.lastDisplayNameChange !== undefined) updateData.lastDisplayNameChange = updates.lastDisplayNameChange;
 
     const [updatedAdmin] = await db
@@ -1110,6 +1111,10 @@ export class DatabaseStorage implements IStorage {
 
     if (updates.profilePicture !== undefined) {
       updateData.profilePicture = updates.profilePicture;
+    }
+
+    if (updates.backgroundPhoto !== undefined) {
+      updateData.backgroundPhoto = updates.backgroundPhoto;
     }
 
     if (updates.bio !== undefined) {

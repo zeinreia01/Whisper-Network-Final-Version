@@ -110,35 +110,57 @@ export function AdminProfilePage() {
     },
   });
 
-  // Compress and resize image
-  const compressImage = (file: File): Promise<string> => {
+  // Compress and resize image with auto-crop
+  const compressImage = (file: File, isBackground: boolean = false): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
 
       img.onload = () => {
-        // Set canvas size to desired dimensions (e.g., 400x400 max)
-        const maxSize = 400;
-        let { width, height } = img;
-
-        if (width > height) {
-          if (width > maxSize) {
-            height = (height * maxSize) / width;
-            width = maxSize;
-          }
+        let targetWidth, targetHeight;
+        
+        if (isBackground) {
+          // Background photo: 16:9 aspect ratio, max 800x450
+          targetWidth = 800;
+          targetHeight = 450;
         } else {
-          if (height > maxSize) {
-            width = (width * maxSize) / height;
-            height = maxSize;
-          }
+          // Profile picture: 1:1 aspect ratio (square), max 400x400
+          targetWidth = 400;
+          targetHeight = 400;
         }
 
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
 
-        // Draw and compress
-        ctx?.drawImage(img, 0, 0, width, height);
+        let { width: imgWidth, height: imgHeight } = img;
+        let sourceX = 0, sourceY = 0, sourceWidth = imgWidth, sourceHeight = imgHeight;
+
+        if (isBackground) {
+          // Auto-crop to 16:9 aspect ratio
+          const targetAspect = 16 / 9;
+          const imageAspect = imgWidth / imgHeight;
+
+          if (imageAspect > targetAspect) {
+            // Image is wider, crop horizontally
+            sourceWidth = imgHeight * targetAspect;
+            sourceX = (imgWidth - sourceWidth) / 2;
+          } else {
+            // Image is taller, crop vertically
+            sourceHeight = imgWidth / targetAspect;
+            sourceY = (imgHeight - sourceHeight) / 2;
+          }
+        } else {
+          // Auto-crop to square (1:1) aspect ratio
+          const minDimension = Math.min(imgWidth, imgHeight);
+          sourceWidth = minDimension;
+          sourceHeight = minDimension;
+          sourceX = (imgWidth - minDimension) / 2;
+          sourceY = (imgHeight - minDimension) / 2;
+        }
+
+        // Draw the cropped and resized image
+        ctx?.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
 
         // Convert to base64 with compression (0.8 quality for JPEG)
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
@@ -182,7 +204,7 @@ export function AdminProfilePage() {
       });
 
       // Compress the image
-      const compressedBase64 = await compressImage(file);
+      const compressedBase64 = await compressImage(file, false);
       setProfilePicture(compressedBase64);
       setProfileImagePreview(compressedBase64);
 
@@ -242,7 +264,7 @@ export function AdminProfilePage() {
       });
 
       // Compress the image
-      const compressedBase64 = await compressImage(file);
+      const compressedBase64 = await compressImage(file, true);
       setBackgroundPhoto(compressedBase64);
       setBackgroundImagePreview(compressedBase64);
 

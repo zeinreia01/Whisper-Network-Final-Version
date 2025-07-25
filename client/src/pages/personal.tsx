@@ -21,10 +21,13 @@ export function PersonalPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const backgroundFileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
+  const [backgroundPhoto, setBackgroundPhoto] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [backgroundImagePreview, setBackgroundImagePreview] = useState<string | null>(null);
 
   // Get display name cooldown status
   const { data: cooldownStatus } = useQuery({
@@ -43,17 +46,19 @@ export function PersonalPage() {
     if (user) {
       setDisplayName(user.displayName || user.username);
       setProfilePicture(user.profilePicture || "");
+      setBackgroundPhoto(user.backgroundPhoto || "");
       setProfileImagePreview(user.profilePicture || null);
+      setBackgroundImagePreview(user.backgroundPhoto || null);
     }
   }, [user]);
 
   // Handle file upload
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file type",
         description: "Please select an image file (JPEG, PNG, GIF, WebP)",
@@ -78,43 +83,103 @@ export function PersonalPage() {
       return;
     }
 
-    // Create preview URL and convert to base64
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        const result = e.target.result as string;
-        setProfileImagePreview(result);
-        setProfilePicture(result);
+    try {
+      toast({
+        title: "Processing image",
+        description: "Compressing and cropping your profile picture...",
+      });
 
-        toast({
-          title: "Image selected",
-          description: "Click 'Save Changes' to update your profile picture",
-        });
-      }
-    };
-    reader.onerror = () => {
+      // Compress and crop the image
+      const compressedBase64 = await compressImage(file, false);
+      setProfilePicture(compressedBase64);
+      setProfileImagePreview(compressedBase64);
+
+      toast({
+        title: "Image ready",
+        description: "Click 'Save Changes' to update your profile picture",
+      });
+    } catch (error) {
       toast({
         title: "Upload failed",
-        description: "There was an error reading the image file",
+        description: "There was an error processing the image file",
         variant: "destructive",
       });
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const removeProfileImage = () => {
-    setProfileImagePreview(null);
     setProfilePicture("");
+    setProfileImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
+  // Handle background photo upload
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Processing background image",
+        description: "Compressing and cropping your background photo...",
+      });
+
+      // Compress and crop the image
+      const compressedBase64 = await compressImage(file, true);
+      setBackgroundPhoto(compressedBase64);
+      setBackgroundImagePreview(compressedBase64);
+
+      toast({
+        title: "Background image ready",
+        description: "Click 'Save Changes' to update your background photo",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "There was an error processing the background image file",
+        variant: "destructive",
+      });
+      if (backgroundFileInputRef.current) {
+        backgroundFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const removeBackgroundImage = () => {
+    setBackgroundPhoto("");
+    setBackgroundImagePreview(null);
+    if (backgroundFileInputRef.current) {
+      backgroundFileInputRef.current.value = "";
+    }
+  };
+
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: { displayName?: string; profilePicture?: string }) => {
+    mutationFn: async (updates: { displayName?: string; profilePicture?: string, backgroundPhoto?: string }) => {
       if (!user) throw new Error("Not authenticated as user");
 
       // Validate the updates
@@ -156,7 +221,7 @@ export function PersonalPage() {
   });
 
   const handleSaveProfile = () => {
-    const updates: { displayName?: string; profilePicture?: string } = {};
+    const updates: { displayName?: string; profilePicture?: string; backgroundPhoto?: string } = {};
 
     if (displayName !== (user?.displayName || user?.username)) {
       updates.displayName = displayName;
@@ -165,6 +230,11 @@ export function PersonalPage() {
     if (profilePicture !== (user?.profilePicture || "")) {
       updates.profilePicture = profilePicture || undefined;
     }
+
+    if (backgroundPhoto !== (user?.backgroundPhoto || "")) {
+      updates.backgroundPhoto = backgroundPhoto || undefined;
+    }
+
 
     if (Object.keys(updates).length === 0) {
       setIsEditing(false);
@@ -175,14 +245,17 @@ export function PersonalPage() {
   };
 
   const handleCancel = () => {
-    if (user) {
-      setDisplayName(user.displayName || user.username);
-      setProfilePicture(user.profilePicture || "");
-      setProfileImagePreview(user.profilePicture || null);
-    }
     setIsEditing(false);
+    setDisplayName(user.displayName || user.username);
+    setProfilePicture(user.profilePicture || "");
+    setBackgroundPhoto(user.backgroundPhoto || "");
+    setProfileImagePreview(user.profilePicture || null);
+    setBackgroundImagePreview(user.backgroundPhoto || null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+    if (backgroundFileInputRef.current) {
+      backgroundFileInputRef.current.value = "";
     }
   };
 
@@ -328,11 +401,81 @@ export function PersonalPage() {
                     </div>
                   </div>
 
+                  {/* Background Photo Section */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    <div className="relative">
+                      <div className="w-48 h-24 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
+                        {isEditing ? (
+                          backgroundImagePreview ? (
+                            <img src={backgroundImagePreview} alt="Background Preview" className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="flex items-center justify-center w-full h-full text-gray-500 dark:text-gray-400">
+                              No background selected
+                            </div>
+                          )
+                        ) : user.backgroundPhoto ? (
+                          <img src={user.backgroundPhoto} alt="Background" className="object-cover w-full h-full" />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full text-gray-500 dark:text-gray-400">
+                            No background
+                          </div>
+                        )}
+                      </div>
+                      {isEditing && (
+                        <div className="absolute -bottom-2 -right-2">
+                          <Button
+                            size="sm"
+                            onClick={() => backgroundFileInputRef.current?.click()}
+                            className="h-8 w-8 p-0 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                          >
+                            <Camera className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Background Photo
+                      </h3>
+                      {isEditing && (
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => backgroundFileInputRef.current?.click()}
+                            className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Photo
+                          </Button>
+                          {backgroundImagePreview && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={removeBackgroundImage}
+                              className="border-red-300 dark:border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Hidden File Input */}
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleImageUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    ref={backgroundFileInputRef}
+                    onChange={handleBackgroundUpload}
                     accept="image/*"
                     className="hidden"
                   />
@@ -459,6 +602,56 @@ export function PersonalPage() {
       </div>
     </div>
   );
+}
+
+async function compressImage(file: File, isBackground: boolean) {
+  const MAX_WIDTH = isBackground ? 1200 : 400;
+  const MAX_HEIGHT = isBackground ? 600 : 400;
+  const MIME_TYPE = "image/jpeg";
+  const QUALITY = 0.7;
+
+  const canvas = document.createElement("canvas");
+  const image = new Image();
+
+  return new Promise((resolve, reject) => {
+    image.onload = () => {
+      let width = image.width;
+      let height = image.height;
+
+      if (width > MAX_WIDTH) {
+        height *= MAX_WIDTH / width;
+        width = MAX_WIDTH;
+      }
+
+      if (height > MAX_HEIGHT) {
+        width *= MAX_HEIGHT / height;
+        height = MAX_HEIGHT;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(image, 0, 0, width, height);
+
+      const dataUrl = canvas.toDataURL(MIME_TYPE, QUALITY);
+      resolve(dataUrl);
+    };
+
+    image.onerror = (error) => {
+      reject(error);
+    };
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        image.src = e.target.result as string;
+      }
+    };
+    reader.onerror = (error) => {
+      reject(error);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 export default PersonalPage;
