@@ -218,7 +218,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
               variant="ghost"
               size="sm"
               onClick={() => onReply(reply.id, reply.nickname)}
-              className="text-xs h-6 px-2 text-muted-foreground hover:text-foreground mb-2"
+              className="text-xs h-6 px-2 text-muted-foreground hover:text-foreground hover:bg-muted mb-2"
             >
               <Reply className="h-3 w-3 mr-1" />
               Reply
@@ -342,10 +342,7 @@ export function ThreadedReplies({
     return null;
   }
 
-  // For preview mode, only show first 2 replies
-  const displayReplies = !showAll ? validReplies.slice(0, 2) : validReplies;
-
-  // Organize replies into a threaded structure
+  // Organize replies into a threaded structure first
   const threadedReplies = React.useMemo(() => {
     if (!replies || replies.length === 0) return [];
 
@@ -403,8 +400,8 @@ export function ThreadedReplies({
         {!showAll && threadedReplies.length > 2 && (
           <div className="text-center pt-2">
             <Link href={`/message/${messageId}`}>
-              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
-                View all {threadedReplies.length} replies →
+              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10">
+                View all {replies.length} replies →
               </Button>
             </Link>
           </div>
@@ -454,7 +451,7 @@ export function ThreadedReplies({
               <Button 
                 onClick={handleReply}
                 disabled={createReplyMutation.isPending || !replyText.trim() || !nickname.trim()}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {createReplyMutation.isPending ? "Sending..." : "Send Reply"}
               </Button>
@@ -465,6 +462,7 @@ export function ThreadedReplies({
                   setReplyText("");
                   setNickname(defaultNickname);
                 }}
+                className="bg-background hover:bg-muted border-border"
               >
                 Cancel
               </Button>

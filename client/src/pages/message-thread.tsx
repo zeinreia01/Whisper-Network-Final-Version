@@ -180,7 +180,7 @@ export default function MessageThread() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/dashboard">
-            <Button variant="ghost" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2 bg-background hover:bg-muted border-border">
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Button>
@@ -189,7 +189,7 @@ export default function MessageThread() {
             variant="outline"
             size="sm"
             onClick={() => setShowGuidelines(true)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-background hover:bg-muted border-border"
           >
             <Info className="w-4 h-4" />
             Community Guidelines
@@ -312,10 +312,10 @@ export default function MessageThread() {
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Please follow our community guidelines when replying
                   </p>
-                  <Button type="submit" disabled={addReplyMutation.isPending}>
+                  <Button type="submit" disabled={addReplyMutation.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     {addReplyMutation.isPending ? "Posting..." : "Post Reply"}
                   </Button>
                 </div>

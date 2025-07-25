@@ -85,7 +85,7 @@ export default function Dashboard() {
           />
           {searchQuery && (
             <div className="text-center mt-4">
-              <Badge variant="secondary" className="text-sm">
+              <Badge variant="secondary" className="text-sm bg-muted text-muted-foreground">
                 {isSearching 
                   ? "Searching..." 
                   : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}"`
