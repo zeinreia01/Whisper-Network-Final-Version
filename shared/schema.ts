@@ -362,14 +362,5 @@ export type MessageCategory = typeof MESSAGE_CATEGORIES[number]["name"];
 // Follow system schemas - using the existing insertFollowSchema from above
 export type InsertFollowCustom = z.infer<typeof insertFollowSchema>;
 
-export interface Follow {
-  id: number;
-  followerId: number;
-  followingId: number;
-  followerType: 'user' | 'admin';
-  followingType: 'user' | 'admin';
-  createdAt: Date;
-}
-
 // Maximum replies per message
 export const MAX_REPLIES_PER_MESSAGE = 500;
