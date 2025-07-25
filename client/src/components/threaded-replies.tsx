@@ -246,7 +246,13 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
   );
 }
 
-export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, onReply }: ThreadedRepliesProps) {
+export function ThreadedReplies({ 
+  replies, 
+  messageId, 
+  messageUserId, 
+  onWarning,
+  isPreview = false
+}: ThreadedRepliesProps) {
   const { user, admin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -356,15 +362,15 @@ export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, 
       {/* Threaded replies */}
       <div className="space-y-3">
         {threadedReplies.map((reply) => (
-          
+
           <div className="relative">
       {/* Threading line - Only show if not at root level */}
-      
+
 
       {/* Reply content */}
       <div 
         className="flex items-start space-x-3 group relative"
-        
+
       >
         {/* Avatar */}
         <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm relative z-10">
@@ -402,7 +408,7 @@ export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, 
               </div>
 
               {/* Reply management controls */}
-              
+
             </div>
 
             {/* Reply content */}
@@ -410,12 +416,12 @@ export function ThreadedReplies({ replies, messageId, messageUserId, onWarning, 
           </div>
 
           {/* Reply action */}
-          
+
         </div>
       </div>
 
       {/* Nested replies */}
-      
+
     </div>
         ))}
       </div>

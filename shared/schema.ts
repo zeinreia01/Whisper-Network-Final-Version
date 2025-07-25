@@ -254,6 +254,8 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 export const insertReplySchema = createInsertSchema(replies).omit({
   id: true,
   createdAt: true,
+}).extend({
+  content: z.string().min(1, "Reply content is required").max(500, "Reply content must be 500 characters or less"),
 });
 
 export const insertAdminSchema = createInsertSchema(admins).omit({

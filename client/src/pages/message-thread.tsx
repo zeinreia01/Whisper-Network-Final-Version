@@ -112,6 +112,15 @@ export default function MessageThread() {
       });
       return;
     }
+
+    if (replyForm.content.length > 500) {
+      toast({
+        title: "Reply too long",
+        description: "Please keep your reply under 500 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
     addReplyMutation.mutate(replyForm);
   };
 
@@ -275,12 +284,20 @@ export default function MessageThread() {
                   <Label htmlFor="content">Your Reply</Label>
                   <Textarea
                     id="content"
+                    placeholder="Write your reply... (500 character limit)"
                     value={replyForm.content}
-                    onChange={(e) => setReplyForm({ ...replyForm, content: e.target.value })}
-                    placeholder="Share your thoughts respectfully..."
-                    rows={4}
-                    required
+                    onChange={(e) => {
+                      const content = e.target.value;
+                      if (content.length <= 500) {
+                        setReplyForm({ ...replyForm, content });
+                      }
+                    }}
+                    className="min-h-[100px] resize-none"
+                    maxLength={500}
                   />
+                  <div className="text-xs text-muted-foreground mt-1 text-right">
+                    {replyForm.content.length}/500 characters
+                  </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">

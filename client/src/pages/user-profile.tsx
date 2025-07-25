@@ -59,7 +59,7 @@ export function UserProfilePage() {
     },
     onSuccess: (_, { action }) => {
       // Invalidate all related queries to ensure UI updates
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/followers`] });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/following`] });
       toast({
@@ -67,7 +67,8 @@ export function UserProfilePage() {
         description: `User ${action === 'unfollow' ? 'unfollowed' : 'followed'} successfully`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Follow mutation error:', error);
       toast({
         title: "Error",
         description: "Failed to update follow status",

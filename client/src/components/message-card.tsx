@@ -316,6 +316,11 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
   const { replies } = message;
 
+  const handleWarning = (replyId: any) => {
+    setSelectedReplyId(replyId);
+    setShowWarningDialog(true);
+  };
+
   return (
     <div className="message-card bg-card pink:romantic-card rounded-xl shadow-lg pink:pink-glow p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-xl pink:hover:pink-glow transition-all duration-300">
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -750,7 +755,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                   userId: message.userId || undefined,
                 })}
                 disabled={!warningReason.trim() || sendWarningMutation.isPending}
-                className="bg-amber-600 hover:bg-amber-700"
+                className="bg-amber-600 hover:bg-amber-amber-700"
               >
                 {sendWarningMutation.isPending ? "Sending..." : "Send Warning"}
               </AlertDialogAction>
