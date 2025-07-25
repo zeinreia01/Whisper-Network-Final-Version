@@ -157,8 +157,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublicMessages(): Promise<MessageWithReplies[]> {
+    let result;
     try {
-      const result = await db.query.messages.findMany({
+      result = await db.query.messages.findMany({
         where: eq(messages.isPublic, true),
         orderBy: desc(messages.createdAt),
         with: {
@@ -184,7 +185,6 @@ export class DatabaseStorage implements IStorage {
           admin: true,
         },
       });
-
     } catch (error) {
       console.error('Error loading public messages:', error);
       return [];
