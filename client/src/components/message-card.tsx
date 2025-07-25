@@ -602,102 +602,15 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         />
       )}
 
-      {/* Simple Replies Preview - Only show on dashboard, not in thread view */}
+      {/* Replies Preview - Only show on dashboard, not in thread view */}
       {showReplies && !showThreaded && replies && replies.length > 0 && (
-        <div className="border-t pt-4 space-y-3">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <MessageSquare className="h-4 w-4" />
-            <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
-          </div>
-          <div className="space-y-3">
-            {replies.slice(0, 2).map((reply) => (
-              <div key={reply.id} className="flex items-start space-x-3 group">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm">
-                  {reply.nickname.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="bg-muted/30 rounded-lg px-3 py-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center space-x-2">
-                        {reply.userId && (user || admin) ? (
-                          <Link href={`/user/${reply.userId}`}>
-                            <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                              {reply.nickname}
-                            </button>
-                          </Link>
-                        ) : (
-                          <span className="text-sm font-medium text-foreground">{reply.nickname}</span>
-                        )}
-                        {reply.adminId && <UserBadge userType="admin" variant="small" />}
-                        {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
-                        <span className="text-xs text-muted-foreground">
-                          {formatTimeAgo(reply.createdAt!)}
-                        </span>
-                      </div>
-                      {admin && (
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <MoreVertical className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedReplyId(reply.id);
-                                  setShowWarningDialog(true);
-                                }}
-                                className="text-amber-600"
-                              >
-                                <AlertTriangle className="h-3 w-3 mr-2" />
-                                Send Warning
-                              </DropdownMenuItem>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <DropdownMenuItem 
-                                    onSelect={(e) => e.preventDefault()}
-                                    className="text-red-600"
-                                  >
-                                    <Trash2 className="h-3 w-3 mr-2" />
-                                    Delete Reply
-                                  </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Reply</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This will permanently delete this reply. This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => deleteReplyMutation.mutate(reply.id)}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          {replies.length > 2 && (
-                  <div className="text-xs text-muted-foreground ml-8">
-                    +{replies.length - 2} more replies
-                  </div>
-                )}
-          </div>
-        </div>
+        <ThreadedReplies
+          replies={replies}
+          messageId={message.id}
+          messageUserId={message.userId ?? undefined}
+          onWarning={handleWarning}
+          isPreview={true}
+        />
       )}
 
       {/* Reply Form - Only show if not using threaded view */}

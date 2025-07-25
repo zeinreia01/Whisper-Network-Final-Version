@@ -288,6 +288,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createReply(replyData: InsertReply): Promise<Reply> {
+    // Check reply count for the message
+    const replyCount = await db.select({ count: sql<number>`count(*)` })
+      .from(replies)
+      .where(eq(replies.messageId, replyData.messageId))
+      .then(rows => rows[0]?.count || 0);
+
+    if (replyCount >= 500) {
+      throw new Error("Maximum number of replies (500) reached for this message");
+    }
+
     const [reply] = await db
       .insert(replies)
       .values(replyData)
@@ -713,7 +723,7 @@ export class DatabaseStorage implements IStorage {
     if (!searchTerm.trim()) {
       return [];
     }
-    
+
     const result = await db
       .select()
       .from(admins)

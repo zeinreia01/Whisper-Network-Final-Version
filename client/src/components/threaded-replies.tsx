@@ -251,8 +251,9 @@ export function ThreadedReplies({
   messageId, 
   messageUserId, 
   onWarning,
+  onReply,
   isPreview = false
-}: ThreadedRepliesProps) {
+}: ThreadedRepliesProps & { isPreview?: boolean }) {
   const { user, admin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -361,69 +362,29 @@ export function ThreadedReplies({
 
       {/* Threaded replies */}
       <div className="space-y-3">
-        {threadedReplies.map((reply) => (
-
-          <div className="relative">
-      {/* Threading line - Only show if not at root level */}
-
-
-      {/* Reply content */}
-      <div 
-        className="flex items-start space-x-3 group relative"
-
-      >
-        {/* Avatar */}
-        <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm relative z-10">
-          {reply.nickname.charAt(0).toUpperCase()}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="bg-muted/30 rounded-lg px-3 py-2 mb-2">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center space-x-2">
-                {/* Make nickname clickable for authenticated users */}
-                {reply.userId ? (
-              <Link href={`/user/${reply.userId}`}>
-                <span className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline cursor-pointer">
-                  {reply.nickname}
-                </span>
-              </Link>
-            ) : reply.adminId ? (
-              <Link href={`/admin/${reply.adminId}/profile`}>
-                <span className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline cursor-pointer">
-                  {reply.nickname}
-                </span>
-              </Link>
-            ) : (
-                  <span className="text-sm font-medium text-foreground">{reply.nickname}</span>
-                )}
-                {/* User type badges */}
-                {reply.adminId && <UserBadge userType="admin" variant="small" />}
-                {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
-                <span className="text-xs text-muted-foreground">
-                  {formatTimeAgo(reply.createdAt!)}
-                </span>
-              </div>
-
-              {/* Reply management controls */}
-
-            </div>
-
-            {/* Reply content */}
-            <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
-          </div>
-
-          {/* Reply action */}
-
-        </div>
-      </div>
-
-      {/* Nested replies */}
-
-    </div>
+        {(isPreview ? threadedReplies.slice(0, 2) : threadedReplies).map((reply) => (
+          <ReplyItem
+            key={reply.id}
+            reply={reply}
+            messageId={messageId}
+            messageUserId={messageUserId}
+            level={0}
+            onWarning={onWarning}
+            onReply={onReply}
+          />
         ))}
+        
+        {/* Show "more replies" indicator in preview mode */}
+        {isPreview && replies.length > 2 && (
+          <div className="text-xs text-muted-foreground ml-8 border-t pt-2">
+            +{replies.length - 2} more replies - 
+            <Link href={`/message/${messageId}`}>
+              <Button variant="link" className="text-xs p-0 h-auto ml-1">
+                View full thread
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Reply form */}
