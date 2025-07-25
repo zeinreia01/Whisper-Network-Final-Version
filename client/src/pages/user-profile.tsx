@@ -51,25 +51,16 @@ export function UserProfilePage() {
 
   // Follow/Unfollow mutation
   const followMutation = useMutation({
-    mutationFn: async () => {
-      if (profile?.isFollowing) {
-        const response = await apiRequest("POST", `/api/users/${userId}/unfollow`, {
-          followerId: user?.id
-        });
-        if (!response.ok) {
-          throw new Error('Failed to unfollow user');
-        }
-        return response.json();
-      } else {
-        const response = await apiRequest("POST", `/api/users/${userId}/follow`, {
-          followerId: user?.id
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to follow user');
-        }
-        return response.json();
+    mutationFn: async ({ targetId, action }: { targetId: number; action: 'follow' | 'unfollow' }) => {
+      const endpoint = action === 'follow' ? `/api/users/${targetId}/follow` : `/api/users/${targetId}/unfollow`;
+      const response = await apiRequest("POST", endpoint, {
+        followerId: user?.id
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to ${action} user`);
       }
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate and refetch the profile to get updated follow status
