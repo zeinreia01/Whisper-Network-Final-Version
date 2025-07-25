@@ -15,6 +15,7 @@ import { ArrowLeft, User, Upload, Calendar, Clock, Save, Archive, Camera, Edit3,
 import { formatTimeAgo } from "@/lib/utils";
 import { updateUserProfileSchema } from "@shared/schema";
 import { z } from "zod";
+import { compressImage } from "@/lib/image-utils";
 
 export function PersonalPage() {
   const { user, admin } = useAuth();
@@ -91,8 +92,8 @@ export function PersonalPage() {
 
       // Compress and crop the image
       const compressedBase64 = await compressImage(file, false);
-      setProfilePicture(compressedBase64);
-      setProfileImagePreview(compressedBase64);
+      setProfilePicture(compressedBase64 as string);
+      setProfileImagePreview(compressedBase64 as string);
 
       toast({
         title: "Image ready",
@@ -151,8 +152,8 @@ export function PersonalPage() {
 
       // Compress and crop the image
       const compressedBase64 = await compressImage(file, true);
-      setBackgroundPhoto(compressedBase64);
-      setBackgroundImagePreview(compressedBase64);
+      setBackgroundPhoto(compressedBase64 as string);
+      setBackgroundImagePreview(compressedBase64 as string);
 
       toast({
         title: "Background image ready",
@@ -246,11 +247,11 @@ export function PersonalPage() {
 
   const handleCancel = () => {
     setIsEditing(false);
-    setDisplayName(user.displayName || user.username);
-    setProfilePicture(user.profilePicture || "");
-    setBackgroundPhoto(user.backgroundPhoto || "");
-    setProfileImagePreview(user.profilePicture || null);
-    setBackgroundImagePreview(user.backgroundPhoto || null);
+    setDisplayName(user?.displayName || user?.username || "");
+    setProfilePicture(user?.profilePicture || "");
+    setBackgroundPhoto(user?.backgroundPhoto || "");
+    setProfileImagePreview(user?.profilePicture || null);
+    setBackgroundImagePreview(user?.backgroundPhoto || null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -604,54 +605,6 @@ export function PersonalPage() {
   );
 }
 
-async function compressImage(file: File, isBackground: boolean) {
-  const MAX_WIDTH = isBackground ? 1200 : 400;
-  const MAX_HEIGHT = isBackground ? 600 : 400;
-  const MIME_TYPE = "image/jpeg";
-  const QUALITY = 0.7;
 
-  const canvas = document.createElement("canvas");
-  const image = new Image();
-
-  return new Promise((resolve, reject) => {
-    image.onload = () => {
-      let width = image.width;
-      let height = image.height;
-
-      if (width > MAX_WIDTH) {
-        height *= MAX_WIDTH / width;
-        width = MAX_WIDTH;
-      }
-
-      if (height > MAX_HEIGHT) {
-        width *= MAX_HEIGHT / height;
-        height = MAX_HEIGHT;
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx?.drawImage(image, 0, 0, width, height);
-
-      const dataUrl = canvas.toDataURL(MIME_TYPE, QUALITY);
-      resolve(dataUrl);
-    };
-
-    image.onerror = (error) => {
-      reject(error);
-    };
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        image.src = e.target.result as string;
-      }
-    };
-    reader.onerror = (error) => {
-      reject(error);
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 export default PersonalPage;

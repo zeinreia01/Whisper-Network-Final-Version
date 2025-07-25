@@ -706,19 +706,18 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async searchAdmins(query: string): Promise<Admin[]> {
-    if (!query.trim()) {
-      return this.getAllAdmins();
+  async searchAdmins(searchTerm: string): Promise<Admin[]> {
+    if (!searchTerm.trim()) {
+      return [];
     }
-
-    const searchTerm = `%${query.toLowerCase()}%`;
+    
     const result = await db
       .select()
       .from(admins)
       .where(
         or(
-          ilike(admins.username, searchTerm),
-          ilike(admins.displayName, searchTerm)
+          ilike(admins.username, `%${searchTerm}%`),
+          ilike(admins.displayName, `%${searchTerm}%`)
         )
       )
       .orderBy(desc(admins.createdAt));
@@ -948,6 +947,7 @@ export class DatabaseStorage implements IStorage {
         password: users.password,
         displayName: users.displayName,
         profilePicture: users.profilePicture,
+        backgroundPhoto: users.backgroundPhoto,
         bio: users.bio,
         lastDisplayNameChange: users.lastDisplayNameChange,
         isVerified: users.isVerified,
@@ -969,6 +969,7 @@ export class DatabaseStorage implements IStorage {
         password: users.password,
         displayName: users.displayName,
         profilePicture: users.profilePicture,
+        backgroundPhoto: users.backgroundPhoto,
         bio: users.bio,
         lastDisplayNameChange: users.lastDisplayNameChange,
         isVerified: users.isVerified,
@@ -1237,19 +1238,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     await db.delete(admins).where(eq(admins.id, adminId));
   }
 
-  async searchAdmins(searchTerm: string): Promise<Admin[]> {
-    const result = await db
-      .select()
-      .from(admins)
-      .where(
-        or(
-          ilike(admins.username, `%${searchTerm}%`),
-          ilike(admins.displayName, `%${searchTerm}%`)
-        )
-      )
-      .orderBy(desc(admins.createdAt));
-    return result;
-  }
+
   // Honorable mentions operations
   async getHonorableMentions(): Promise<HonorableMention[]> {
     return await db
