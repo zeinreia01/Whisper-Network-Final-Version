@@ -1,31 +1,35 @@
+
+import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Shield, Calendar, MessageSquare, Reply } from "lucide-react";
-import { Link } from "wouter";
-import { UserBadge } from "@/components/user-badge";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Shield, MessageSquare, MessageCircle, Calendar, User, Heart } from "lucide-react";
+import { formatTimeAgo } from "@/lib/utils";
 
 interface Admin {
   id: number;
   username: string;
   displayName: string;
   profilePicture?: string;
+  backgroundPhoto?: string;
   bio?: string;
-  isVerified: boolean;
-  isActive: boolean;
   createdAt: string;
+  role: string;
+  isActive: boolean;
+  isVerified?: boolean;
 }
 
 interface Message {
   id: number;
   content: string;
   category: string;
-  isPublic: boolean;
   createdAt: string;
-  reactionCount: number;
+  senderName: string;
+  reactionCount?: number;
 }
 
 interface Reply {
@@ -33,6 +37,7 @@ interface Reply {
   content: string;
   messageId: number;
   createdAt: string;
+  nickname: string;
 }
 
 export function AdminProfileViewPage() {
@@ -124,38 +129,52 @@ export function AdminProfileViewPage() {
           </Link>
         </div>
 
-        {/* Admin Profile Card */}
+        {/* Profile Header */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-start space-x-4">
-              <Avatar className="w-20 h-20">
-                <AvatarImage src={admin.profilePicture} alt={admin.displayName} />
-                <AvatarFallback>{admin.displayName.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h1 className="text-2xl font-bold truncate">{admin.displayName}</h1>
-                  <UserBadge 
-                    isVerified={admin.isVerified} 
-                    isAdmin={true}
-                  />
+          <CardContent className="p-0">
+            {/* Background Photo */}
+            {admin.backgroundPhoto && (
+              <div
+                className="h-48 bg-cover bg-center rounded-t-lg"
+                style={{ backgroundImage: `url(${admin.backgroundPhoto})` }}
+              />
+            )}
+            
+            <div className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <div className={`relative ${admin.backgroundPhoto ? '-mt-16' : ''}`}>
+                  <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+                    <AvatarImage src={admin.profilePicture || undefined} alt={admin.displayName} />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white text-xl font-semibold">
+                      {admin.displayName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
 
-                <p className="text-gray-600 text-sm mb-2">@{admin.username}</p>
-
-                {admin.bio && (
-                  <p className="text-gray-700 mb-4">{admin.bio}</p>
-                )}
-
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Shield className="w-4 h-4" />
-                    <span>Whisper Listener</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {admin.displayName}
+                    </h1>
+                    <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Whisper Listener
+                    </Badge>
+                    {admin.isVerified && (
+                      <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
+                        Verified
+                      </Badge>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>Joined {new Date(admin.createdAt).toLocaleDateString()}</span>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">@{admin.username}</p>
+                  {admin.bio && (
+                    <p className="text-gray-700 dark:text-gray-300 mb-3">{admin.bio}</p>
+                  )}
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      Joined {formatTimeAgo(admin.createdAt)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -163,92 +182,118 @@ export function AdminProfileViewPage() {
           </CardContent>
         </Card>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Messages</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{messages?.length || 0}</div>
-            </CardContent>
-          </Card>
+        {/* Content Tabs */}
+        <Tabs defaultValue="messages" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Messages ({messages?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger value="replies" className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              Replies ({replies?.length || 0})
+            </TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Replies</CardTitle>
-              <Reply className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{replies?.length || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Reactions</CardTitle>
-              <span className="text-lg">❤️</span>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {messages?.reduce((sum, msg) => sum + msg.reactionCount, 0) || 0}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Messages */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Messages</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {messagesLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          <TabsContent value="messages">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Messages by {admin.displayName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {messagesLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="p-4 border rounded-lg">
+                        <Skeleton className="h-4 w-20 mb-2" />
+                        <Skeleton className="h-16 w-full mb-2" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : messages && messages.length > 0 ? (
-              <div className="space-y-4">
-                {messages.slice(0, 5).map((message) => (
-                  <Link key={message.id} href={`/message/${message.id}`}>
-                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="secondary">{message.category}</Badge>
-                        <span className="text-xs text-gray-500">
-                          {new Date(message.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm line-clamp-2">{message.content}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge variant={message.isPublic ? "default" : "outline"}>
-                          {message.isPublic ? "Public" : "Private"}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          {message.reactionCount} reactions
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-                {messages.length > 5 && (
-                  <p className="text-center text-sm text-gray-500">
-                    Showing 5 of {messages.length} messages
-                  </p>
+                ) : messages && messages.length > 0 ? (
+                  <div className="space-y-4">
+                    {messages.map((message) => (
+                      <Link key={message.id} href={`/message/${message.id}`}>
+                        <div className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="outline" size="sm">
+                              {message.category}
+                            </Badge>
+                            <span className="text-sm text-gray-500">
+                              {formatTimeAgo(message.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-gray-900 dark:text-gray-100 mb-2 line-clamp-3">
+                            {message.content}
+                          </p>
+                          {message.reactionCount && message.reactionCount > 0 && (
+                            <div className="flex items-center text-sm text-gray-500">
+                              <Heart className="w-4 h-4 mr-1" />
+                              {message.reactionCount} reactions
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No messages found</p>
+                  </div>
                 )}
-              </div>
-            ) : (
-              <p className="text-center text-gray-500 py-8">
-                No messages shared yet.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="replies">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  Replies by {admin.displayName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {repliesLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="p-4 border rounded-lg">
+                        <Skeleton className="h-16 w-full mb-2" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    ))}
+                  </div>
+                ) : replies && replies.length > 0 ? (
+                  <div className="space-y-4">
+                    {replies.map((reply) => (
+                      <Link key={reply.id} href={`/message/${reply.messageId}`}>
+                        <div className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                          <p className="text-gray-900 dark:text-gray-100 mb-2">
+                            {reply.content}
+                          </p>
+                          <div className="flex items-center justify-between text-sm text-gray-500">
+                            <span>Reply as {reply.nickname}</span>
+                            <span>{formatTimeAgo(reply.createdAt)}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No replies found</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

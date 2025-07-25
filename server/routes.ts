@@ -1233,20 +1233,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-      const admin = await storage.getAdminById(adminId);
-      if (!admin) {
-        return res.status(404).json({ error: "Admin not found" });
-      }
-
-      // Remove password before sending
-      const { password, ...adminWithoutPassword } = admin;
-      res.json(adminWithoutPassword);
-    } catch (error) {
-      console.error("Error fetching admin profile:", error);
-      res.status(500).json({ error: "Failed to fetch admin profile" });
-    }
-  });
-
   // Get admin messages
   app.get("/api/admins/:id/messages", async (req, res) => {
     try {
