@@ -1000,8 +1000,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: users.id,
         username: users.username,
-        password: users.password,<previous_generation>```text
-<replit_final_file>
+        password: users.password,
         displayName: users.displayName,
         profilePicture: users.profilePicture,
         backgroundPhoto: users.backgroundPhoto,
