@@ -359,15 +359,8 @@ export const MESSAGE_CATEGORIES = [
 
 export type MessageCategory = typeof MESSAGE_CATEGORIES[number]["name"];
 
-// Follow system schemas
-export const insertFollowSchema = z.object({
-  followerId: z.number(),
-  followingId: z.number(),
-  followerType: z.enum(['user', 'admin']),
-  followingType: z.enum(['user', 'admin']),
-});
-
-export type InsertFollow = z.infer<typeof insertFollowSchema>;
+// Follow system schemas - using the existing insertFollowSchema from above
+export type InsertFollowCustom = z.infer<typeof insertFollowSchema>;
 
 export interface Follow {
   id: number;
