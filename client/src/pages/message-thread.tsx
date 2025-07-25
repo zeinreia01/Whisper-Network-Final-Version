@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Reply as ReplyIcon, Trash2, AlertTriangle, Info, Calendar, Music, Shield } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { MESSAGE_CATEGORIES } from "@shared/schema";
+import { ThreadedReplies } from "@/components/threaded-replies";
 import type { MessageWithReplies, Reply, ReplyWithUser } from "@shared/schema";
 
 export default function MessageThread() {
@@ -322,7 +323,7 @@ export default function MessageThread() {
             </CardContent>
           </Card>
 
-          {/* Threaded Replies List with connecting lines */}
+          {/* Use ThreadedReplies component to show ALL replies in thread view */}
           <div className="space-y-4">
             {message.replies.length === 0 ? (
               <Card>
@@ -331,110 +332,19 @@ export default function MessageThread() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-2">
-                {message.replies.map((reply: Reply, index) => (
-                  <div key={reply.id} className="relative">
-                    {/* Threading line connector */}
-                    {index < message.replies.length - 1 && (
-                      <div className="absolute left-6 top-16 bottom-0 w-0.5 bg-border opacity-30" />
-                    )}
-
-                    <Card className="relative ml-0">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-start gap-3">
-                            {/* Threading connector dot */}
-                            <div className="relative flex-shrink-0">
-                              <div className="w-3 h-3 rounded-full bg-primary/20 border-2 border-primary/40 mt-1" />
-                              {index > 0 && (
-                                <div className="absolute top-0 left-1.5 w-0.5 h-2 bg-border -translate-y-2" />
-                              )}
-                            </div>
-
-                            {/* Avatar */}
-                            {reply.userId && (reply as ReplyWithUser).user && (
-                              <Avatar className="w-8 h-8">
-                                <AvatarImage 
-                                  src={(reply as ReplyWithUser).user?.profilePicture || undefined} 
-                                  alt={(reply as ReplyWithUser).user?.displayName || (reply as ReplyWithUser).user?.username}
-                                />
-                                <AvatarFallback className="bg-blue-600 text-white text-sm">
-                                  {((reply as ReplyWithUser).user?.displayName || (reply as ReplyWithUser).user?.username || reply.nickname).charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
-                            {reply.adminId && (reply as ReplyWithUser).admin && (
-                              <Avatar className="w-8 h-8">
-                                <AvatarFallback className="bg-purple-600 text-white text-sm">
-                                  {((reply as ReplyWithUser).admin?.displayName || reply.nickname).charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
-                            {!reply.userId && !reply.adminId && (
-                              <Avatar className="w-8 h-8">
-                                <AvatarFallback className="bg-gray-600 text-white text-sm">
-                                  {reply.nickname.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 mb-1">
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{reply.nickname}</span>
-                                {/* Show admin permission tag */}
-                                {reply.adminId && (
-                                  <Badge variant="outline" className="text-xs px-2 py-0 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
-                                    <Shield className="h-3 w-3 mr-1" />
-                                    Whisper Listener
-                                  </Badge>
-                                )}
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                  {reply.createdAt ? formatTimeAgo(reply.createdAt) : "Unknown date"}
-                                </span>
-                              </div>
-                              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{reply.content}</p>
-
-                              {/* Reply actions */}
-                              <div className="flex items-center gap-2 mt-2 text-sm">
-                                <button
-                                  onClick={() => {
-                                    const mentionText = `@${reply.nickname} `;
-                                    setReplyForm(prev => ({
-                                      ...prev,
-                                      content: mentionText,
-                                      parentId: reply.id,
-                                      mentionedUserId: reply.userId,
-                                      mentionedAdminId: reply.adminId
-                                    }));
-                                    // Scroll to reply form
-                                    document.querySelector('#reply-form')?.scrollIntoView({ behavior: 'smooth' });
-                                  }}
-                                  className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-                                >
-                                  <ReplyIcon className="w-3 h-3" />
-                                  Reply
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {admin && (
-                            <div className="flex items-center gap-2 ml-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeleteReplyId(reply.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))}
+              <div className="border-t pt-4">
+                <ThreadedReplies
+                  replies={message.replies}
+                  messageId={message.id}
+                  messageUserId={message.userId ?? undefined}
+                  showAll={true}
+                  onWarning={(replyId) => {
+                    sendWarningMutation.mutate({
+                      replyId,
+                      reason: "Your reply was flagged for violating community guidelines. Please review our guidelines and be respectful in future interactions."
+                    });
+                  }}
+                />
               </div>
             )}
           </div>
