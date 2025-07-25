@@ -24,7 +24,7 @@ export function Navigation() {
 
   return (
     <>
-      <nav className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
+      <nav className="bg-white dark:bg-gray-900 pink:romantic-card border-b border-gray-100 dark:border-gray-700 pink:border-pink-200 sticky top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95 pink:bg-pink-50/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             {/* Logo section - moved closer to center on mobile */}
@@ -34,7 +34,7 @@ export function Navigation() {
                   localStorage.removeItem('hasVisitedWhisperingNetwork');
                   window.location.reload();
                 }}
-                className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight hover:text-purple-600 transition-colors"
+                className="text-lg font-medium text-gray-900 dark:text-gray-100 pink:text-pink-900 cursor-pointer tracking-tight hover:text-purple-600 pink:hover:text-pink-700 transition-colors"
               >
                 Whisper Network
               </button>

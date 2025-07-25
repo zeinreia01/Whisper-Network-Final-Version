@@ -317,7 +317,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
   const { replies } = message;
 
   return (
-    <div className="message-card bg-card rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-xl transition-all duration-300">
+    <div className="message-card bg-card pink:romantic-card rounded-xl shadow-lg pink:pink-glow p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-xl pink:hover:pink-glow transition-all duration-300">
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="flex items-center space-x-2">
           <span className={`category-dot ${category?.color}`}></span>

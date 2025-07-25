@@ -82,37 +82,142 @@
 }
 
 .pink {
-  --background: hsl(345, 50%, 96%);
-  --foreground: hsl(340, 25%, 15%);
-  --muted: hsl(345, 40%, 92%);
-  --muted-foreground: hsl(340, 15%, 45%);
-  --popover: hsl(345, 60%, 98%);
-  --popover-foreground: hsl(340, 25%, 15%);
-  --card: hsl(345, 60%, 98%);
-  --card-foreground: hsl(340, 25%, 15%);
-  --border: hsl(345, 30%, 88%);
-  --input: hsl(345, 30%, 88%);
-  --primary: hsl(330, 70%, 65%);
-  --primary-foreground: hsl(345, 60%, 98%);
-  --secondary: hsl(345, 40%, 92%);
-  --secondary-foreground: hsl(340, 25%, 15%);
-  --accent: hsl(10, 75%, 60%);
-  --accent-foreground: hsl(345, 60%, 98%);
+  /* Romantic Reddish-Pink Gradient Background */
+  --background: linear-gradient(135deg, hsl(345, 55%, 97%) 0%, hsl(340, 50%, 95%) 50%, hsl(350, 60%, 96%) 100%);
+  --background-solid: hsl(345, 55%, 97%);
+  --foreground: hsl(340, 35%, 12%);
+  --muted: linear-gradient(135deg, hsl(345, 45%, 90%) 0%, hsl(340, 40%, 88%) 100%);
+  --muted-solid: hsl(345, 45%, 90%);
+  --muted-foreground: hsl(340, 25%, 40%);
+  --popover: linear-gradient(135deg, hsl(345, 70%, 99%) 0%, hsl(340, 65%, 97%) 100%);
+  --popover-solid: hsl(345, 70%, 99%);
+  --popover-foreground: hsl(340, 35%, 12%);
+  --card: linear-gradient(135deg, hsl(345, 70%, 99%) 0%, hsl(340, 65%, 97%) 50%, hsl(350, 75%, 98%) 100%);
+  --card-solid: hsl(345, 70%, 99%);
+  --card-foreground: hsl(340, 35%, 12%);
+  --border: hsl(345, 40%, 85%);
+  --input: linear-gradient(135deg, hsl(345, 35%, 86%) 0%, hsl(340, 30%, 84%) 100%);
+  --input-solid: hsl(345, 35%, 86%);
+  
+  /* Romantic Red-to-Pink Primary Gradient */
+  --primary: linear-gradient(135deg, hsl(350, 85%, 65%) 0%, hsl(340, 80%, 70%) 50%, hsl(330, 75%, 72%) 100%);
+  --primary-solid: hsl(340, 80%, 70%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  
+  --secondary: linear-gradient(135deg, hsl(345, 45%, 90%) 0%, hsl(340, 40%, 88%) 100%);
+  --secondary-solid: hsl(345, 45%, 90%);
+  --secondary-foreground: hsl(340, 35%, 12%);
+  
+  /* Elegant Coral-Rose Accent */
+  --accent: linear-gradient(135deg, hsl(15, 85%, 65%) 0%, hsl(5, 80%, 68%) 50%, hsl(355, 75%, 70%) 100%);
+  --accent-solid: hsl(5, 80%, 68%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  
   --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(345, 60%, 98%);
-  --ring: hsl(330, 70%, 65%);
-  --radius: 0.5rem;
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(340, 80%, 70%);
+  --radius: 0.75rem;
 
-  /* Tea Rose Pink theme category colors - romantic and warm */
-  --hope: hsl(140, 45%, 55%);
-  --reflection: hsl(330, 70%, 65%);
-  --gratitude: hsl(45, 85%, 60%);
-  --support: hsl(10, 75%, 60%);
-  --dreams: hsl(280, 65%, 75%);
-  --text-primary: hsl(340, 25%, 15%);
-  --text-secondary: hsl(340, 15%, 45%);
-  --surface: hsl(345, 60%, 98%);
-  --bg-main: hsl(345, 50%, 96%);
+  /* Romantic Tea Rose Pink Category Colors */
+  --hope: hsl(140, 50%, 60%);
+  --reflection: hsl(330, 75%, 68%);
+  --gratitude: hsl(45, 90%, 65%);
+  --support: hsl(10, 85%, 65%);
+  --dreams: hsl(280, 70%, 78%);
+  --text-primary: hsl(340, 35%, 12%);
+  --text-secondary: hsl(340, 25%, 40%);
+  --surface: hsl(345, 70%, 99%);
+  --bg-main: hsl(345, 55%, 97%);
+  
+  /* Special Pink Gradients for Enhanced Elements */
+  --pink-gradient-warm: linear-gradient(135deg, hsl(350, 85%, 65%) 0%, hsl(340, 80%, 70%) 50%, hsl(320, 75%, 75%) 100%);
+  --pink-gradient-cool: linear-gradient(135deg, hsl(340, 75%, 68%) 0%, hsl(330, 70%, 72%) 50%, hsl(320, 65%, 76%) 100%);
+  --pink-gradient-romantic: linear-gradient(135deg, hsl(355, 80%, 70%) 0%, hsl(345, 75%, 68%) 25%, hsl(335, 70%, 70%) 50%, hsl(325, 65%, 72%) 75%, hsl(315, 60%, 74%) 100%);
+  --pink-shadow: 0 4px 20px hsla(340, 60%, 70%, 0.25);
+  --pink-glow: 0 0 20px hsla(340, 80%, 75%, 0.4);
+}
+
+/* Pink Theme Enhanced Components */
+.pink .bg-card {
+  background: var(--card-solid, var(--card));
+}
+
+.pink .bg-popover {
+  background: var(--popover-solid, var(--popover));
+}
+
+.pink .bg-muted {
+  background: var(--muted-solid, var(--muted));
+}
+
+.pink .bg-primary {
+  background: var(--primary-solid, var(--primary));
+}
+
+.pink .bg-secondary {
+  background: var(--secondary-solid, var(--secondary));
+}
+
+.pink .bg-accent {
+  background: var(--accent-solid, var(--accent));
+}
+
+/* Pink Theme Romantic Enhancements */
+.pink .romantic-gradient {
+  background: var(--pink-gradient-romantic);
+  box-shadow: var(--pink-shadow);
+}
+
+.pink .warm-gradient {
+  background: var(--pink-gradient-warm);
+}
+
+.pink .cool-gradient {
+  background: var(--pink-gradient-cool);
+}
+
+.pink .pink-glow {
+  box-shadow: var(--pink-glow);
+}
+
+.pink .pink-border {
+  border: 2px solid var(--primary-solid);
+  background: linear-gradient(135deg, transparent 0%, hsla(340, 60%, 90%, 0.3) 100%);
+}
+
+.pink .romantic-card {
+  background: var(--card);
+  border: 1px solid hsla(340, 40%, 85%, 0.6);
+  box-shadow: 0 8px 32px hsla(340, 60%, 70%, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.pink .elegant-button {
+  background: var(--pink-gradient-romantic);
+  border: none;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-shadow: 0 1px 2px hsla(0, 0%, 0%, 0.1);
+  box-shadow: 0 4px 16px hsla(340, 60%, 70%, 0.3);
+  transition: all 0.3s ease;
+}
+
+.pink .elegant-button:hover {
+  box-shadow: 0 6px 24px hsla(340, 60%, 70%, 0.4);
+  transform: translateY(-1px);
+}
+
+.pink .romantic-input {
+  background: var(--input-solid);
+  border: 2px solid hsla(340, 40%, 85%, 0.8);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.pink .romantic-input:focus {
+  border-color: var(--primary-solid);
+  box-shadow: 0 0 0 3px hsla(340, 60%, 70%, 0.2);
 }
 
 @layer base {
@@ -121,7 +226,8 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: var(--background-solid, var(--background));
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

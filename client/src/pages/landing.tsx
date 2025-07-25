@@ -9,7 +9,7 @@ interface LandingProps {
 
 export default function Landing({ onEnter }: LandingProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted pink:from-pink-50 pink:to-pink-100 flex items-center justify-center">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <div className="space-y-10">
           {/* Logo/Icon */}
@@ -37,7 +37,7 @@ export default function Landing({ onEnter }: LandingProps) {
             <Button 
               onClick={onEnter}
               size="lg"
-              className="group px-8 py-3 text-base font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="group px-8 py-3 text-base font-medium transition-all duration-300 shadow-lg hover:shadow-xl pink:elegant-button"
             >
               Enter the Network
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -58,7 +58,7 @@ export default function Landing({ onEnter }: LandingProps) {
 
         {/* About Section */}
         <div className="mt-20 max-w-6xl mx-auto">
-          <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-sm">
+          <Card className="border-none shadow-2xl bg-card/50 pink:romantic-card backdrop-blur-sm pink:pink-glow">
             <CardContent className="p-8 lg:p-12">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">

@@ -45,7 +45,17 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       downloadContainer.style.width = '600px';
       downloadContainer.style.height = 'auto';
       downloadContainer.style.fontFamily = '"Times New Roman", serif';
-      downloadContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+      
+      // Check if pink theme is active for reddish-pink save UI
+      const isPinkTheme = document.documentElement.classList.contains('pink');
+      
+      if (isPinkTheme) {
+        downloadContainer.style.background = 'linear-gradient(135deg, #e91e63 0%, #f06292 25%, #ec407a 50%, #ad1457 75%, #880e4f 100%)';
+        downloadContainer.style.boxShadow = '0 20px 40px rgba(233, 30, 99, 0.3), 0 8px 16px rgba(240, 98, 146, 0.2)';
+      } else {
+        downloadContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+      }
+      
       downloadContainer.style.padding = '32px';
       downloadContainer.style.borderRadius = '16px';
       downloadContainer.style.color = '#ffffff';
@@ -53,7 +63,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       // Create Instagram-optimized content
       downloadContainer.innerHTML = `
         <div style="text-align: center; margin-bottom: 32px;">
-          <h1 style="font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px 0; font-family: 'Times New Roman', serif;">
+          <h1 style="font-size: 28px; font-weight: bold; background: ${isPinkTheme ? 'linear-gradient(135deg, #ffffff 0%, #fce4ec 50%, #f8bbd9 100%)' : 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'}; -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px 0; font-family: 'Times New Roman', serif;">
             Whisper Network
           </h1>
           <p style="color: #94a3b8; font-size: 14px; margin: 0; font-family: 'Times New Roman', serif;">

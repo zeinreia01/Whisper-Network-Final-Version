@@ -126,33 +126,33 @@ export function HonorableMentionsModal({ trigger }: HonorableMentionsModalProps)
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-900 pink:bg-pink-50">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-900 pink:romantic-card pink:pink-glow">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center mb-4 text-gray-900 dark:text-gray-100 pink:text-pink-900">
-            <Heart className="w-6 h-6 inline mr-2 text-red-500" />
-            Honorable Mentions
+            <Heart className="w-6 h-6 inline mr-2 text-red-500 pink:text-pink-700" />
+            Personal Thanks from Zeke
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Gratitude Message */}
-          <div className="text-center space-y-4 p-6 bg-gradient-to-br from-pink-50 to-red-50 dark:from-gray-800 dark:to-gray-700 pink:from-pink-100 pink:to-pink-200 rounded-xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 pink:text-pink-900 mb-4">
-              Special Thanks To:
+          <div className="text-center space-y-4 p-6 bg-gradient-to-br from-pink-50 to-red-50 dark:from-gray-800 dark:to-gray-700 pink:warm-gradient rounded-xl pink:text-white">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 pink:text-white mb-4">
+              My Dearest Friends & Supporters
             </h3>
-            <p className="text-lg leading-relaxed text-gray-800 dark:text-gray-200 pink:text-pink-800">
-              From the depths of my heart, I want to express my profound gratitude to these incredible souls 
-              who believed in this vision, offered their unwavering support, and helped bring Whisper Network to life.
+            <p className="text-lg leading-relaxed text-gray-800 dark:text-gray-200 pink:text-pink-100 font-serif italic">
+              "These beautiful souls have touched my heart and inspired this sanctuary of connection. 
+              Their love, encouragement, and belief in this vision made Whisper Network possible."
             </p>
-            <p className="text-base text-gray-700 dark:text-gray-300 pink:text-pink-700">
-              Your encouragement, inspiration, and kindness made this sanctuary of anonymous connection possible. 
-              Each of you holds a special place in this journey, and your influence resonates through every whisper shared here.
+            <p className="text-base text-gray-700 dark:text-gray-300 pink:text-pink-200">
+              Each name here represents a cherished friendship, a moment of support, and a piece of my heart. 
+              Your kindness echoes through every whisper shared in this space.
             </p>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 pink:text-pink-600">
-              With endless appreciation and love,
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 pink:text-pink-300">
+              With endless love and gratitude,
             </p>
-            <p className="text-lg font-semibold text-primary">
-              ~ Zeke
+            <p className="text-xl font-bold text-primary pink:text-white font-serif">
+              ♡ Zeke ♡
             </p>
           </div>
 

@@ -159,10 +159,10 @@ export function AccessibilityMenu() {
               
               <button
                 onClick={() => setTheme('pink')}
-                className={`p-2 rounded-xl transition-colors ${
+                className={`p-2 rounded-xl transition-all duration-300 ${
                   theme === 'pink' 
-                    ? 'bg-pink-200 text-pink-700' 
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 pink:hover:bg-pink-100 text-gray-600 dark:text-gray-400'
+                    ? 'romantic-gradient text-white shadow-lg pink-glow' 
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 pink:hover:bg-pink-100 text-gray-600 dark:text-gray-400 hover:text-pink-500'
                 }`}
                 aria-label="Tea Rose Pink theme"
               >
