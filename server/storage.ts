@@ -70,7 +70,10 @@ export interface IStorage {
   // Follow operations
   followUser(followerId: number, followingId: number): Promise<Follow>;
   unfollowUser(followerId: number, followingId: number): Promise<void>;
+  followAdmin(followerId: number, adminId: number): Promise<Follow>;
+  unfollowAdmin(followerId: number, adminId: number): Promise<void>;
   isFollowing(followerId: number, followingId: number): Promise<boolean>;
+  isFollowingAdmin(followerId: number, adminId: number): Promise<boolean>;
   getUserFollowers(userId: number): Promise<User[]>;
   getUserFollowing(userId: number): Promise<User[]>;
   getFollowStats(userId: number): Promise<{ followersCount: number; followingCount: number }>;
@@ -172,7 +175,7 @@ export class DatabaseStorage implements IStorage {
                 mentionedUser: true,
                 mentionedAdmin: true,
               },
-              orderBy: desc(replies.createdAt),
+              orderBy: asc(replies.createdAt),
             },
           },
         },
@@ -230,7 +233,7 @@ export class DatabaseStorage implements IStorage {
       orderBy: desc(messages.createdAt),
       with: {
         replies: {
-          orderBy: desc(replies.createdAt),
+          orderBy: asc(replies.createdAt),
           with: {
             user: true,
           },
@@ -260,7 +263,7 @@ export class DatabaseStorage implements IStorage {
       orderBy: desc(messages.createdAt),
       with: {
         replies: {
-          orderBy: desc(replies.createdAt),
+          orderBy: asc(replies.createdAt),
           with: {
             user: true,
           },
@@ -297,7 +300,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(replies)
       .where(eq(replies.messageId, messageId))
-      .orderBy(desc(replies.createdAt));
+      .orderBy(asc(replies.createdAt));
     return result;
   }
 
@@ -321,7 +324,7 @@ export class DatabaseStorage implements IStorage {
       where: eq(messages.id, id),
       with: {
         replies: {
-          orderBy: desc(replies.createdAt),
+          orderBy: asc(replies.createdAt),
           with: {
             user: true,
             admin: true,
@@ -334,7 +337,7 @@ export class DatabaseStorage implements IStorage {
                 mentionedUser: true,
                 mentionedAdmin: true,
               },
-              orderBy: desc(replies.createdAt),
+              orderBy: asc(replies.createdAt),
             },
           },
         },
@@ -569,7 +572,7 @@ export class DatabaseStorage implements IStorage {
       orderBy: desc(messages.createdAt),
       with: {
         replies: {
-          orderBy: desc(replies.createdAt),
+          orderBy: asc(replies.createdAt),
           with: {
             user: true,
             admin: true,
@@ -600,7 +603,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(replies)
       .where(eq(replies.adminId, adminId))
-      .orderBy(desc(replies.createdAt));
+      .orderBy(asc(replies.createdAt));
   }
 
   async getUserReplies(userId: number): Promise<Reply[]> {
@@ -608,7 +611,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(replies)
       .where(eq(replies.userId, userId))
-      .orderBy(desc(replies.createdAt));
+      .orderBy(asc(replies.createdAt));
     return result;
   }
 
@@ -1168,6 +1171,42 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .where(eq(admins.id, adminId))
       .returning();
     return admin;
+  }
+
+  async followAdmin(followerId: number, adminId: number): Promise<Follow> {
+    const [follow] = await db
+      .insert(follows)
+      .values({
+        followerId,
+        followingAdminId: adminId,
+      })
+      .returning();
+    return follow;
+  }
+
+  async unfollowAdmin(followerId: number, adminId: number): Promise<void> {
+    await db
+      .delete(follows)
+      .where(
+        and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingAdminId, adminId)
+        )
+      );
+  }
+
+  async isFollowingAdmin(followerId: number, adminId: number): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(follows)
+      .where(
+        and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingAdminId, adminId)
+        )
+      )
+      .limit(1);
+    return !!result;
   }
 
   // Message privacy operations

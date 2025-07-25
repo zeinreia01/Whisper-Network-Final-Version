@@ -58,7 +58,10 @@ export function UserProfilePage() {
       });
     },
     onSuccess: (_, { action }) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
+      // Invalidate all related queries to ensure UI updates
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/followers`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/following`] });
       toast({
         title: "Success",
         description: `User ${action === 'unfollow' ? 'unfollowed' : 'followed'} successfully`,
@@ -204,12 +207,22 @@ export function UserProfilePage() {
               </Button>
             </Link>
 
-            {/* Profile header */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6">
-              <CardHeader>
+            {/* Profile header with background photo */}
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6 overflow-hidden">
+              {/* Background Photo */}
+              {profile.backgroundPhoto && (
+                <div 
+                  className="h-48 bg-cover bg-center relative"
+                  style={{ backgroundImage: `url(${profile.backgroundPhoto})` }}
+                >
+                  <div className="absolute inset-0 bg-black/30"></div>
+                </div>
+              )}
+              
+              <CardHeader className={profile.backgroundPhoto ? "-mt-16 relative z-10" : ""}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                   <div className="flex items-center space-x-4">
-                    <Avatar className="w-16 h-16 border-2 border-primary">
+                    <Avatar className="w-16 h-16 border-4 border-white dark:border-gray-800 shadow-lg">
                       <AvatarImage 
                         src={profile.profilePicture || undefined} 
                         alt={profile.displayName || profile.username}
@@ -219,7 +232,7 @@ export function UserProfilePage() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-2xl text-gray-900 dark:text-white flex items-center space-x-2">
+                      <CardTitle className={`text-2xl flex items-center space-x-2 ${profile.backgroundPhoto ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                         <span>{profile.displayName || profile.username || 'Unknown User'}</span>
                         <UserBadge userType="user" variant="small" />
                         {profile.isVerified && (
@@ -231,9 +244,9 @@ export function UserProfilePage() {
                         )}
                       </CardTitle>
                       {profile.displayName && profile.username && (
-                        <p className="text-gray-600 dark:text-gray-400">@{profile.username}</p>
+                        <p className={`${profile.backgroundPhoto ? 'text-gray-200' : 'text-gray-600 dark:text-gray-400'}`}>@{profile.username}</p>
                       )}
-                      <p className="text-gray-500 dark:text-gray-400 flex items-center mt-1 text-sm">
+                      <p className={`flex items-center mt-1 text-sm ${profile.backgroundPhoto ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
                         <Calendar className="w-4 h-4 mr-1" />
                         Joined {profile.createdAt ? formatTimeAgo(profile.createdAt) : 'Unknown'}
                       </p>

@@ -975,7 +975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Follow system endpoints
+  // Follow system endpoints - users
   app.post("/api/users/:id/follow", async (req, res) => {
     try {
       const followingId = parseInt(req.params.id);
@@ -1012,6 +1012,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error following user:", error);
       res.status(500).json({ error: "Failed to follow user" });
+    }
+  });
+
+  // Follow system endpoints - admins
+  app.post("/api/admins/:id/follow", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+      const { followerId } = req.body;
+
+      if (!adminId || !followerId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const follow = await storage.followAdmin(followerId, adminId);
+
+      // Create notification for the followed admin
+      const follower = await storage.getUserById(followerId);
+      if (follower) {
+        await storage.createNotification({
+          adminId: adminId,
+          type: "follow",
+          fromUserId: followerId,
+          content: `${follower.username} started following you`,
+        });
+      }
+
+      res.json(follow);
+    } catch (error) {
+      console.error("Error following admin:", error);
+      res.status(500).json({ error: "Failed to follow admin" });
+    }
+  });
+
+  app.post("/api/admins/:id/unfollow", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+      const { followerId } = req.body;
+
+      if (!adminId || !followerId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      await storage.unfollowAdmin(followerId, adminId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unfollowing admin:", error);
+      res.status(500).json({ error: "Failed to unfollow admin" });
     }
   });
 
@@ -1209,10 +1256,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Get admin profile by ID
+  // Get admin profile by ID with stats and follow status
   app.get("/api/admins/:id/profile", async (req, res) => {
     try {
       const adminId = parseInt(req.params.id);
+      const { currentUserId } = req.query;
 
       if (!adminId || isNaN(adminId)) {
         return res.status(400).json({ error: "Invalid admin ID" });
@@ -1224,8 +1272,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Admin not found" });
       }
 
+      // Get admin messages count
+      const adminMessages = await storage.getAdminMessages(adminId);
+      
+      // Get admin replies count
+      const adminReplies = await storage.getAdminReplies(adminId);
+
+      // Check if current user is following this admin
+      let isFollowing = false;
+      try {
+        if (currentUserId) {
+          isFollowing = await storage.isFollowingAdmin(parseInt(currentUserId as string), adminId);
+        }
+      } catch (error) {
+        // Skip if follows table doesn't exist yet
+        isFollowing = false;
+      }
+
+      // Count reactions on all admin messages
+      let totalReactions = 0;
+      try {
+        for (const message of adminMessages) {
+          const messageReactions = await storage.getMessageReactions(message.id);
+          totalReactions += messageReactions.length;
+        }
+      } catch (error) {
+        // Skip if reactions table doesn't exist yet
+        totalReactions = 0;
+      }
+
+      // Count followers for this admin
+      let followersCount = 0;
+      try {
+        const followResults = await db
+          .select()
+          .from(follows)
+          .where(eq(follows.followingAdminId, adminId));
+        followersCount = followResults.length;
+      } catch (error) {
+        // Skip if follows table doesn't exist yet
+        followersCount = 0;
+      }
+
+      const profile = {
+        ...admin,
+        messageCount: adminMessages.length,
+        replyCount: adminReplies.length,
+        totalReactions,
+        followersCount,
+        isFollowing,
+      };
+
       // Return admin profile without password
-      const { password: _, ...adminProfile } = admin;
+      const { password: _, ...adminProfile } = profile;
       res.json(adminProfile);
     } catch (error) {
       console.error("Get admin profile error:", error);

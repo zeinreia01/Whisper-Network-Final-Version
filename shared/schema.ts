@@ -92,7 +92,8 @@ export const notifications = pgTable("notifications", {
 export const follows = pgTable("follows", {
   id: serial("id").primaryKey(),
   followerId: integer("follower_id").references(() => users.id).notNull(),
-  followingId: integer("following_id").references(() => users.id).notNull(),
+  followingId: integer("following_id").references(() => users.id),
+  followingAdminId: integer("following_admin_id").references(() => admins.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -218,6 +219,10 @@ export const followsRelations = relations(follows, ({ one }) => ({
   following: one(users, {
     fields: [follows.followingId],
     references: [users.id],
+  }),
+  followingAdmin: one(admins, {
+    fields: [follows.followingAdminId],
+    references: [admins.id],
   }),
 }));
 
