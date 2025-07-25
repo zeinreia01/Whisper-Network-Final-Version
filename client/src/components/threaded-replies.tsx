@@ -303,22 +303,27 @@ export function ThreadedReplies({
       adminId?: number 
     }) => {
       const response = await apiRequest("POST", "/api/replies", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create reply');
+      }
       return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${messageId}`] });
       setReplyText("");
-      setNickname("");
+      setNickname(defaultNickname);
       setReplyingTo(null);
       toast({
         title: "Reply sent!",
         description: "Your reply has been added to the conversation.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to send reply. Please try again.",
+        description: error.message || "Failed to send reply. Please try again.",
         variant: "destructive",
       });
     },
@@ -347,6 +352,14 @@ export function ThreadedReplies({
   const handleReplyClick = (parentId: number, parentNickname: string) => {
     setReplyingTo({ id: parentId, nickname: parentNickname });
     setNickname(defaultNickname);
+    
+    // Scroll to reply form smoothly
+    setTimeout(() => {
+      const replyForm = document.querySelector('.reply-form-container');
+      if (replyForm) {
+        replyForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   if (threadedReplies.length === 0) {
@@ -389,14 +402,18 @@ export function ThreadedReplies({
 
       {/* Reply form */}
       {replyingTo && (
-        <div className="bg-muted/20 border rounded-lg p-4 mt-4">
+        <div className="reply-form-container bg-muted/20 border rounded-lg p-4 mt-4">
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
             <Reply className="h-4 w-4" />
             <span>Replying to {replyingTo.nickname}</span>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setReplyingTo(null)}
+              onClick={() => {
+                setReplyingTo(null);
+                setReplyText("");
+                setNickname(defaultNickname);
+              }}
               className="h-6 px-2 text-xs ml-auto"
             >
               Cancel
@@ -415,18 +432,28 @@ export function ThreadedReplies({
               placeholder="Write your reply..."
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleReply();
+                }
+              }}
             />
             <div className="flex space-x-2">
               <Button 
                 onClick={handleReply}
-                disabled={createReplyMutation.isPending}
+                disabled={createReplyMutation.isPending || !replyText.trim() || !nickname.trim()}
                 className="bg-primary hover:bg-primary/90"
               >
                 {createReplyMutation.isPending ? "Sending..." : "Send Reply"}
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setReplyingTo(null)}
+                onClick={() => {
+                  setReplyingTo(null);
+                  setReplyText("");
+                  setNickname(defaultNickname);
+                }}
               >
                 Cancel
               </Button>

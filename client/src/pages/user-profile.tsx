@@ -51,27 +51,42 @@ export function UserProfilePage() {
 
   // Follow/Unfollow mutation
   const followMutation = useMutation({
-    mutationFn: async ({ targetId, action }: { targetId: number; action: 'follow' | 'unfollow' }) => {
-      const endpoint = action === 'follow' ? `/api/users/${targetId}/follow` : `/api/users/${targetId}/unfollow`;
-      return apiRequest('POST', endpoint, {
-        followerId: currentUserId
-      });
+    mutationFn: async () => {
+      if (profile?.isFollowing) {
+        const response = await apiRequest("POST", `/api/users/${userId}/unfollow`, {
+          followerId: user?.id
+        });
+        if (!response.ok) {
+          throw new Error('Failed to unfollow user');
+        }
+        return response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/users/${userId}/follow`, {
+          followerId: user?.id
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to follow user');
+        }
+        return response.json();
+      }
     },
-    onSuccess: (_, { action }) => {
-      // Invalidate all related queries to ensure UI updates
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/followers`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/following`] });
+    onSuccess: () => {
+      // Invalidate and refetch the profile to get updated follow status
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`] });
+      queryClient.refetchQueries({ queryKey: [`/api/users/${userId}/profile`] });
+
       toast({
-        title: "Success",
-        description: `User ${action === 'unfollow' ? 'unfollowed' : 'followed'} successfully`,
+        title: profile?.isFollowing ? "Unfollowed" : "Now Following",
+        description: profile?.isFollowing 
+          ? `You unfollowed ${profile?.displayName || profile?.username}` 
+          : `You are now following ${profile?.displayName || profile?.username}`,
       });
     },
     onError: (error: any) => {
-      console.error('Follow mutation error:', error);
       toast({
         title: "Error",
-        description: "Failed to update follow status",
+        description: error.message || "Failed to update follow status",
         variant: "destructive",
       });
     },
@@ -119,7 +134,7 @@ export function UserProfilePage() {
       });
       return;
     }
-    
+
     if (bioText.length > 200) {
       toast({
         title: "Error",
@@ -219,7 +234,7 @@ export function UserProfilePage() {
                   <div className="absolute inset-0 bg-black/30"></div>
                 </div>
               )}
-              
+
               <CardHeader className={profile.backgroundPhoto ? "-mt-16 relative z-10" : ""}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                   <div className="flex items-center space-x-4">
@@ -253,7 +268,7 @@ export function UserProfilePage() {
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Action buttons */}
                   <div className="flex space-x-2">
                     {isOwnProfile ? (
@@ -294,7 +309,7 @@ export function UserProfilePage() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Bio section */}
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -324,7 +339,7 @@ export function UserProfilePage() {
                   )}
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
@@ -371,7 +386,7 @@ export function UserProfilePage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Public Messages ({Array.isArray(userMessages) ? userMessages.length : 0})
               </h2>
-              
+
               {messagesLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (

@@ -287,22 +287,28 @@ export class DatabaseStorage implements IStorage {
     return messagesWithReactions;
   }
 
-  async createReply(replyData: InsertReply): Promise<Reply> {
-    // Check reply count for the message
-    const replyCount = await db.select({ count: sql<number>`count(*)` })
-      .from(replies)
-      .where(eq(replies.messageId, replyData.messageId))
-      .then(rows => rows[0]?.count || 0);
+  async createReply(reply: InsertReply): Promise<Reply> {
+    try {
+      // Validate that the message exists
+      const message = await this.getMessageById(reply.messageId);
+      if (!message) {
+        throw new Error("Message not found");
+      }
 
-    if (replyCount >= 500) {
-      throw new Error("Maximum number of replies (500) reached for this message");
+      // If there's a parentId, validate that the parent reply exists
+      if (reply.parentId) {
+        const parentReply = await this.getReplyById(reply.parentId);
+        if (!parentReply) {
+          throw new Error("Parent reply not found");
+        }
+      }
+
+      const [newReply] = await db.insert(replies).values(reply).returning();
+      return newReply;
+    } catch (error) {
+      console.error("Error creating reply:", error);
+      throw error;
     }
-
-    const [reply] = await db
-      .insert(replies)
-      .values(replyData)
-      .returning();
-    return reply;
   }
 
   async getRepliesByMessageId(messageId: number): Promise<Reply[]> {
@@ -922,7 +928,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Follow operations
   async followUser(followerId: number, followingId: number): Promise<Follow> {
     const [follow] = await db
       .insert(follows)
@@ -941,15 +946,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async isFollowing(followerId: number, followingId: number): Promise<boolean> {
-    const [follow] = await db
-      .select()
-      .from(follows)
-      .where(and(
-        eq(follows.followerId, followerId),
-        eq(follows.followingId, followingId)
-      ))
-      .limit(1);
-    return !!follow;
+    try {
+      const follow = await db
+        .select()
+        .from(follows)
+        .where(
+          and(
+            eq(follows.followerId, followerId),
+            eq(follows.followingId, followingId)
+          )
+        )
+        .limit(1);
+
+      return follow.length > 0;
+    } catch (error) {
+      console.error("Error checking follow status:", error);
+      return false;
+    }
   }
 
   async getUserFollowers(userId: number): Promise<User[]> {
