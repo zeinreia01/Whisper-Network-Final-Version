@@ -1219,6 +1219,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const admin = await storage.getAdminById(adminId);
+
+      if (!admin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+
+      // Return admin profile without password
+      const { password: _, ...adminProfile } = admin;
+      res.json(adminProfile);
+    } catch (error) {
+      console.error("Get admin profile error:", error);
+      res.status(500).json({ error: "Failed to get admin profile" });
+    }
+  });
+
+      const admin = await storage.getAdminById(adminId);
       if (!admin) {
         return res.status(404).json({ error: "Admin not found" });
       }

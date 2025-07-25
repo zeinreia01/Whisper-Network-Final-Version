@@ -1,19 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowLeft, Camera, Upload, X, Clock, Shield } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Camera, Save, X, Upload, AlertCircle, Shield } from "lucide-react";
 
 export function AdminProfilePage() {
   const { admin } = useAuth();
@@ -119,7 +117,7 @@ export function AdminProfilePage() {
 
       img.onload = () => {
         let targetWidth, targetHeight;
-        
+
         if (isBackground) {
           // Background photo: 16:9 aspect ratio, max 800x450
           targetWidth = 800;
@@ -136,35 +134,43 @@ export function AdminProfilePage() {
         let { width: imgWidth, height: imgHeight } = img;
         let sourceX = 0, sourceY = 0, sourceWidth = imgWidth, sourceHeight = imgHeight;
 
+        // Auto-crop to fit target aspect ratio
         if (isBackground) {
-          // Auto-crop to 16:9 aspect ratio
-          const targetAspect = 16 / 9;
-          const imageAspect = imgWidth / imgHeight;
+          // For background (16:9 ratio)
+          const targetRatio = 16 / 9;
+          const imageRatio = imgWidth / imgHeight;
 
-          if (imageAspect > targetAspect) {
-            // Image is wider, crop horizontally
-            sourceWidth = imgHeight * targetAspect;
+          if (imageRatio > targetRatio) {
+            // Image is wider than target ratio, crop width
+            sourceWidth = imgHeight * targetRatio;
             sourceX = (imgWidth - sourceWidth) / 2;
           } else {
-            // Image is taller, crop vertically
-            sourceHeight = imgWidth / targetAspect;
+            // Image is taller than target ratio, crop height
+            sourceHeight = imgWidth / targetRatio;
             sourceY = (imgHeight - sourceHeight) / 2;
           }
         } else {
-          // Auto-crop to square (1:1) aspect ratio
-          const minDimension = Math.min(imgWidth, imgHeight);
-          sourceWidth = minDimension;
-          sourceHeight = minDimension;
-          sourceX = (imgWidth - minDimension) / 2;
-          sourceY = (imgHeight - minDimension) / 2;
+          // For profile picture (1:1 ratio)
+          const size = Math.min(imgWidth, imgHeight);
+          sourceWidth = size;
+          sourceHeight = size;
+          sourceX = (imgWidth - size) / 2;
+          sourceY = (imgHeight - size) / 2;
         }
 
-        // Draw the cropped and resized image
         ctx?.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
 
-        // Convert to base64 with compression (0.8 quality for JPEG)
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(compressedBase64);
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to compress image'));
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Failed to read compressed image'));
+          reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.8);
       };
 
       img.onerror = () => reject(new Error('Failed to load image'));
@@ -172,197 +178,104 @@ export function AdminProfilePage() {
     });
   };
 
-  // Handle file upload for profile picture
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, isBackground: boolean = false) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
-        description: "Please select an image file.",
+        description: "Please select an image file",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate file size (10MB limit before compression)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 10MB.",
+        description: "Please select an image smaller than 5MB",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      toast({
-        title: "Processing image",
-        description: "Compressing and optimizing your image...",
-      });
+      const compressedBase64 = await compressImage(file, isBackground);
 
-      // Compress the image
-      const compressedBase64 = await compressImage(file, false);
-      setProfilePicture(compressedBase64);
-      setProfileImagePreview(compressedBase64);
-
-      toast({
-        title: "Image ready",
-        description: "Click 'Save Changes' to update your profile picture",
-      });
-    } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: "There was an error processing the image file",
-        variant: "destructive",
-      });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      if (isBackground) {
+        setBackgroundImagePreview(compressedBase64);
+        setBackgroundPhoto(compressedBase64);
+      } else {
+        setProfileImagePreview(compressedBase64);
+        setProfilePicture(compressedBase64);
       }
-    }
-  };
-
-  const handleRemoveProfilePicture = () => {
-    setProfilePicture("");
-    setProfileImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  // Handle background photo upload
-  const handleBackgroundFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (10MB limit before compression)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 10MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      toast({
-        title: "Processing background image",
-        description: "Compressing and optimizing your background image...",
-      });
-
-      // Compress the image
-      const compressedBase64 = await compressImage(file, true);
-      setBackgroundPhoto(compressedBase64);
-      setBackgroundImagePreview(compressedBase64);
-
-      toast({
-        title: "Background image ready",
-        description: "Click 'Save Changes' to update your background photo",
-      });
     } catch (error) {
+      console.error('Image compression error:', error);
       toast({
-        title: "Upload failed",
-        description: "There was an error processing the background image file",
+        title: "Image processing failed",
+        description: "Failed to process the image. Please try another file.",
         variant: "destructive",
       });
-      if (backgroundFileInputRef.current) {
-        backgroundFileInputRef.current.value = "";
-      }
     }
   };
 
-  const handleRemoveBackgroundPhoto = () => {
-    setBackgroundPhoto("");
-    setBackgroundImagePreview(null);
-    if (backgroundFileInputRef.current) {
-      backgroundFileInputRef.current.value = "";
-    }
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleSaveChanges = () => {
     if (!admin) return;
 
     const updates: any = {};
 
-    if (displayName !== admin.displayName) {
-      updates.displayName = displayName;
-    }
-
-    if (bio !== (admin.bio || "")) {
-      updates.bio = bio;
-    }
-
-    if (profilePicture !== (admin.profilePicture || "")) {
-      updates.profilePicture = profilePicture;
-    }
-
-    if (backgroundPhoto !== (admin.backgroundPhoto || "")) {
-      updates.backgroundPhoto = backgroundPhoto;
-    }
+    if (displayName !== admin.displayName) updates.displayName = displayName;
+    if (bio !== admin.bio) updates.bio = bio;
+    if (profilePicture !== admin.profilePicture) updates.profilePicture = profilePicture;
+    if (backgroundPhoto !== admin.backgroundPhoto) updates.backgroundPhoto = backgroundPhoto;
 
     if (Object.keys(updates).length === 0) {
       toast({
         title: "No changes",
-        description: "No changes were made to your profile.",
+        description: "No changes were made to save.",
       });
-      setIsEditing(false);
       return;
     }
 
     updateProfileMutation.mutate(updates);
   };
 
+  const handleCancel = () => {
+    if (admin) {
+      setDisplayName(admin.displayName || "");
+      setBio(admin.bio || "");
+      setProfilePicture(admin.profilePicture || "");
+      setBackgroundPhoto(admin.backgroundPhoto || "");
+      setProfileImagePreview(admin.profilePicture || null);
+      setBackgroundImagePreview(admin.backgroundPhoto || null);
+    }
+    setIsEditing(false);
+  };
+
   if (!admin) {
-    return (
-      <div className="min-h-screen bg-background py-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <Link href="/admin">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Admin Panel
-              </Button>
-            </Link>
-          </div>
-          <Card>
-            <CardContent className="text-center py-12">
-              <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-              <p className="text-gray-600">Please log in as an admin to view this page.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    navigate("/");
+    return null;
   }
 
-  const canUpdateDisplayName = cooldownStatus?.canUpdate ?? false;
-  const daysSinceLastChange = admin.lastDisplayNameChange 
-    ? Math.floor((Date.now() - new Date(admin.lastDisplayNameChange).getTime()) / (1000 * 60 * 60 * 24))
-    : null;
-
   return (
-    <div className="min-h-screen bg-background py-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Navigation */}
         <div className="mb-6">
-          <Link href="/admin">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Admin Panel
-            </Button>
-          </Link>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate("/admin")}
+            className="text-gray-600 dark:text-gray-300"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Admin Panel
+          </Button>
         </div>
 
         <div className="grid gap-6">
@@ -395,237 +308,139 @@ export function AdminProfilePage() {
                       </Button>
                     </div>
                   )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
                 </div>
 
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Badge className="bg-purple-100 dark:bg-purple-600 text-purple-800 dark:text-white">
-                      <Shield className="w-3 h-3 mr-1" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {admin.displayName}
+                    </h1>
+                    <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
+                      <Shield className="h-3 w-3 mr-1" />
                       Whisper Listener
                     </Badge>
-                    {admin.isVerified && (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        Verified
-                      </Badge>
-                    )}
                   </div>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">@{admin.username}</p>
+                  {admin.bio && !isEditing && (
+                    <p className="text-gray-700 dark:text-gray-300">{admin.bio}</p>
+                  )}
+                </div>
 
+                <div className="flex space-x-2">
+                  {!isEditing ? (
+                    <Button onClick={() => setIsEditing(true)} className="bg-purple-600 hover:bg-purple-700">
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        onClick={handleCancel} 
+                        variant="outline"
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleSubmit}
+                        disabled={updateProfileMutation.isPending}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Edit Form */}
+              {isEditing && (
+                <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Display Name */}
                   <div className="space-y-2">
                     <Label htmlFor="displayName">Display Name</Label>
-                    {isEditing ? (
-                      <div className="space-y-2">
-                        <Input
-                          id="displayName"
-                          value={displayName}
-                          onChange={(e) => setDisplayName(e.target.value)}
-                          disabled={!canUpdateDisplayName}
-                          placeholder="Enter display name"
-                          className="max-w-md"
-                        />
-                        {!canUpdateDisplayName && daysSinceLastChange !== null && (
-                          <div className="flex items-center text-sm text-orange-600 dark:text-orange-400">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>Can change again in {30 - daysSinceLastChange} days</span>
-                          </div>
-                        )}
+                    <Input
+                      id="displayName"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      disabled={!cooldownStatus?.canUpdate}
+                      className="max-w-md"
+                    />
+                    {!cooldownStatus?.canUpdate && (
+                      <div className="flex items-center text-amber-600 dark:text-amber-400 text-sm">
+                        <AlertCircle className="w-4 h-4 mr-1" />
+                        Display name can only be changed once every 30 days
                       </div>
-                    ) : (
-                      <p className="text-lg font-semibold">{admin.displayName}</p>
                     )}
                   </div>
 
                   {/* Bio */}
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
-                    {isEditing ? (
-                      <div className="space-y-1">
-                        <Textarea
-                          id="bio"
-                          value={bio}
-                          onChange={(e) => setBio(e.target.value)}
-                          placeholder="Tell users about yourself..."
-                          className="max-w-md resize-none"
-                          rows={3}
-                          maxLength={200}
-                        />
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {bio.length}/200 characters
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-gray-600 dark:text-gray-300 max-w-md">
-                        {admin.bio || "No bio added yet."}
-                      </p>
-                    )}
+                    <Textarea
+                      id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Tell us about yourself..."
+                      className="max-w-md resize-none"
+                      rows={3}
+                    />
                   </div>
 
-                  {/* Profile Picture Upload Status */}
-                  {isEditing && (
-                    <div className="space-y-2">
-                      <Label>Profile Picture</Label>
-                      {profileImagePreview ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-2 text-sm text-green-600 dark:text-green-400">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Image ready for upload
-                          </div>
+                  {/* Background Photo */}
+                  <div className="space-y-2">
+                    <Label>Background Photo</Label>
+                    <div className="flex items-center space-x-4">
+                      {backgroundImagePreview && (
+                        <div className="relative">
+                          <img 
+                            src={backgroundImagePreview} 
+                            alt="Background preview" 
+                            className="w-32 h-18 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600"
+                          />
                           <Button
                             type="button"
-                            variant="outline"
                             size="sm"
-                            onClick={handleRemoveProfilePicture}
+                            variant="destructive"
+                            className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                            onClick={() => {
+                              setBackgroundImagePreview(null);
+                              setBackgroundPhoto("");
+                            }}
                           >
-                            <X className="w-4 h-4 mr-1" />
-                            Remove
+                            <X className="w-3 h-3" />
                           </Button>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Click "Upload Photo" to select a new profile picture
                         </div>
                       )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => backgroundFileInputRef.current?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Background
+                      </Button>
                     </div>
-                  )}
+                  </div>
+                </form>
+              )}
 
-                  {/* Background Photo Upload */}
-                  {isEditing && (
-                    <div className="space-y-2">
-                      <Label>Background Photo</Label>
-                      <div className="space-y-2">
-                        {/* Background Photo Preview */}
-                        {backgroundImagePreview ? (
-                          <div className="relative w-full h-32 rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                            <img 
-                              src={backgroundImagePreview} 
-                              alt="Background preview"
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                              <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                                Background Preview
-                              </div>
-                            </div>
-                          </div>
-                        ) : admin.backgroundPhoto ? (
-                          <div className="relative w-full h-32 rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                            <img 
-                              src={admin.backgroundPhoto} 
-                              alt="Current background"
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                              <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                                Current Background
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="w-full h-32 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                            <div className="text-center">
-                              <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                              <p className="text-sm text-gray-500">No background photo</p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Background Photo Controls */}
-                        <div className="flex space-x-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => backgroundFileInputRef.current?.click()}
-                          >
-                            <Upload className="w-4 h-4 mr-1" />
-                            {backgroundImagePreview || admin.backgroundPhoto ? 'Change Background' : 'Upload Background'}
-                          </Button>
-                          {(backgroundImagePreview || admin.backgroundPhoto) && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleRemoveBackgroundPhoto}
-                            >
-                              <X className="w-4 h-4 mr-1" />
-                              Remove
-                            </Button>
-                          )}
-                        </div>
-                        
-                        {/* Status Message */}
-                        {backgroundImagePreview ? (
-                          <div className="flex items-center space-x-2 text-sm text-green-600 dark:text-green-400">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Background image ready for upload
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            Add a background photo to personalize your profile (like Facebook or Twitter)
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Hidden file input for background */}
-                      <input
-                        ref={backgroundFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleBackgroundFileUpload}
-                        className="hidden"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-3 pt-4">
-                {isEditing ? (
-                  <>
-                    <Button
-                      onClick={handleSaveChanges}
-                      disabled={updateProfileMutation.isPending}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsEditing(false);
-                        // Reset form values
-                        setDisplayName(admin.displayName);
-                        setBio(admin.bio || "");
-                        setProfilePicture(admin.profilePicture || "");
-                        setBackgroundPhoto(admin.backgroundPhoto || "");
-                        setProfileImagePreview(admin.profilePicture || null);
-                        setBackgroundImagePreview(admin.backgroundPhoto || null);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                    Edit Profile
-                  </Button>
-                )}
-              </div>
+              {/* Hidden file inputs */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileChange(e, false)}
+                className="hidden"
+              />
+              <input
+                ref={backgroundFileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileChange(e, true)}
+                className="hidden"
+              />
             </CardContent>
           </Card>
         </div>

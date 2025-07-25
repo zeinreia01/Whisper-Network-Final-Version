@@ -157,7 +157,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                       Whisper Listeners
                     </div>
                     {searchResults.admins.map((admin: any) => (
-                      <Link key={`admin-${admin.id}`} href={`/admin-profile-view/${admin.id}`} onClick={handleUserClick}>
+                      <Link key={`admin-${admin.id}`} href={`/admin/${admin.id}`} onClick={handleUserClick}>
                         <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer transition-colors">
                           <Avatar className="w-10 h-10">
                             <AvatarImage src={admin.profilePicture || undefined} />

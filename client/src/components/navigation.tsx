@@ -168,7 +168,7 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <Link href="/admin/profile">
+                    <Link href="/admin-profile">
                       <DropdownMenuItem className="cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />
                         Profile Settings

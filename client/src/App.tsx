@@ -49,7 +49,7 @@ function Router() {
         <Route path="/message/:id" component={MessageThread} />
         <Route path="/user/:id" component={UserProfilePage} />
         <Route path="/admin/:id" component={AdminProfileViewPage} />
-        <Route path="/admin/profile" component={AdminProfilePage} />
+        <Route path="/admin-profile" component={AdminProfilePage} />
         <Route path="/personal" component={PersonalPage} />
         <Route path="/personal-archive" component={PersonalArchivePage} />
         <Route component={NotFound} />
