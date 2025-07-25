@@ -69,7 +69,7 @@ export function AdminPersonalPage() {
 
     try {
       // Compress and convert to base64
-      const compressedDataUrl = await compressImage(file);
+      const compressedDataUrl = await compressImage(file, type === 'background');
 
       if (type === 'profile') {
         setProfilePicture(compressedDataUrl);
@@ -85,9 +85,17 @@ export function AdminPersonalPage() {
       });
     } catch (error) {
       console.error("Image compression failed:", error);
+      
+      // Reset file input
+      const input = type === 'profile' ? fileInputRef.current : backgroundFileInputRef.current;
+      if (input) {
+        input.value = "";
+      }
+
+      const errorMessage = error instanceof Error ? error.message : "Failed to process the image. Please try again.";
       toast({
         title: "Upload failed",
-        description: "Failed to process the image. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

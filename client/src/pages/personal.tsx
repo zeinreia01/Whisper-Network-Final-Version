@@ -58,31 +58,12 @@ export function PersonalPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file (JPEG, PNG, GIF, WebP)",
-        variant: "destructive",
-      });
+    // Reset file input on any error
+    const resetInput = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB",
-        variant: "destructive",
-      });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      return;
-    }
+    };
 
     try {
       toast({
@@ -96,18 +77,19 @@ export function PersonalPage() {
       setProfileImagePreview(compressedBase64 as string);
 
       toast({
-        title: "Image ready",
-        description: "Click 'Save Changes' to update your profile picture",
+        title: "Image uploaded successfully",
+        description: "Your profile picture is ready to save",
       });
     } catch (error) {
+      console.error("Image upload failed:", error);
+      resetInput();
+
+      const errorMessage = error instanceof Error ? error.message : "Failed to process the image. Please try again.";
       toast({
         title: "Upload failed",
-        description: "There was an error processing the image file",
+        description: errorMessage,
         variant: "destructive",
       });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     }
   };
 
@@ -119,55 +101,43 @@ export function PersonalPage() {
     }
   };
 
-  // Handle background photo upload
+  // Handle background upload
   const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 10MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      toast({
-        title: "Processing background image",
-        description: "Compressing and cropping your background photo...",
-      });
-
-      // Compress and crop the image
-      const compressedBase64 = await compressImage(file, true);
-      setBackgroundPhoto(compressedBase64 as string);
-      setBackgroundImagePreview(compressedBase64 as string);
-
-      toast({
-        title: "Background image ready",
-        description: "Click 'Save Changes' to update your background photo",
-      });
-    } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: "There was an error processing the background image file",
-        variant: "destructive",
-      });
+    // Reset file input on any error
+    const resetBackgroundInput = () => {
       if (backgroundFileInputRef.current) {
         backgroundFileInputRef.current.value = "";
       }
+    };
+
+    try {
+      toast({
+        title: "Processing background",
+        description: "Compressing and optimizing your background photo...",
+      });
+
+      // Compress and process the image
+      const compressedBase64 = await compressImage(file, true);
+      setBackgroundPhoto(compressedBase64);
+      setBackgroundImagePreview(compressedBase64);
+
+      toast({
+        title: "Background uploaded successfully",
+        description: "Your background photo is ready to save",
+      });
+    } catch (error) {
+      console.error("Background upload failed:", error);
+      resetBackgroundInput();
+
+      const errorMessage = error instanceof Error ? error.message : "Failed to process the background image. Please try again.";
+      toast({
+        title: "Upload failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
