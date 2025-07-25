@@ -157,82 +157,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublicMessages(): Promise<MessageWithReplies[]> {
-    let result;
     try {
-      result = await db.query.messages.findMany({
+      console.log('Loading public messages...');
+      const result = await db.query.messages.findMany({
         where: eq(messages.isPublic, true),
         orderBy: desc(messages.createdAt),
         with: {
           replies: {
-            orderBy: desc(replies.createdAt),
             with: {
               user: true,
               admin: true,
-              mentionedUser: true,
-              mentionedAdmin: true,
-              children: {
-                with: {
-                  user: true,
-                  admin: true,
-                  mentionedUser: true,
-                  mentionedAdmin: true,
-                },
-                orderBy: asc(replies.createdAt),
-              },
             },
           },
           user: true,
           admin: true,
         },
       });
+
+      console.log(`Loaded ${result.length} public messages`);
+
+      return result.map(message => ({
+        ...message,
+        replies: message.replies || [],
+      }));
     } catch (error) {
       console.error('Error loading public messages:', error);
       return [];
     }
-
-    console.log(`Loaded ${result.length} public messages`); // Debug log
-
-    // Build nested replies structure and add reaction counts
-    const messagesWithReactions = await Promise.all(
-      result.map(async (message) => {
-        const messageReactions = await this.getMessageReactions(message.id);
-
-        // Organize replies in nested structure
-        const allReplies = message.replies;
-        const rootReplies = allReplies.filter(reply => !reply.parentId);
-        const childRepliesMap = new Map();
-
-        // Group child replies by parent ID
-        allReplies.forEach(reply => {
-          if (reply.parentId) {
-            if (!childRepliesMap.has(reply.parentId)) {
-              childRepliesMap.set(reply.parentId, []);
-            }
-            childRepliesMap.get(reply.parentId).push(reply);
-          }
-        });
-
-        // Attach children to their parents recursively
-        const attachChildren = (reply: any): any => {
-          const children = childRepliesMap.get(reply.id) || [];
-          return {
-            ...reply,
-            children: children.map(attachChildren),
-          };
-        };
-
-        const nestedReplies = rootReplies.map(attachChildren);
-
-        return {
-          ...message,
-          replies: nestedReplies,
-          reactionCount: messageReactions.length,
-          reactions: messageReactions,
-        };
-      })
-    );
-
-    return messagesWithReactions;
   }
 
   async getPrivateMessages(): Promise<MessageWithReplies[]> {

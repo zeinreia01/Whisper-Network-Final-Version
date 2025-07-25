@@ -12,8 +12,23 @@ export default function Dashboard() {
   const [searchResults, setSearchResults] = useState<MessageWithReplies[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const { data: messages = [], isLoading } = useQuery<MessageWithReplies[]>({
+  const { data: messages = [], isLoading, error, refetch } = useQuery<MessageWithReplies[]>({
     queryKey: ["/api/messages/public"],
+    queryFn: async () => {
+      console.log('Fetching public messages...');
+      const response = await apiRequest('GET', '/api/messages/public');
+      if (!response.ok) {
+        console.error('Failed to fetch messages:', response.status, response.statusText);
+        throw new Error('Failed to fetch messages');
+      }
+      const data = await response.json();
+      console.log('Fetched messages:', data.length);
+      return data;
+    },
+    retry: 3,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // 30 seconds
   });
 
   const handleSearch = async (query: string) => {
@@ -23,7 +38,7 @@ export default function Dashboard() {
       setIsSearching(false);
       return;
     }
-    
+
     setIsSearching(true);
     try {
       const response = await fetch(`/api/messages/search?q=${encodeURIComponent(query)}`);

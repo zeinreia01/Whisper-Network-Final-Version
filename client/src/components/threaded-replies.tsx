@@ -336,6 +336,45 @@ export function ThreadedReplies({
   // For preview mode, only show first 2 replies
   const displayReplies = isPreview && !showAll ? validReplies.slice(0, 2) : validReplies;
 
+  // Organize replies into a threaded structure
+  const threadedReplies = React.useMemo(() => {
+    if (!replies || replies.length === 0) return [];
+
+    const replyMap = new Map<number, ReplyWithUser>();
+    const rootReplies: ReplyWithUser[] = [];
+
+    // First pass: create reply objects
+    replies.forEach(reply => {
+      replyMap.set(reply.id, {
+        ...reply,
+        children: []
+      } as ReplyWithUser);
+    });
+
+    // Second pass: organize into threads
+    replies.forEach(reply => {
+      const threadedReply = replyMap.get(reply.id)!;
+      if (reply.parentId) {
+        const parent = replyMap.get(reply.parentId);
+        if (parent) {
+          if (parent.children) {
+            parent.children.push(threadedReply);
+          } else {
+            parent.children = [threadedReply];
+          }
+        } else {
+          // Parent not found, treat as root
+          rootReplies.push(threadedReply);
+        }
+      } else {
+        rootReplies.push(threadedReply);
+      }
+    });
+
+    return rootReplies;
+  }, [replies]);
+
+
   return (
     <div className="border-t pt-4 space-y-4">
       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
