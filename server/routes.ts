@@ -1118,7 +1118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/admins/:id/profile", async (req, res) => {
     try {
       const adminId = parseInt(req.params.id);
-      const { displayName, profilePicture, bio } = req.body;
+      const { displayName, profilePicture, bio, backgroundPhoto } = req.body;
 
       // Validate admin ID
       if (!adminId || isNaN(adminId)) {
@@ -1158,6 +1158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (displayName !== undefined) updateData.displayName = displayName;
       if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
       if (bio !== undefined) updateData.bio = bio;
+      if (backgroundPhoto !== undefined) updateData.backgroundPhoto = backgroundPhoto;
       if (displayName && displayName !== admin.displayName) {
         updateData.lastDisplayNameChange = new Date();
       }

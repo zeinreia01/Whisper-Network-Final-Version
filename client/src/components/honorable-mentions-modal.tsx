@@ -137,6 +137,9 @@ export function HonorableMentionsModal({ trigger }: HonorableMentionsModalProps)
         <div className="space-y-6">
           {/* Gratitude Message */}
           <div className="text-center space-y-4 p-6 bg-gradient-to-br from-pink-50 to-red-50 dark:from-gray-800 dark:to-gray-700 pink:from-pink-100 pink:to-pink-200 rounded-xl">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 pink:text-pink-900 mb-4">
+              Special Thanks To:
+            </h3>
             <p className="text-lg leading-relaxed text-gray-800 dark:text-gray-200 pink:text-pink-800">
               From the depths of my heart, I want to express my profound gratitude to these incredible souls 
               who believed in this vision, offered their unwavering support, and helped bring Whisper Network to life.
@@ -149,7 +152,7 @@ export function HonorableMentionsModal({ trigger }: HonorableMentionsModalProps)
               With endless appreciation and love,
             </p>
             <p className="text-lg font-semibold text-primary">
-              ~ The Whisper Network Team
+              ~ Zeke
             </p>
           </div>
 

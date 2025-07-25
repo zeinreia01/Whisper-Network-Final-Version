@@ -24,13 +24,19 @@ export function AdminProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
+  const [backgroundPhoto, setBackgroundPhoto] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [backgroundImagePreview, setBackgroundImagePreview] = useState<string | null>(null);
+  const backgroundFileInputRef = useRef<HTMLInputElement>(null);
 
   // Get display name cooldown status
   const { data: cooldownStatus } = useQuery({
     queryKey: [`/api/admins/${admin?.id}/can-update-display-name`],
-    queryFn: () => apiRequest(`/api/admins/${admin?.id}/can-update-display-name`),
+    queryFn: async () => {
+      const response = await fetch(`/api/admins/${admin?.id}/can-update-display-name`);
+      return response.json();
+    },
     enabled: !!admin?.id,
   });
 
@@ -40,7 +46,9 @@ export function AdminProfilePage() {
       setDisplayName(admin.displayName || "");
       setBio(admin.bio || "");
       setProfilePicture(admin.profilePicture || "");
+      setBackgroundPhoto(admin.backgroundPhoto || "");
       setProfileImagePreview(admin.profilePicture || null);
+      setBackgroundImagePreview(admin.backgroundPhoto || null);
     }
   }, [admin]);
 
@@ -81,7 +89,9 @@ export function AdminProfilePage() {
       setDisplayName(updatedAdmin.displayName || "");
       setBio(updatedAdmin.bio || "");
       setProfilePicture(updatedAdmin.profilePicture || "");
+      setBackgroundPhoto(updatedAdmin.backgroundPhoto || "");
       setProfileImagePreview(updatedAdmin.profilePicture || null);
+      setBackgroundImagePreview(updatedAdmin.backgroundPhoto || null);
 
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/can-update-display-name`] });
@@ -200,6 +210,66 @@ export function AdminProfilePage() {
     }
   };
 
+  // Handle background photo upload
+  const handleBackgroundFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB limit before compression)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Processing background image",
+        description: "Compressing and optimizing your background image...",
+      });
+
+      // Compress the image
+      const compressedBase64 = await compressImage(file);
+      setBackgroundPhoto(compressedBase64);
+      setBackgroundImagePreview(compressedBase64);
+
+      toast({
+        title: "Background image ready",
+        description: "Click 'Save Changes' to update your background photo",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "There was an error processing the background image file",
+        variant: "destructive",
+      });
+      if (backgroundFileInputRef.current) {
+        backgroundFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveBackgroundPhoto = () => {
+    setBackgroundPhoto("");
+    setBackgroundImagePreview(null);
+    if (backgroundFileInputRef.current) {
+      backgroundFileInputRef.current.value = "";
+    }
+  };
+
   const handleSaveChanges = () => {
     if (!admin) return;
 
@@ -215,6 +285,10 @@ export function AdminProfilePage() {
 
     if (profilePicture !== (admin.profilePicture || "")) {
       updates.profilePicture = profilePicture;
+    }
+
+    if (backgroundPhoto !== (admin.backgroundPhoto || "")) {
+      updates.backgroundPhoto = backgroundPhoto;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -400,6 +474,97 @@ export function AdminProfilePage() {
                       )}
                     </div>
                   )}
+
+                  {/* Background Photo Upload */}
+                  {isEditing && (
+                    <div className="space-y-2">
+                      <Label>Background Photo</Label>
+                      <div className="space-y-2">
+                        {/* Background Photo Preview */}
+                        {backgroundImagePreview ? (
+                          <div className="relative w-full h-32 rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
+                            <img 
+                              src={backgroundImagePreview} 
+                              alt="Background preview"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                              <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-medium">
+                                Background Preview
+                              </div>
+                            </div>
+                          </div>
+                        ) : admin.backgroundPhoto ? (
+                          <div className="relative w-full h-32 rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
+                            <img 
+                              src={admin.backgroundPhoto} 
+                              alt="Current background"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                              <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-medium">
+                                Current Background
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-full h-32 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                            <div className="text-center">
+                              <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                              <p className="text-sm text-gray-500">No background photo</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Background Photo Controls */}
+                        <div className="flex space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => backgroundFileInputRef.current?.click()}
+                          >
+                            <Upload className="w-4 h-4 mr-1" />
+                            {backgroundImagePreview || admin.backgroundPhoto ? 'Change Background' : 'Upload Background'}
+                          </Button>
+                          {(backgroundImagePreview || admin.backgroundPhoto) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleRemoveBackgroundPhoto}
+                            >
+                              <X className="w-4 h-4 mr-1" />
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {/* Status Message */}
+                        {backgroundImagePreview ? (
+                          <div className="flex items-center space-x-2 text-sm text-green-600 dark:text-green-400">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Background image ready for upload
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            Add a background photo to personalize your profile (like Facebook or Twitter)
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Hidden file input for background */}
+                      <input
+                        ref={backgroundFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBackgroundFileUpload}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -422,7 +587,9 @@ export function AdminProfilePage() {
                         setDisplayName(admin.displayName);
                         setBio(admin.bio || "");
                         setProfilePicture(admin.profilePicture || "");
+                        setBackgroundPhoto(admin.backgroundPhoto || "");
                         setProfileImagePreview(admin.profilePicture || null);
+                        setBackgroundImagePreview(admin.backgroundPhoto || null);
                       }}
                     >
                       Cancel
