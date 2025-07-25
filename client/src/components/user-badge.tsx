@@ -26,6 +26,9 @@ export function UserBadge({ userType, variant = "default", className }: UserBadg
   };
 
   const config = badgeConfig[userType];
+  if (!config) {
+    return null; // Return null if userType is not valid
+  }
   const Icon = config.icon;
 
   const sizeClasses = variant === "small" 
