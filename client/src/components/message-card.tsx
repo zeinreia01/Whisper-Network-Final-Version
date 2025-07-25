@@ -391,7 +391,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                   </span>
                 </Link>
               ) : message.adminId && message.admin && (user || admin) ? (
-                <Link href={`/admins/${message.adminId}/profile`}>
+                <Link href={`/admin-profile-view/${message.adminId}`}>
                   <span className="text-sm text-gray-600 dark:text-gray-400 font-medium hover:text-primary dark:hover:text-primary cursor-pointer transition-colors flex items-center space-x-1">
                     <span>From: {message.admin?.displayName}</span>
                     {message.admin?.isVerified && (
