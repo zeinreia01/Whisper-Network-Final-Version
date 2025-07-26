@@ -3,13 +3,18 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Send, Eye, EyeOff, Trash2 } from "lucide-react";
+import { MessageSquare, Send, Eye, EyeOff, Trash2, Music } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { MessageViewer } from "@/components/message-viewer";
+import { categories } from "@/lib/categories";
+import { useToast } from "@/hooks/use-toast";
 
 interface AnonymousMessage {
   id: number;
@@ -34,9 +39,13 @@ export default function AnonymousMessaging() {
   const [location, navigate] = useLocation();
   const { user, admin } = useAuth();
   const [message, setMessage] = useState("");
+  const [category, setCategory] = useState("Anything");
+  const [spotifyLink, setSpotifyLink] = useState("");
+  const [senderName, setSenderName] = useState("");
   const [showInbox, setShowInbox] = useState(false);
   const [isLinkPaused, setIsLinkPaused] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Get recipient user profile
   const { data: recipientProfile, isLoading: profileLoading } = useQuery<UserProfile>({
@@ -59,12 +68,20 @@ export default function AnonymousMessaging() {
 
   // Send anonymous message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async (messageData: {
+      content: string;
+      category?: string;
+      spotifyLink?: string;
+      senderName?: string;
+    }) => {
       const response = await fetch("/api/anonymous-messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content,
+          content: messageData.content,
+          category: messageData.category,
+          spotifyLink: messageData.spotifyLink,
+          senderName: messageData.senderName,
           recipientUserId: recipientProfile?.id,
           recipientAdminId: null, // For now, only supporting user recipients
         }),
@@ -74,6 +91,13 @@ export default function AnonymousMessaging() {
     },
     onSuccess: () => {
       setMessage("");
+      setCategory("Anything");
+      setSpotifyLink("");
+      setSenderName("");
+      toast({
+        title: "Message sent!",
+        description: "Your anonymous message has been sent successfully.",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/anonymous-messages"] });
     },
   });
@@ -124,7 +148,13 @@ export default function AnonymousMessaging() {
 
   const handleSendMessage = () => {
     if (!message.trim() || !recipientProfile) return;
-    sendMessageMutation.mutate(message.trim());
+    
+    sendMessageMutation.mutate({
+      content: message.trim(),
+      category: category,
+      spotifyLink: spotifyLink || undefined,
+      senderName: senderName || undefined,
+    });
   };
 
   const handleMarkAsRead = (messageId: number) => {
@@ -242,8 +272,9 @@ export default function AnonymousMessaging() {
                             id: msg.id,
                             content: msg.content,
                             createdAt: msg.createdAt,
-                            senderName: "Anonymous",
-                            category: "confession",
+                            senderName: (msg as any).senderName || "Anonymous",
+                            category: (msg as any).category || "Anything",
+                            spotifyLink: (msg as any).spotifyLink || undefined,
                             recipient: recipientProfile.username,
                             reactionCount: 0,
                             replies: []
@@ -307,19 +338,70 @@ export default function AnonymousMessaging() {
                 </p>
               </div>
             ) : (
-              <>
-                <Textarea
-                  placeholder="Type your anonymous message here..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  maxLength={500}
-                  rows={4}
-                  className="resize-none"
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">
-                    {message.length}/500 characters
-                  </span>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="message">Your Message</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Type your anonymous message here..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    maxLength={500}
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-sm text-muted-foreground">
+                      {message.length}/500 characters
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-3 h-3 rounded-full ${cat.color}`} />
+                            <span>{cat.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="senderName">Your Name (Optional)</Label>
+                  <Input
+                    id="senderName"
+                    value={senderName}
+                    onChange={(e) => setSenderName(e.target.value)}
+                    placeholder="Leave blank to remain anonymous"
+                    maxLength={50}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="spotify" className="flex items-center gap-2">
+                    <Music className="h-4 w-4" />
+                    Spotify Track (Optional)
+                  </Label>
+                  <Input
+                    id="spotify"
+                    type="url"
+                    value={spotifyLink}
+                    onChange={(e) => setSpotifyLink(e.target.value)}
+                    placeholder="https://open.spotify.com/track/..."
+                  />
+                </div>
+
+                <div className="flex justify-end">
                   <Button
                     onClick={handleSendMessage}
                     disabled={!message.trim() || sendMessageMutation.isPending}
@@ -329,7 +411,7 @@ export default function AnonymousMessaging() {
                     {sendMessageMutation.isPending ? "Sending..." : "Send Anonymously"}
                   </Button>
                 </div>
-              </>
+              </div>
             )}
             
             {sendMessageMutation.isSuccess && (

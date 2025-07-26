@@ -46,14 +46,17 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       downloadContainer.style.height = 'auto';
       downloadContainer.style.fontFamily = '"Times New Roman", serif';
 
-      // Check if pink theme is active for reddish-pink save UI
+      // Check theme for proper styling
       const isPinkTheme = document.documentElement.classList.contains('pink');
-
+      const isDarkTheme = document.documentElement.classList.contains('dark');
+      
       if (isPinkTheme) {
         downloadContainer.style.background = 'linear-gradient(135deg, #e91e63 0%, #f06292 25%, #ec407a 50%, #ad1457 75%, #880e4f 100%)';
         downloadContainer.style.boxShadow = '0 20px 40px rgba(233, 30, 99, 0.3), 0 8px 16px rgba(240, 98, 146, 0.2)';
-      } else {
+      } else if (isDarkTheme) {
         downloadContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+      } else {
+        downloadContainer.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)';
       }
 
       downloadContainer.style.padding = '32px';
@@ -63,10 +66,10 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       // Create Instagram-optimized content
       downloadContainer.innerHTML = `
         <div style="text-align: center; margin-bottom: 32px;">
-          <h1 style="font-size: 28px; font-weight: bold; background: ${isPinkTheme ? 'linear-gradient(135deg, #ffffff 0%, #fce4ec 50%, #f8bbd9 100%)' : 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'}; -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px 0; font-family: 'Times New Roman', serif;">
+          <h1 style="font-size: 28px; font-weight: bold; background: ${isPinkTheme ? 'linear-gradient(135deg, #ffffff 0%, #fce4ec 50%, #f8bbd9 100%)' : isDarkTheme ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)' : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%)'}; -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px 0; font-family: 'Times New Roman', serif;">
             Whisper Network
           </h1>
-          <p style="color: #94a3b8; font-size: 14px; margin: 0; font-family: 'Times New Roman', serif;">
+          <p style="color: ${isPinkTheme || isDarkTheme ? '#94a3b8' : '#64748b'}; font-size: 14px; margin: 0; font-family: 'Times New Roman', serif;">
             A place where voices unite and hearts connect
           </p>
         </div>
@@ -83,8 +86,8 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           </span>
         </div>
 
-        <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.2);">
-          <blockquote style="font-size: 20px; line-height: 1.6; color: #f8fafc; text-align: center; font-style: italic; margin: 0; font-family: 'Times New Roman', serif;">
+        <div style="background: ${isPinkTheme || isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}; backdrop-filter: blur(10px); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid ${isPinkTheme || isDarkTheme ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};">
+          <blockquote style="font-size: 20px; line-height: 1.6; color: ${isPinkTheme || isDarkTheme ? '#f8fafc' : '#1e293b'}; text-align: center; font-style: italic; margin: 0; font-family: 'Times New Roman', serif;">
             "${message.content}"
           </blockquote>
         </div>
@@ -106,12 +109,12 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         ` : ''}
 
         <div style="text-align: center; margin-bottom: 24px;">
-          <p style="color: #94a3b8; font-style: italic; font-size: 16px; margin: 0; font-family: 'Times New Roman', serif;">
+          <p style="color: ${isPinkTheme || isDarkTheme ? '#94a3b8' : '#64748b'}; font-style: italic; font-size: 16px; margin: 0; font-family: 'Times New Roman', serif;">
             — ${message.senderName || 'Anonymous Whisper'}
           </p>
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; font-size: 14px; color: #94a3b8; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; font-size: 14px; color: ${isPinkTheme || isDarkTheme ? '#94a3b8' : '#64748b'}; margin-bottom: 24px;">
           <div style="display: flex; align-items: center; gap: 4px;">
             <span style="color: #f87171;">♥</span>
             <span style="font-family: 'Times New Roman', serif;">${message.reactionCount || 0} hearts</span>
@@ -122,8 +125,8 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           </div>
         </div>
 
-        <div style="text-align: center; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
-          <p style="font-size: 12px; color: #64748b; margin: 0; font-family: 'Times New Roman', serif;">
+        <div style="text-align: center; padding-top: 24px; border-top: 1px solid ${isPinkTheme || isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};">
+          <p style="font-size: 12px; color: ${isPinkTheme || isDarkTheme ? '#64748b' : '#94a3b8'}; margin: 0; font-family: 'Times New Roman', serif;">
             This whisper was shared on Whispering Network • ${new Date(message.createdAt!).toLocaleDateString()}
           </p>
         </div>
@@ -131,8 +134,14 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
       document.body.appendChild(downloadContainer);
 
+      const canvasBackground = isPinkTheme 
+        ? '#e91e63' 
+        : isDarkTheme 
+        ? '#1a1a2e' 
+        : '#f8fafc';
+
       const canvas = await html2canvas(downloadContainer, {
-        backgroundColor: '#1a1a2e',
+        backgroundColor: canvasBackground,
         scale: 4, // Ultra high resolution for Instagram quality
         width: 600,
         height: downloadContainer.scrollHeight,
@@ -143,7 +152,13 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           // Ensure gradients render properly in cloned document
           const clonedContainer = clonedDoc.querySelector('div') as HTMLElement;
           if (clonedContainer) {
-            clonedContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+            if (isPinkTheme) {
+              clonedContainer.style.background = 'linear-gradient(135deg, #e91e63 0%, #f06292 25%, #ec407a 50%, #ad1457 75%, #880e4f 100%)';
+            } else if (isDarkTheme) {
+              clonedContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+            } else {
+              clonedContainer.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)';
+            }
           }
         }
       });

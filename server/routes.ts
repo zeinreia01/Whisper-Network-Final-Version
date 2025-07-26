@@ -1456,7 +1456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Anonymous messages endpoints (NGL-style)
   app.post("/api/anonymous-messages", async (req, res) => {
     try {
-      const { content, recipientUserId, recipientAdminId } = req.body;
+      const { content, category, spotifyLink, senderName, recipientUserId, recipientAdminId } = req.body;
 
       if (!content || (!recipientUserId && !recipientAdminId)) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -1476,6 +1476,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const message = await storage.sendAnonymousMessage({
         content: content.trim(),
+        category: category || "Anything",
+        spotifyLink: spotifyLink || null,
+        senderName: senderName || null,
         recipientUserId: recipientUserId || null,
         recipientAdminId: recipientAdminId || null,
       });
