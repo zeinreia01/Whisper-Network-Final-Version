@@ -19,6 +19,9 @@ import { useToast } from "@/hooks/use-toast";
 interface AnonymousMessage {
   id: number;
   content: string;
+  category?: string;
+  spotifyLink?: string;
+  senderName?: string;
   recipientUserId: number | null;
   recipientAdminId: number | null;
   isRead: boolean;
@@ -263,7 +266,34 @@ export default function AnonymousMessaging() {
               inboxMessages.map((msg) => (
                 <Card key={msg.id} className={`${!msg.isRead ? "ring-2 ring-purple-200" : ""}`}>
                   <CardContent className="p-4">
-                    <p className="mb-3">{msg.content}</p>
+                    {/* Message content */}
+                    <p className="mb-3 text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">{msg.content}</p>
+                    
+                    {/* Category, sender name, and spotify link */}
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      {msg.category && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                          {msg.category}
+                        </span>
+                      )}
+                      {msg.senderName && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                          From: {msg.senderName}
+                        </span>
+                      )}
+                      {msg.spotifyLink && (
+                        <a 
+                          href={msg.spotifyLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
+                        >
+                          <Music className="h-3 w-3 mr-1" />
+                          🎵 Spotify Track
+                        </a>
+                      )}
+                    </div>
+                    
                     <div className="flex justify-between items-center text-sm text-muted-foreground">
                       <span>{new Date(msg.createdAt).toLocaleDateString()}</span>
                       <div className="flex gap-2">
@@ -272,9 +302,9 @@ export default function AnonymousMessaging() {
                             id: msg.id,
                             content: msg.content,
                             createdAt: new Date(msg.createdAt),
-                            senderName: (msg as any).senderName || "Anonymous",
-                            category: (msg as any).category || "Anything",
-                            spotifyLink: (msg as any).spotifyLink || undefined,
+                            senderName: msg.senderName || "Anonymous",
+                            category: msg.category || "Anything",
+                            spotifyLink: msg.spotifyLink || null,
                             recipient: recipientProfile.username,
                             reactionCount: 0,
                             replies: [],

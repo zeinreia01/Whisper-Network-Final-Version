@@ -1470,7 +1470,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (recipientUserId) {
         const recipient = await storage.getUserById(recipientUserId);
         if (recipient?.isAnonymousLinkPaused) {
-          return res.status(403).json({ error: "This user has paused anonymous messages" });
+          return res.status(403).json({ 
+            error: "Link paused, try again later or ask the owner of the link to turn it back on to resume whispering" 
+          });
         }
       }
 

@@ -347,7 +347,7 @@ export function PersonalPage() {
                       <Button 
                         onClick={() => setIsEditing(true)}
                         size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 dark:border-blue-500"
                       >
                         <Edit3 className="w-4 h-4 mr-2" />
                         Edit Profile
