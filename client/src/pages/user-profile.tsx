@@ -261,12 +261,20 @@ export function UserProfilePage() {
                   {/* Action buttons */}
                   <div className="flex space-x-2">
                     {isOwnProfile ? (
-                      <Link href="/personal">
-                        <Button variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      </Link>
+                      <>
+                        <Link href={`/u/${profile.username}`}>
+                          <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Anonymous Messages
+                          </Button>
+                        </Link>
+                        <Link href="/personal">
+                          <Button variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Edit Profile
+                          </Button>
+                        </Link>
+                      </>
                     ) : (user || admin) ? (
                       <Button
                         onClick={() => {
