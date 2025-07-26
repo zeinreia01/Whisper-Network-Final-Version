@@ -65,20 +65,41 @@ export function PersonalPage() {
       }
     };
 
+    // Validate file before processing
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPEG, PNG, GIF, WebP)",
+        variant: "destructive",
+      });
+      resetInput();
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB",
+        variant: "destructive",
+      });
+      resetInput();
+      return;
+    }
+
     try {
       toast({
         title: "Processing image",
-        description: "Compressing and cropping your profile picture...",
+        description: "Auto-cropping and optimizing your profile picture...",
       });
 
-      // Compress and crop the image
+      // Compress and crop the image (square crop for profile)
       const compressedBase64 = await compressImage(file, false);
-      setProfilePicture(compressedBase64 as string);
-      setProfileImagePreview(compressedBase64 as string);
+      setProfilePicture(compressedBase64);
+      setProfileImagePreview(compressedBase64);
 
       toast({
-        title: "Image uploaded successfully",
-        description: "Your profile picture is ready to save",
+        title: "Profile picture ready!",
+        description: "Image automatically cropped to square format",
       });
     } catch (error) {
       console.error("Image upload failed:", error);
@@ -113,20 +134,41 @@ export function PersonalPage() {
       }
     };
 
+    // Validate file before processing
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPEG, PNG, GIF, WebP)",
+        variant: "destructive",
+      });
+      resetBackgroundInput();
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB",
+        variant: "destructive",
+      });
+      resetBackgroundInput();
+      return;
+    }
+
     try {
       toast({
         title: "Processing background",
-        description: "Compressing and optimizing your background photo...",
+        description: "Auto-cropping to 16:9 ratio and optimizing...",
       });
 
-      // Compress and process the image
+      // Compress and process the image (16:9 crop for background)
       const compressedBase64 = await compressImage(file, true);
       setBackgroundPhoto(compressedBase64);
       setBackgroundImagePreview(compressedBase64);
 
       toast({
-        title: "Background uploaded successfully",
-        description: "Your background photo is ready to save",
+        title: "Background photo ready!",
+        description: "Image automatically cropped to 16:9 format",
       });
     } catch (error) {
       console.error("Background upload failed:", error);

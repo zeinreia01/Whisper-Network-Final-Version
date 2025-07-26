@@ -47,6 +47,14 @@ export function AdminPersonalPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Reset file input on any error
+    const resetInput = () => {
+      const input = type === 'profile' ? fileInputRef.current : backgroundFileInputRef.current;
+      if (input) {
+        input.value = "";
+      }
+    };
+
     // Validate file type
     if (!file.type.startsWith("image/")) {
       toast({
@@ -54,20 +62,27 @@ export function AdminPersonalPage() {
         description: "Please select an image file (JPEG, PNG, GIF, WebP)",
         variant: "destructive",
       });
+      resetInput();
       return;
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 5MB",
+        description: "Please select an image smaller than 10MB",
         variant: "destructive",
       });
+      resetInput();
       return;
     }
 
     try {
+      toast({
+        title: "Processing image",
+        description: `Auto-cropping and optimizing your ${type} photo...`,
+      });
+
       // Compress and convert to base64
       const compressedDataUrl = await compressImage(file, type === 'background');
 
@@ -80,17 +95,12 @@ export function AdminPersonalPage() {
       }
 
       toast({
-        title: "Image uploaded",
-        description: `${type === 'profile' ? 'Profile' : 'Background'} image ready to save`,
+        title: `${type === 'profile' ? 'Profile' : 'Background'} photo ready!`,
+        description: `Image automatically cropped to ${type === 'profile' ? 'square' : '16:9'} format`,
       });
     } catch (error) {
       console.error("Image compression failed:", error);
-      
-      // Reset file input
-      const input = type === 'profile' ? fileInputRef.current : backgroundFileInputRef.current;
-      if (input) {
-        input.value = "";
-      }
+      resetInput();
 
       const errorMessage = error instanceof Error ? error.message : "Failed to process the image. Please try again.";
       toast({

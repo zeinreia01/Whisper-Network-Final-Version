@@ -1,10 +1,11 @@
-// Image compression utility function
+
+// Image compression utility function with improved error handling and auto-cropping
 export async function compressImage(file: File, isBackground: boolean = false): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       // Validate file type first
       if (!file.type.startsWith('image/')) {
-        reject(new Error('Invalid file type. Please select an image file.'));
+        reject(new Error('Invalid file type. Please select an image file (JPEG, PNG, GIF, WebP).'));
         return;
       }
 
@@ -26,101 +27,120 @@ export async function compressImage(file: File, isBackground: boolean = false): 
 
       img.onload = () => {
         try {
-          // Set dimensions based on type
-          const maxWidth = isBackground ? 1920 : 400;
-          const maxHeight = isBackground ? 1080 : 400;
+          // Set target dimensions based on type with proper aspect ratios
+          let targetWidth, targetHeight;
           
-          let { width, height } = img;
-
-          // Calculate new dimensions while maintaining aspect ratio
-          if (width > maxWidth || height > maxHeight) {
-            const aspectRatio = width / height;
-            
-            if (width > height) {
-              width = Math.min(width, maxWidth);
-              height = width / aspectRatio;
-              
-              if (height > maxHeight) {
-                height = maxHeight;
-                width = height * aspectRatio;
-              }
-            } else {
-              height = Math.min(height, maxHeight);
-              width = height * aspectRatio;
-              
-              if (width > maxWidth) {
-                width = maxWidth;
-                height = width / aspectRatio;
-              }
-            }
+          if (isBackground) {
+            // Background photo - 16:9 aspect ratio, optimized for cover
+            targetWidth = 1200;
+            targetHeight = 675;
+          } else {
+            // Profile picture - 1:1 aspect ratio (square)
+            targetWidth = 300;
+            targetHeight = 300;
           }
 
-          // Ensure dimensions are valid
-          width = Math.floor(width);
-          height = Math.floor(height);
+          // Calculate crop dimensions to maintain aspect ratio
+          const sourceAspectRatio = img.width / img.height;
+          const targetAspectRatio = targetWidth / targetHeight;
+          
+          let sourceX = 0;
+          let sourceY = 0;
+          let sourceWidth = img.width;
+          let sourceHeight = img.height;
 
-          if (width <= 0 || height <= 0) {
-            reject(new Error('Invalid image dimensions.'));
-            return;
+          if (sourceAspectRatio > targetAspectRatio) {
+            // Image is wider than target - crop horizontally (center crop)
+            sourceWidth = img.height * targetAspectRatio;
+            sourceX = (img.width - sourceWidth) / 2;
+          } else if (sourceAspectRatio < targetAspectRatio) {
+            // Image is taller than target - crop vertically (center crop)
+            sourceHeight = img.width / targetAspectRatio;
+            sourceY = (img.height - sourceHeight) / 2;
           }
 
-          canvas.width = width;
-          canvas.height = height;
+          // Set canvas dimensions
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
 
-          // Clear canvas and draw image
-          ctx.clearRect(0, 0, width, height);
+          // Clear canvas and enable high-quality rendering
+          ctx.clearRect(0, 0, targetWidth, targetHeight);
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, width, height);
+
+          // Draw cropped and resized image
+          ctx.drawImage(
+            img,
+            Math.floor(sourceX), Math.floor(sourceY),
+            Math.floor(sourceWidth), Math.floor(sourceHeight),
+            0, 0,
+            targetWidth, targetHeight
+          );
           
-          // Convert to base64 with compression
-          const quality = isBackground ? 0.8 : 0.7;
-          
-          // Try JPEG first, fallback to PNG if needed
+          // Convert to base64 with appropriate compression
+          const quality = isBackground ? 0.85 : 0.8;
           let compressedDataUrl;
+          
           try {
+            // Try JPEG compression first for better file size
             compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-          } catch (jpegError) {
+            
+            // If JPEG results in larger file than PNG, use PNG (rare but possible for simple images)
+            const pngDataUrl = canvas.toDataURL('image/png');
+            if (pngDataUrl.length < compressedDataUrl.length) {
+              compressedDataUrl = pngDataUrl;
+            }
+          } catch (compressionError) {
+            // Fallback to PNG if JPEG fails
             try {
               compressedDataUrl = canvas.toDataURL('image/png');
             } catch (pngError) {
-              reject(new Error('Failed to compress image. Please try a different image.'));
+              reject(new Error('Failed to compress image. Your browser may not support this image format.'));
               return;
             }
           }
 
-          // Validate result size (5MB limit for final base64)
-          const resultSize = (compressedDataUrl.length * 3) / 4; // Approximate byte size
-          if (resultSize > 5 * 1024 * 1024) {
-            reject(new Error('Compressed image is still too large. Please try a smaller image.'));
+          // Validate result size (3MB limit for final base64)
+          const resultSize = (compressedDataUrl.length * 3) / 4;
+          if (resultSize > 3 * 1024 * 1024) {
+            reject(new Error('Image is still too large after compression. Please try a smaller image.'));
             return;
           }
 
-          // Clean up
+          // Clean up and resolve
           URL.revokeObjectURL(img.src);
           resolve(compressedDataUrl);
         } catch (processingError) {
+          console.error('Image processing error:', processingError);
           reject(new Error(`Image processing failed: ${processingError instanceof Error ? processingError.message : 'Unknown error'}`));
         }
       };
 
-      img.onerror = () => {
+      img.onerror = (error) => {
+        console.error('Image load error:', error);
         URL.revokeObjectURL(img.src);
-        reject(new Error('Failed to load image. Please check the file and try again.'));
+        reject(new Error('Failed to load image. The file may be corrupted or in an unsupported format.'));
       };
 
-      // Create object URL and load image
-      const objectUrl = URL.createObjectURL(file);
-      img.src = objectUrl;
+      // Create object URL and load image with timeout
+      try {
+        const objectUrl = URL.createObjectURL(file);
+        img.src = objectUrl;
 
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error('Image processing timed out. Please try a smaller image.'));
-      }, 30000);
+        // Timeout after 15 seconds
+        setTimeout(() => {
+          if (!img.complete) {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Image loading timed out. Please try a smaller image.'));
+          }
+        }, 15000);
+      } catch (urlError) {
+        reject(new Error('Failed to process file. Please try again.'));
+      }
 
     } catch (error) {
-      reject(new Error(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      console.error('Setup error:', error);
+      reject(new Error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
     }
   });
 }
