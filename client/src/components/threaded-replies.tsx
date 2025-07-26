@@ -42,7 +42,7 @@ interface ThreadedRepliesProps {
   messageUserId?: number;
   onWarning: (replyId: number) => void;
   onReply?: (parentId: number, parentNickname: string) => void;
-  showAll?: boolean; // Add prop to control showing all replies vs preview
+  showAll?: boolean;
 }
 
 interface ReplyItemProps {
@@ -52,11 +52,14 @@ interface ReplyItemProps {
   level: number;
   onWarning: (replyId: number) => void;
   onReply: (parentId: number, parentNickname: string) => void;
+  showAll: boolean;
 }
 
-const MAX_NESTING_LEVEL = 3; // Limit nesting to avoid infinite depth
+const MAX_NESTING_LEVEL = 5;
+const MAX_REPLIES_PER_MESSAGE = 500;
 
-function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply }: ReplyItemProps) {
+// Recursive Reply Component
+function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply, showAll }: ReplyItemProps) {
   const { user, admin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,6 +71,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${messageId}`] });
       toast({
         title: "Reply deleted",
         description: "The reply has been removed.",
@@ -82,12 +86,12 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
     },
   });
 
-  // Build nested replies recursively
+  // Get child replies from the children array
   const childReplies = reply.children || [];
 
   return (
     <div className="relative">
-      {/* Threading line - Only show if not at root level */}
+      {/* Threading line for nested replies */}
       {level > 0 && (
         <div 
           className="absolute left-4 top-0 bottom-6 w-0.5 bg-border" 
@@ -95,7 +99,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
         />
       )}
 
-      {/* Reply content */}
+      {/* Main reply content */}
       <div 
         className="flex items-start space-x-3 group relative"
         style={{ marginLeft: `${level * 24}px` }}
@@ -111,7 +115,6 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
             {/* Header */}
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2">
-                {/* Make nickname clickable for authenticated users */}
                 {reply.userId && (user || admin) ? (
                   <Link href={`/user/${reply.userId}`}>
                     <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
@@ -121,7 +124,6 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
                 ) : (
                   <span className="text-sm font-medium text-foreground">{reply.nickname}</span>
                 )}
-                {/* User type badges */}
                 {reply.adminId && <UserBadge userType="admin" variant="small" />}
                 {reply.userId && !reply.adminId && <UserBadge userType="user" variant="small" />}
                 <span className="text-xs text-muted-foreground">
@@ -131,7 +133,6 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
 
               {/* Reply management controls */}
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1">
-                {/* Admin controls */}
                 {admin && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -179,7 +180,6 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
                   </DropdownMenu>
                 )}
 
-                {/* Message owner can delete replies */}
                 {user && messageUserId === user.id && !admin && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -213,8 +213,8 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
             <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
           </div>
 
-          {/* Reply action */}
-          {level < MAX_NESTING_LEVEL && (user || admin) && (
+          {/* Reply button - only show if within nesting limit and user is authenticated */}
+          {level < MAX_NESTING_LEVEL && (user || admin) && showAll && (
             <Button
               variant="ghost"
               size="sm"
@@ -228,24 +228,21 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
         </div>
       </div>
 
-      {/* Nested replies - Always render children regardless of showAll when they exist */}
+      {/* Render child replies recursively - THIS IS THE KEY FIX */}
       {childReplies.length > 0 && (
         <div className="mt-2">
-          {console.log(`Rendering ${childReplies.length} children for reply ${reply.id} at level ${level}`)}
-          {childReplies.map((childReply) => {
-            console.log(`Rendering child reply ${childReply.id} with content: ${childReply.content.substring(0, 30)}`);
-            return (
-              <ReplyItem
-                key={childReply.id}
-                reply={childReply}
-                messageId={messageId}
-                messageUserId={messageUserId}
-                level={level + 1}
-                onWarning={onWarning}
-                onReply={onReply}
-              />
-            );
-          })}
+          {childReplies.map((childReply) => (
+            <ReplyItem
+              key={childReply.id}
+              reply={childReply}
+              messageId={messageId}
+              messageUserId={messageUserId}
+              level={level + 1}
+              onWarning={onWarning}
+              onReply={onReply}
+              showAll={showAll}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -259,15 +256,6 @@ export function ThreadedReplies({
   onWarning,
   showAll = false
 }: ThreadedRepliesProps) {
-  
-  // Debug logging
-  console.log('ThreadedReplies component received:', {
-    repliesCount: replies?.length || 0,
-    showAll,
-    messageId,
-    repliesData: replies?.map(r => ({ id: r.id, content: r.content?.substring(0, 50), parentId: r.parentId }))
-  });
-
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
   const [parentReplyId, setParentReplyId] = useState<number | null>(null);
@@ -278,10 +266,8 @@ export function ThreadedReplies({
   const queryClient = useQueryClient();
   const { admin, user } = useAuth();
 
-  // Auto-fill nickname for logged-in users
   const defaultNickname = user ? user.username : admin ? admin.displayName : "";
 
-  // Initialize nickname when component mounts
   useEffect(() => {
     if ((user || admin) && defaultNickname) {
       setNickname(defaultNickname);
@@ -303,11 +289,12 @@ export function ThreadedReplies({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/messages", messageId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${messageId}`] });
       setReplyText("");
       setNickname(defaultNickname);
       setParentReplyId(null);
       setShowReplyForm(false);
+      setReplyingTo(null);
       toast({
         title: "Reply sent!",
         description: "Your reply has been added to the conversation.",
@@ -332,6 +319,16 @@ export function ThreadedReplies({
       return;
     }
 
+    // Check if we're at the reply limit
+    if (replies.length >= MAX_REPLIES_PER_MESSAGE) {
+      toast({
+        title: "Reply limit reached",
+        description: `This thread has reached the maximum of ${MAX_REPLIES_PER_MESSAGE} replies.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     createReplyMutation.mutate({
       messageId,
       content: replyText,
@@ -348,111 +345,75 @@ export function ThreadedReplies({
     setNickname(defaultNickname);
   };
 
-  // Ensure replies is an array and handle nested structure properly
-  const validReplies = Array.isArray(replies) ? replies.filter(reply => reply && reply.id) : [];
-
-  if (validReplies.length === 0) {
-    return null;
-  }
-
-  // FIXED: Organize replies into a threaded structure properly
+  // Organize replies into threaded structure
   const threadedReplies = React.useMemo(() => {
     if (!replies || replies.length === 0) return [];
 
-    console.log('Processing replies for threading:', replies.length, 'showAll:', showAll);
-    console.log('All replies data:', replies.map(r => ({ id: r.id, parentId: r.parentId, content: r.content?.substring(0, 20) })));
+    const replyMap = new Map<number, ReplyWithUser & { children: ReplyWithUser[] }>();
+    const rootReplies: (ReplyWithUser & { children: ReplyWithUser[] })[] = [];
 
-    const replyMap = new Map<number, ReplyWithUser>();
-    const rootReplies: ReplyWithUser[] = [];
-
-    // First pass: create reply objects with children array
+    // First pass: create all reply objects with empty children arrays
     replies.forEach(reply => {
       const threadedReply = {
         ...reply,
         children: []
-      } as ReplyWithUser;
+      };
       replyMap.set(reply.id, threadedReply);
-      console.log(`Created threaded reply ${reply.id} with parentId: ${reply.parentId}`);
     });
 
-    // Second pass: organize into threads
+    // Second pass: organize into parent-child relationships
     replies.forEach(reply => {
       const threadedReply = replyMap.get(reply.id)!;
+      
       if (reply.parentId && replyMap.has(reply.parentId)) {
-        // This is a nested reply
+        // This is a child reply - add it to parent's children
         const parent = replyMap.get(reply.parentId);
         if (parent) {
-          parent.children = parent.children || [];
           parent.children.push(threadedReply);
-          console.log(`Added reply ${reply.id} as child of ${reply.parentId}`);
         }
       } else {
-        // This is a root-level reply
+        // This is a root reply - add to root array
         rootReplies.push(threadedReply);
-        console.log(`Added reply ${reply.id} as root reply`);
-      }
-    });
-
-    console.log(`Threaded replies processed (showAll=${showAll}):`, rootReplies.length, 'root replies, total replies:', replies.length);
-    
-    // Log the complete structure for debugging
-    rootReplies.forEach((root, index) => {
-      console.log(`Root reply ${index + 1} (ID: ${root.id}):`, root.content.substring(0, 30), 'Children:', root.children?.length || 0);
-      if (root.children && root.children.length > 0) {
-        root.children.forEach((child, childIndex) => {
-          console.log(`  Child ${childIndex + 1} (ID: ${child.id}):`, child.content.substring(0, 30), 'ParentId:', child.parentId);
-          // Check for grandchildren
-          if (child.children && child.children.length > 0) {
-            child.children.forEach((grandchild, grandchildIndex) => {
-              console.log(`    Grandchild ${grandchildIndex + 1} (ID: ${grandchild.id}):`, grandchild.content.substring(0, 30));
-            });
-          }
-        });
       }
     });
 
     return rootReplies;
-  }, [replies, showAll]);
+  }, [replies]);
+
+  if (!replies || replies.length === 0) {
+    return null;
+  }
+
+  // For dashboard preview (showAll=false): show only first 2 root replies without nesting
+  // For thread view (showAll=true): show all replies with full nesting
+  const displayReplies = showAll ? threadedReplies : threadedReplies.slice(0, 2);
 
   return (
     <div className="border-t pt-4 space-y-4">
       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
         <MessageSquare className="h-4 w-4" />
         <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
+        {replies.length >= MAX_REPLIES_PER_MESSAGE && (
+          <Badge variant="secondary" className="text-xs">
+            Reply limit reached
+          </Badge>
+        )}
       </div>
 
-      {/* Threaded replies */}
+      {/* Render replies */}
       <div className="space-y-3">
-        {showAll ? (
-          // When showAll is true, display ALL threaded replies with full nesting (this is for message thread page)
-          threadedReplies.map((reply) => {
-            console.log('Rendering root reply in showAll mode:', reply.id, 'with children:', reply.children?.length || 0);
-            return (
-              <ReplyItem
-                key={reply.id}
-                reply={reply}
-                messageId={messageId}
-                messageUserId={messageUserId}
-                level={0}
-                onWarning={onWarning}
-                onReply={onReply}
-              />
-            );
-          })
-        ) : (
-          // When showAll is false, display only first 2 root replies (this is for dashboard preview)
-          threadedReplies.slice(0, 2).map((reply) => (
-            <ReplyItem
-              key={reply.id}
-              reply={reply}
-              messageId={messageId}
-              messageUserId={messageUserId}
-              level={0}
-              onWarning={onWarning}
-              onReply={onReply}
-            />
-          ))
-        )}
+        {displayReplies.map((reply) => (
+          <ReplyItem
+            key={reply.id}
+            reply={reply}
+            messageId={messageId}
+            messageUserId={messageUserId}
+            level={0}
+            onWarning={onWarning}
+            onReply={onReply}
+            showAll={showAll}
+          />
+        ))}
         
         {/* Show "View all replies" link when in preview mode and there are more replies */}
         {!showAll && threadedReplies.length > 2 && (
@@ -466,25 +427,28 @@ export function ThreadedReplies({
         )}
       </div>
 
-      {/* Reply form */}
-      {replyingTo && (
+      {/* Reply form - only show in thread view */}
+      {showAll && (user || admin) && replies.length < MAX_REPLIES_PER_MESSAGE && (
         <div className="reply-form-container bg-muted/20 border rounded-lg p-4 mt-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
-            <Reply className="h-4 w-4" />
-            <span>Replying to {replyingTo.nickname}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setReplyingTo(null);
-                setReplyText("");
-                setNickname(defaultNickname);
-              }}
-              className="h-6 px-2 text-xs ml-auto"
-            >
-              Cancel
-            </Button>
-          </div>
+          {replyingTo && (
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
+              <Reply className="h-4 w-4" />
+              <span>Replying to {replyingTo.nickname}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setReplyingTo(null);
+                  setParentReplyId(null);
+                  setReplyText("");
+                  setNickname(defaultNickname);
+                }}
+                className="h-6 px-2 text-xs ml-auto"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Input
@@ -513,17 +477,20 @@ export function ThreadedReplies({
               >
                 {createReplyMutation.isPending ? "Sending..." : "Send Reply"}
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setReplyingTo(null);
-                  setReplyText("");
-                  setNickname(defaultNickname);
-                }}
-                className="bg-background hover:bg-muted border-border"
-              >
-                Cancel
-              </Button>
+              {replyingTo && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setReplyingTo(null);
+                    setParentReplyId(null);
+                    setReplyText("");
+                    setNickname(defaultNickname);
+                  }}
+                  className="bg-background hover:bg-muted border-border"
+                >
+                  Cancel
+                </Button>
+              )}
             </div>
           </div>
         </div>

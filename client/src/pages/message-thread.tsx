@@ -2,44 +2,24 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowLeft, Reply as ReplyIcon, Trash2, AlertTriangle, Info, Calendar, Music, Shield } from "lucide-react";
+import { ArrowLeft, Info, Calendar, Music } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { MESSAGE_CATEGORIES } from "@shared/schema";
 import { ThreadedReplies } from "@/components/threaded-replies";
-import type { MessageWithReplies, Reply, ReplyWithUser } from "@shared/schema";
+import type { MessageWithReplies } from "@shared/schema";
 
 export default function MessageThread() {
   const { id } = useParams();
-  const [replyForm, setReplyForm] = useState({ 
-    content: "", 
-    nickname: "",
-    parentId: null as number | null,
-    mentionedUserId: null as number | null,
-    mentionedAdminId: null as number | null,
-  });
   const [showGuidelines, setShowGuidelines] = useState(false);
-  const [deleteReplyId, setDeleteReplyId] = useState<number | null>(null);
   const { admin, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Auto-fill nickname for authenticated users
-  useEffect(() => {
-    const defaultNickname = user ? user.username : admin ? admin.displayName : "";
-    if (defaultNickname) {
-      setReplyForm(prev => ({ ...prev, nickname: defaultNickname }));
-    }
-  }, [user, admin]);
 
   const { data: message, isLoading, error } = useQuery<MessageWithReplies>({
     queryKey: [`/api/messages/${id}`],
@@ -48,59 +28,11 @@ export default function MessageThread() {
       if (!response.ok) {
         throw new Error('Message not found');
       }
-      const data = await response.json();
-      console.log('Message data:', data); // Debug log
-      console.log('Total replies in message:', data.replies ? data.replies.length : 0);
-      return data;
+      return await response.json();
     },
     enabled: !!id,
     retry: 3,
     retryDelay: 1000,
-  });
-
-  const addReplyMutation = useMutation({
-    mutationFn: async (data: { content: string; nickname: string; parentId?: number | null; mentionedUserId?: number | null; mentionedAdminId?: number | null }) => {
-      const replyData = {
-        messageId: parseInt(id!),
-        content: data.content,
-        nickname: data.nickname,
-        userId: user?.id,
-        adminId: admin?.id,
-        parentId: data.parentId,
-        mentionedUserId: data.mentionedUserId,
-        mentionedAdminId: data.mentionedAdminId,
-      };
-      return await apiRequest("POST", "/api/replies", replyData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages", id] });
-      const defaultNickname = user ? user.username : admin ? admin.displayName : "";
-      setReplyForm({ 
-        content: "", 
-        nickname: defaultNickname,
-        parentId: null,
-        mentionedUserId: null,
-        mentionedAdminId: null,
-      });
-      toast({
-        title: "Reply added",
-        description: "Your reply has been posted successfully.",
-      });
-    },
-  });
-
-  const deleteReplyMutation = useMutation({
-    mutationFn: async (replyId: number) => {
-      return await apiRequest("DELETE", `/api/replies/${replyId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages", id] });
-      setDeleteReplyId(null);
-      toast({
-        title: "Reply deleted",
-        description: "The reply has been removed for violating community guidelines.",
-      });
-    },
   });
 
   const sendWarningMutation = useMutation({
@@ -114,37 +46,6 @@ export default function MessageThread() {
       });
     },
   });
-
-  const handleSubmitReply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!replyForm.content.trim() || !replyForm.nickname.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in both content and nickname.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (replyForm.content.length > 500) {
-      toast({
-        title: "Reply too long",
-        description: "Please keep your reply under 500 characters.",
-        variant: "destructive",
-      });
-      return;
-    }
-    addReplyMutation.mutate(replyForm);
-  };
-
-  const handleDeleteReply = (replyId: number) => {
-    deleteReplyMutation.mutate(replyId);
-    // Also send a warning
-    sendWarningMutation.mutate({
-      replyId,
-      reason: "Your reply was removed for violating community guidelines. Please review our guidelines and be respectful in future interactions."
-    });
-  };
 
   const getCategoryStyle = (category: string) => {
     const categoryObj = MESSAGE_CATEGORIES.find(cat => cat.name === category);
@@ -246,85 +147,14 @@ export default function MessageThread() {
           </CardContent>
         </Card>
 
-        {/* Replies Section */}
+        {/* Replies Section with new ThreadedReplies system */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold text-gray-900">
-              Replies ({message.replies.length})
+              Thread Discussion ({message.replies.length}/500 replies)
             </h2>
           </div>
 
-          {/* Reply Form */}
-          <Card id="reply-form">
-            <CardHeader>
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <ReplyIcon className="w-5 h-5" />
-                {replyForm.parentId ? "Reply to Comment" : "Add Your Reply"}
-              </h3>
-              {replyForm.parentId && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Replying to a comment</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setReplyForm(prev => ({ 
-                      ...prev, 
-                      parentId: null, 
-                      mentionedUserId: null, 
-                      mentionedAdminId: null,
-                      content: ""
-                    }))}
-                  >
-                    Cancel Reply
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmitReply} className="space-y-4">
-                <div>
-                  <Label htmlFor="nickname">Nickname</Label>
-                  <Input
-                    id="nickname"
-                    value={replyForm.nickname}
-                    onChange={(e) => setReplyForm({ ...replyForm, nickname: e.target.value })}
-                    placeholder={user ? `Replying as: ${user.username}` : admin ? `Replying as: ${admin.displayName}` : "Enter a nickname"}
-                    disabled={!!(user || admin)}
-                    className={(user || admin) ? "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300" : ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="content">Your Reply</Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Write your reply... (500 character limit)"
-                    value={replyForm.content}
-                    onChange={(e) => {
-                      const content = e.target.value;
-                      if (content.length <= 500) {
-                        setReplyForm({ ...replyForm, content });
-                      }
-                    }}
-                    className="min-h-[100px] resize-none"
-                    maxLength={500}
-                  />
-                  <div className="text-xs text-muted-foreground mt-1 text-right">
-                    {replyForm.content.length}/500 characters
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-muted-foreground">
-                    Please follow our community guidelines when replying
-                  </p>
-                  <Button type="submit" disabled={addReplyMutation.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    {addReplyMutation.isPending ? "Posting..." : "Post Reply"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Use ThreadedReplies component to show ALL replies in thread view */}
           <div className="space-y-4">
             {message.replies.length === 0 ? (
               <Card>
@@ -336,12 +166,12 @@ export default function MessageThread() {
               <Card>
                 <CardHeader>
                   <h3 className="text-lg font-medium">
-                    All Replies ({message.replies.length})
+                    Discussion Thread
                   </h3>
                 </CardHeader>
                 <CardContent>
                   <ThreadedReplies
-                    replies={message.replies || []}
+                    replies={message.replies}
                     messageId={message.id}
                     messageUserId={message.userId ?? undefined}
                     showAll={true}
@@ -369,48 +199,41 @@ export default function MessageThread() {
               <AlertDialogDescription asChild>
                 <div className="space-y-4 text-left">
                   <p>Welcome to Whisper Network! To maintain a safe and supportive environment for all Silent Messengers, please follow these guidelines:</p>
-
                   <div className="space-y-3">
                     <div>
                       <h4 className="font-semibold text-gray-900">✓ Be Respectful</h4>
                       <p className="text-sm text-gray-600">Treat everyone with kindness and respect. Different perspectives are welcome.</p>
                     </div>
-
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No Bullying or Harassment</h4>
                       <p className="text-sm text-gray-600">Any form of bullying, harassment, or personal attacks will not be tolerated.</p>
                     </div>
-
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No NSFW Content</h4>
                       <p className="text-sm text-gray-600">Keep all content appropriate for all ages. No explicit sexual content or graphic violence.</p>
                     </div>
-
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No Hate Speech</h4>
                       <p className="text-sm text-gray-600">Discriminatory language based on race, gender, religion, sexual orientation, or other characteristics is prohibited.</p>
                     </div>
-
                     <div>
                       <h4 className="font-semibold text-gray-900">✓ Constructive Communication</h4>
                       <p className="text-sm text-gray-600">Aim to be helpful and constructive in your responses. Offer support when possible.</p>
                     </div>
-
                     <div>
                       <h4 className="font-semibold text-gray-900">✗ No Spam or Self-Promotion</h4>
                       <p className="text-sm text-gray-600">Avoid repetitive content or excessive self-promotion.</p>
                     </div>
-
                     <div>
                       <h4 className="font-semibold text-gray-900">🔒 Privacy Respect</h4>
                       <p className="text-sm text-gray-600">Don't share personal information or try to identify anonymous users.</p>
                     </div>
                   </div>
-
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm text-blue-800">
                       <strong>Remember:</strong> Whisper Listeners are here to help maintain a safe space. 
                       Violations may result in content removal and warnings. Repeated violations may lead to restricted access.
+                      Each thread is limited to 500 replies to maintain readability.
                     </p>
                   </div>
                 </div>
@@ -418,31 +241,6 @@ export default function MessageThread() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Close</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Delete Reply Confirmation */}
-        <AlertDialog open={!!deleteReplyId} onOpenChange={() => setDeleteReplyId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
-                Delete Reply & Send Warning
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete the reply and send a warning message to the user about community guidelines. 
-                This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => deleteReplyId && handleDeleteReply(deleteReplyId)}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Delete & Warn User
-              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
