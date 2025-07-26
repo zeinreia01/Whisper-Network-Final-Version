@@ -426,8 +426,8 @@ export function ThreadedReplies({
         )}
       </div>
 
-      {/* Reply form - only show in thread view */}
-      {showAll && (user || admin) && replies.length < MAX_REPLIES_PER_MESSAGE && (
+      {/* Reply form - always show in thread view for authenticated users */}
+      {showAll && (user || admin) && (
         <div className="reply-form-container bg-muted/20 border rounded-lg p-4 mt-4">
           {replyingTo && (
             <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
