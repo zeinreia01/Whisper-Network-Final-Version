@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, Eye, EyeOff, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -24,6 +25,8 @@ interface UserProfile {
   username: string;
   displayName?: string;
   profilePicture?: string;
+  backgroundPhoto?: string;
+  isAnonymousLinkPaused?: boolean;
 }
 
 export default function AnonymousMessaging() {
@@ -161,17 +164,33 @@ export default function AnonymousMessaging() {
   return (
     <div className="container mx-auto p-6 max-w-2xl space-y-6">
       {/* Profile Header */}
-      <Card>
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold">
-              {recipientProfile.displayName?.[0] || recipientProfile.username[0]}
-            </div>
+      <Card className="overflow-hidden">
+        {/* Background Photo */}
+        {recipientProfile.backgroundPhoto && (
+          <div 
+            className="h-48 bg-cover bg-center relative"
+            style={{ backgroundImage: `url(${recipientProfile.backgroundPhoto})` }}
+          >
+            <div className="absolute inset-0 bg-black/30"></div>
           </div>
-          <CardTitle className="text-2xl">
+        )}
+        
+        <CardHeader className={`text-center ${recipientProfile.backgroundPhoto ? "-mt-16 relative z-10" : ""}`}>
+          <div className="flex justify-center mb-4">
+            <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+              <AvatarImage 
+                src={recipientProfile.profilePicture || undefined} 
+                alt={recipientProfile.displayName || recipientProfile.username}
+              />
+              <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-bold">
+                {(recipientProfile.displayName || recipientProfile.username)[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <CardTitle className={`text-2xl ${recipientProfile.backgroundPhoto ? 'text-white' : ''}`}>
             {recipientProfile.displayName || recipientProfile.username}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className={recipientProfile.backgroundPhoto ? 'text-gray-200' : ''}>
             Send an anonymous message to @{recipientProfile.username}
           </CardDescription>
         </CardHeader>
