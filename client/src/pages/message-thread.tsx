@@ -341,7 +341,7 @@ export default function MessageThread() {
                 </CardHeader>
                 <CardContent>
                   <ThreadedReplies
-                    replies={message.replies}
+                    replies={message.replies || []}
                     messageId={message.id}
                     messageUserId={message.userId ?? undefined}
                     showAll={true}

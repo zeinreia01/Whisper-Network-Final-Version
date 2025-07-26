@@ -228,7 +228,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
         </div>
       </div>
 
-      {/* Nested replies */}
+      {/* Nested replies - Always show children in threaded view */}
       {childReplies.length > 0 && (
         <div className="mt-2">
           {childReplies.map((childReply) => (
@@ -255,6 +255,14 @@ export function ThreadedReplies({
   onWarning,
   showAll = false
 }: ThreadedRepliesProps) {
+  
+  // Debug logging
+  console.log('ThreadedReplies component received:', {
+    repliesCount: replies?.length || 0,
+    showAll,
+    messageId,
+    repliesData: replies?.map(r => ({ id: r.id, content: r.content?.substring(0, 50), parentId: r.parentId }))
+  });
 
   const [replyText, setReplyText] = useState("");
   const [nickname, setNickname] = useState("");
@@ -349,6 +357,9 @@ export function ThreadedReplies({
 
     console.log('Processing replies for threading:', replies.length, 'showAll:', showAll);
 
+    // If showAll is true, we want to show ALL replies with proper nesting
+    // If showAll is false, we want to show only a preview (first 2 root replies)
+    
     const replyMap = new Map<number, ReplyWithUser>();
     const rootReplies: ReplyWithUser[] = [];
 
@@ -376,7 +387,7 @@ export function ThreadedReplies({
       }
     });
 
-    console.log('Threaded replies processed:', rootReplies.length, 'root replies, total replies:', replies.length);
+    console.log(`Threaded replies processed (showAll=${showAll}):`, rootReplies.length, 'root replies, total replies:', replies.length);
     
     // Log the structure for debugging
     rootReplies.forEach((root, index) => {
