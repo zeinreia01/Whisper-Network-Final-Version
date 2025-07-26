@@ -757,3 +757,5 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         onClose={() => setShowAuthModal(false)}
       />
     </div>
+  );
+}

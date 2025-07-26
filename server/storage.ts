@@ -324,7 +324,7 @@ export class DatabaseStorage implements IStorage {
     if (!result) return null;
 
     // Build nested replies structure
-    const allReplies = result.replies;
+    const allReplies = result.replies || [];
     const rootReplies = allReplies.filter(reply => !reply.parentId);
     const childRepliesMap = new Map();
 

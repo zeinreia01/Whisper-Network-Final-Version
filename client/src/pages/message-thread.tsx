@@ -171,7 +171,7 @@ export default function MessageThread() {
                 </CardHeader>
                 <CardContent>
                   <NestedReplyThread
-                    replies={message.replies}
+                    replies={message.replies || []}
                     messageId={message.id}
                     messageUserId={message.userId ?? undefined}
                     showAll={true}
