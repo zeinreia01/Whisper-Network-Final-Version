@@ -867,7 +867,10 @@ export class DatabaseStorage implements IStorage {
 
   async getUserMessages(userId: number): Promise<MessageWithReplies[]> {
     const result = await db.query.messages.findMany({
-      where: eq(messages.userId, userId),
+      where: and(
+        eq(messages.userId, userId),
+        eq(messages.isPublic, true) // CRITICAL FIX: Only return public messages for profile views
+      ),
       orderBy: desc(messages.createdAt),
       with: {
         replies: {
@@ -922,14 +925,17 @@ export class DatabaseStorage implements IStorage {
       const userMessages = await db
         .select()
         .from(messages)
-        .where(eq(messages.userId, userId));
+        .where(and(
+          eq(messages.userId, userId),
+          eq(messages.isPublic, true) // CRITICAL FIX: Only count public messages in profile stats
+        ));
 
       const userReplies = await db
         .select()
         .from(replies)
         .where(eq(replies.userId, userId));
 
-      // Count reactions on all user messages
+      // Count reactions on public user messages only
       let totalReactions = 0;
       try {
         for (const message of userMessages) {
