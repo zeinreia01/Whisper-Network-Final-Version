@@ -271,13 +271,18 @@ export default function AnonymousMessaging() {
                           message={{
                             id: msg.id,
                             content: msg.content,
-                            createdAt: msg.createdAt,
+                            createdAt: new Date(msg.createdAt),
                             senderName: (msg as any).senderName || "Anonymous",
                             category: (msg as any).category || "Anything",
                             spotifyLink: (msg as any).spotifyLink || undefined,
                             recipient: recipientProfile.username,
                             reactionCount: 0,
-                            replies: []
+                            replies: [],
+                            isPublic: false,
+                            userId: null,
+                            adminId: null,
+                            isAuthenticated: false,
+                            isOwnerPrivate: false
                           }}
                           trigger={
                             <Button size="sm" variant="outline" className="flex items-center gap-1">

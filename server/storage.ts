@@ -1332,6 +1332,10 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       updateData.bio = updates.bio;
     }
 
+    if (updates.isAnonymousLinkPaused !== undefined) {
+      updateData.isAnonymousLinkPaused = updates.isAnonymousLinkPaused;
+    }
+
     // If no valid updates, return current user
     if (Object.keys(updateData).length === 0) {
       const [currentUser] = await db

@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
   likedMessagesPrivacy: text("liked_messages_privacy").default("private"), // "public" or "private"
+  isAnonymousLinkPaused: boolean("is_anonymous_link_paused").default(false), // Whether user has paused anonymous messaging
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
 });
@@ -302,6 +303,7 @@ export const updateUserProfileSchema = z.object({
   ),
   backgroundPhoto: z.string().optional(),
   bio: z.string().max(200).optional(),
+  isAnonymousLinkPaused: z.boolean().optional(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
