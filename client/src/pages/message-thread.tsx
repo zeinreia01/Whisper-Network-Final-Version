@@ -151,7 +151,7 @@ export default function MessageThread() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold text-gray-900">
-              Thread Discussion ({message.replies.length}/500 replies)
+              Thread Discussion ({message.replyCount || message.replies.length}/500 replies)
             </h2>
           </div>
 

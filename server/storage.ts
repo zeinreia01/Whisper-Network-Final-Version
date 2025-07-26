@@ -349,11 +349,21 @@ export class DatabaseStorage implements IStorage {
 
     const nestedReplies = rootReplies.map(attachChildren);
 
+    // Count all replies (including nested ones)
+    const countAllReplies = (replies: any[]): number => {
+      return replies.reduce((count, reply) => {
+        return count + 1 + countAllReplies(reply.children || []);
+      }, 0);
+    };
+
+    const totalReplyCount = countAllReplies(nestedReplies);
+
     // Add reaction data
     const messageReactions = await this.getMessageReactions(result.id);
     return {
       ...result,
       replies: nestedReplies,
+      replyCount: totalReplyCount,
       reactionCount: messageReactions.length,
       reactions: messageReactions,
     };

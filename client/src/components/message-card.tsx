@@ -325,6 +325,19 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
     return null;
   }
 
+  // Function to recursively count all replies, including nested ones
+  const countAllReplies = (replies: any[]): number => {
+    let count = replies.length;
+    replies.forEach(reply => {
+      if (reply.replies && Array.isArray(reply.replies)) {
+        count += countAllReplies(reply.replies);
+      }
+    });
+    return count;
+  };
+
+  const totalReplies = replies ? countAllReplies(replies) : 0;
+
   return (
     <div className="message-card bg-card pink:romantic-card rounded-xl shadow-lg pink:pink-glow p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-xl pink:hover:pink-glow transition-all duration-300">
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -458,7 +471,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
           >
             Reply
           </button>
-          <span className="flex-shrink-0 px-1">{message.replies.length} replies</span>
+          <span className="flex-shrink-0 px-1">{totalReplies} replies</span>
 
           {/* Heart reaction button - visible to everyone but prompts login for non-authenticated */}
           <button
@@ -614,15 +627,15 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <MessageSquare className="h-4 w-4" />
-              <span>{message.replies.length} {message.replies.length === 1 ? 'reply' : 'replies'}</span>
+              <span>{totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}</span>
             </div>
             <Link href={`/message/${message.id}`}>
               <Button variant="outline" size="sm">
-                View all {message.replies.length} replies
+                View all {totalReplies} replies
               </Button>
             </Link>
           </div>
-          
+
           {/* Show only first 2 replies - SIMPLE, NO NESTING */}
           <div className="space-y-3">
             {message.replies.slice(0, 2).map((reply) => (
@@ -744,5 +757,3 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         onClose={() => setShowAuthModal(false)}
       />
     </div>
-  );
-}
