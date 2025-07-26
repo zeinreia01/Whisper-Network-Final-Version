@@ -379,9 +379,7 @@ export function ThreadedReplies({
     return rootReplies;
   }, [replies]);
 
-  if (!replies || replies.length === 0) {
-    return null;
-  }
+  // Don't return null when there are no replies - we still want to show the reply form
 
   // For dashboard preview (showAll=false): show only first 2 root replies without nesting
   // For thread view (showAll=true): show all replies with full nesting
@@ -389,42 +387,55 @@ export function ThreadedReplies({
 
   return (
     <div className="border-t pt-4 space-y-4">
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <MessageSquare className="h-4 w-4" />
-        <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
-        {replies.length >= MAX_REPLIES_PER_MESSAGE && (
-          <Badge variant="secondary" className="text-xs">
-            Reply limit reached
-          </Badge>
-        )}
-      </div>
+      {/* Only show reply counter if there are replies */}
+      {replies && replies.length > 0 && (
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <MessageSquare className="h-4 w-4" />
+          <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
+          {replies.length >= MAX_REPLIES_PER_MESSAGE && (
+            <Badge variant="secondary" className="text-xs">
+              Reply limit reached
+            </Badge>
+          )}
+        </div>
+      )}
+
+      {/* Show message when no replies exist and we're on the thread page */}
+      {(!replies || replies.length === 0) && showAll && (
+        <div className="text-center py-8 text-muted-foreground">
+          <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
+          <p>No replies yet. Be the first to share your thoughts!</p>
+        </div>
+      )}
 
       {/* Render replies */}
-      <div className="space-y-3">
-        {displayReplies.map((reply) => (
-          <ReplyItem
-            key={reply.id}
-            reply={reply}
-            messageId={messageId}
-            messageUserId={messageUserId}
-            level={0}
-            onWarning={onWarning}
-            onReply={onReply}
-            showAll={showAll}
-          />
-        ))}
+      {replies && replies.length > 0 && (
+        <div className="space-y-3">
+          {displayReplies.map((reply) => (
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              messageId={messageId}
+              messageUserId={messageUserId}
+              level={0}
+              onWarning={onWarning}
+              onReply={onReply}
+              showAll={showAll}
+            />
+          ))}
 
-        {/* Show "View all replies" link when in preview mode and there are more replies */}
-        {!showAll && threadedReplies.length > 2 && (
-          <div className="text-center pt-2">
-            <Link href={`/message/${messageId}`}>
-              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10">
-                View all {replies.length} replies →
-              </Button>
-            </Link>
-          </div>
-        )}
-      </div>
+          {/* Show "View all replies" link when in preview mode and there are more replies */}
+          {!showAll && threadedReplies.length > 2 && (
+            <div className="text-center pt-2">
+              <Link href={`/message/${messageId}`}>
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10">
+                  View all {replies.length} replies →
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Reply form - ALWAYS show for authenticated users when on thread page */}
       {(user || admin) && (

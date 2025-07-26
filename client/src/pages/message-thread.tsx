@@ -155,37 +155,28 @@ export default function MessageThread() {
             </h2>
           </div>
 
-          <div className="space-y-4">
-            {message.replies.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-gray-600 dark:text-gray-400">No replies yet. Be the first to share your thoughts!</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-medium">
-                    Discussion Thread
-                  </h3>
-                </CardHeader>
-                <CardContent>
-                  <ThreadedReplies
-                    replies={message.replies || []}
-                    messageId={message.id}
-                    messageUserId={message.userId ?? undefined}
-                    showAll={true}
-                    onWarning={(replyId) => {
-                      sendWarningMutation.mutate({
-                        replyId,
-                        reason: "Your reply was flagged for violating community guidelines. Please review our guidelines and be respectful in future interactions."
-                      });
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {/* Always show ThreadedReplies component, even if no replies exist - it has the reply form */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-medium">
+                Discussion Thread
+              </h3>
+            </CardHeader>
+            <CardContent>
+              <ThreadedReplies
+                replies={message.replies || []}
+                messageId={message.id}
+                messageUserId={message.userId ?? undefined}
+                showAll={true}
+                onWarning={(replyId) => {
+                  sendWarningMutation.mutate({
+                    replyId,
+                    reason: "Your reply was flagged for violating community guidelines. Please review our guidelines and be respectful in future interactions."
+                  });
+                }}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         {/* Community Guidelines Dialog */}
