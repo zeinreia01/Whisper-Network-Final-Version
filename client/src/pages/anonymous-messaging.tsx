@@ -147,10 +147,10 @@ export default function AnonymousMessaging() {
   });
 
   const handleSendMessage = () => {
-    if (!message.trim() || !recipientProfile) return;
+    if (!message.replace(/\s+/g, '').length || !recipientProfile) return;
     
     sendMessageMutation.mutate({
-      content: message.trim(),
+      content: message,
       category: category,
       spotifyLink: spotifyLink || undefined,
       senderName: senderName || undefined,

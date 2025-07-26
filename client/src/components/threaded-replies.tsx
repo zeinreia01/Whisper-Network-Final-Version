@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -210,7 +209,7 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply,
             </div>
 
             {/* Reply content */}
-            <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{reply.content}</p>
           </div>
 
           {/* Reply button - only show if within nesting limit and user is authenticated */}
@@ -364,7 +363,7 @@ export function ThreadedReplies({
     // Second pass: organize into parent-child relationships
     replies.forEach(reply => {
       const threadedReply = replyMap.get(reply.id)!;
-      
+
       if (reply.parentId && replyMap.has(reply.parentId)) {
         // This is a child reply - add it to parent's children
         const parent = replyMap.get(reply.parentId);
@@ -414,7 +413,7 @@ export function ThreadedReplies({
             showAll={showAll}
           />
         ))}
-        
+
         {/* Show "View all replies" link when in preview mode and there are more replies */}
         {!showAll && threadedReplies.length > 2 && (
           <div className="text-center pt-2">

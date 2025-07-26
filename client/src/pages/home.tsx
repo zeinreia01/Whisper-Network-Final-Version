@@ -63,7 +63,7 @@ export default function Home() {
   });
 
   const handleSendPublic = () => {
-    if (!content.trim()) {
+    if (!content.replace(/\s+/g, '').length) {
       toast({
         title: "Message required",
         description: "Please enter a message before sending.",
@@ -91,7 +91,7 @@ export default function Home() {
   };
 
   const handleSendPrivate = () => {
-    if (!content.trim()) {
+    if (!content.replace(/\s+/g, '').length) {
       toast({
         title: "Message required",
         description: "Please enter a message before sending.",

@@ -192,7 +192,7 @@ export function PersonalPage() {
   };
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: { displayName?: string; profilePicture?: string, backgroundPhoto?: string }) => {
+    mutationFn: async (updates: { displayName?: string; profilePicture?: string, backgroundPhoto?: string, bio?: string }) => {
       if (!user) throw new Error("Not authenticated as user");
 
       // Validate the updates
@@ -524,6 +524,29 @@ export function PersonalPage() {
                       <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                         <p className="text-gray-900 dark:text-white font-medium">
                           {user.displayName || user.username}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                   {/* Bio Section */}
+                   <div className="space-y-3">
+                    <Label className="text-gray-700 dark:text-gray-300 font-medium">Bio</Label>
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <Input
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          placeholder="Enter bio (2-50 characters)"
+                          maxLength={50}
+                          disabled={!canUpdateDisplayName}
+                          className="bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {user.bio || "No bio yet."}
                         </p>
                       </div>
                     )}
