@@ -691,6 +691,20 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         </div>
       )}
 
+      {/* Reply section for authenticated users on dashboard */}
+      {showReplies && !showThreaded && (user || admin) && (
+        <div className="border-t pt-4">
+          <div className="text-center">
+            <Link href={`/message/${message.id}`}>
+              <Button variant="outline" size="sm" className="text-primary hover:text-primary/80">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Reply to this message
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Warning Dialog */}
       {showWarningDialog && (
         <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
