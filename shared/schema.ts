@@ -159,14 +159,6 @@ export const repliesRelations = relations(replies, ({ one, many }) => ({
     fields: [replies.mentionedAdminId],
     references: [admins.id],
   }),
-  parent: one(replies, {
-    fields: [replies.parentId],
-    references: [replies.id],
-    relationName: "nested_replies"
-  }),
-  children: many(replies, {
-    relationName: "nested_replies"
-  }),
 }));
 
 export const reactionsRelations = relations(reactions, ({ one }) => ({

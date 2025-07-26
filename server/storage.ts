@@ -159,27 +159,114 @@ export class DatabaseStorage implements IStorage {
   async getPublicMessages(): Promise<MessageWithReplies[]> {
     try {
       console.log('Loading public messages...');
-      const result = await db.query.messages.findMany({
-        where: eq(messages.isPublic, true),
-        orderBy: desc(messages.createdAt),
-        with: {
-          replies: {
-            with: {
-              user: true,
-              admin: true,
-            },
-          },
-          user: true,
-          admin: true,
-        },
-      });
+      
+      // Get all public messages
+      const messagesData = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.isPublic, true))
+        .orderBy(desc(messages.createdAt));
+
+      const result: MessageWithReplies[] = [];
+
+      for (const message of messagesData) {
+        // Get user if exists
+        let user = null;
+        if (message.userId) {
+          const userData = await db
+            .select({
+              id: users.id,
+              username: users.username,
+              displayName: users.displayName,
+              profilePicture: users.profilePicture,
+              isVerified: users.isVerified,
+            })
+            .from(users)
+            .where(eq(users.id, message.userId))
+            .limit(1);
+          user = userData[0] || null;
+        }
+
+        // Get admin if exists
+        let admin = null;
+        if (message.adminId) {
+          const adminData = await db
+            .select({
+              id: admins.id,
+              displayName: admins.displayName,
+              profilePicture: admins.profilePicture,
+              isVerified: admins.isVerified,
+            })
+            .from(admins)
+            .where(eq(admins.id, message.adminId))
+            .limit(1);
+          admin = adminData[0] || null;
+        }
+
+        // Get replies for this message
+        const repliesData = await db
+          .select()
+          .from(replies)
+          .where(eq(replies.messageId, message.id))
+          .orderBy(asc(replies.createdAt));
+
+        // Get users and admins for replies
+        const repliesWithUsers: ReplyWithUser[] = [];
+        for (const reply of repliesData) {
+          let replyUser = null;
+          let replyAdmin = null;
+
+          if (reply.userId) {
+            const userData = await db
+              .select({
+                id: users.id,
+                username: users.username,
+                displayName: users.displayName,
+                profilePicture: users.profilePicture,
+                isVerified: users.isVerified,
+              })
+              .from(users)
+              .where(eq(users.id, reply.userId))
+              .limit(1);
+            replyUser = userData[0] || null;
+          }
+
+          if (reply.adminId) {
+            const adminData = await db
+              .select({
+                id: admins.id,
+                displayName: admins.displayName,
+                profilePicture: admins.profilePicture,
+                isVerified: admins.isVerified,
+              })
+              .from(admins)
+              .where(eq(admins.id, reply.adminId))
+              .limit(1);
+            replyAdmin = adminData[0] || null;
+          }
+
+          repliesWithUsers.push({
+            ...reply,
+            user: replyUser,
+            admin: replyAdmin,
+          });
+        }
+
+        // Get reactions
+        const messageReactions = await this.getMessageReactions(message.id);
+
+        result.push({
+          ...message,
+          user,
+          admin,
+          replies: repliesWithUsers,
+          reactions: messageReactions,
+          reactionCount: messageReactions.length,
+        });
+      }
 
       console.log(`Loaded ${result.length} public messages`);
-
-      return result.map(message => ({
-        ...message,
-        replies: message.replies || [],
-      }));
+      return result;
     } catch (error) {
       console.error('Error loading public messages:', error);
       return [];
@@ -295,82 +382,124 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMessageById(id: number): Promise<MessageWithReplies | null> {
-    const result = await db.query.messages.findFirst({
-      where: eq(messages.id, id),
-      with: {
-        user: {
-          columns: {
-            id: true,
-            username: true,
-            displayName: true,
-            profilePicture: true,
-            isVerified: true,
-          }
-        },
-        admin: {
-          columns: {
-            id: true,
-            displayName: true,
-            profilePicture: true,
-            isVerified: true,
-          }
-        },
-        replies: {
-          with: {
-            user: {
-              columns: {
-                id: true,
-                username: true,
-                displayName: true,
-                profilePicture: true,
-                isVerified: true,
-              }
-            },
-            admin: {
-              columns: {
-                id: true,
-                displayName: true,
-                profilePicture: true,
-                isVerified: true,
-              }
-            }
-          },
-          orderBy: asc(replies.createdAt),
-        },
-        reactions: {
-          with: {
-            user: {
-              columns: {
-                id: true,
-                username: true,
-              }
-            },
-            admin: {
-              columns: {
-                id: true,
-                displayName: true,
-              }
-            }
-          }
-        }
+    try {
+      // First get the message
+      const message = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.id, id))
+        .limit(1);
+
+      if (!message || message.length === 0) {
+        return null;
       }
-    });
 
-    if (!result) return null;
+      const messageData = message[0];
 
-    console.log(`Retrieved message ${id} with ${result.replies?.length || 0} replies`);
-    console.log('Raw replies:', result.replies?.map(r => ({ id: r.id, parentId: r.parentId, content: r.content.substring(0, 50) })));
+      // Get the user if exists
+      let user = null;
+      if (messageData.userId) {
+        const userData = await db
+          .select({
+            id: users.id,
+            username: users.username,
+            displayName: users.displayName,
+            profilePicture: users.profilePicture,
+            isVerified: users.isVerified,
+          })
+          .from(users)
+          .where(eq(users.id, messageData.userId))
+          .limit(1);
+        user = userData[0] || null;
+      }
 
-    // Return all replies in flat structure - let frontend handle threading
-    const allReplies = result.replies || [];
+      // Get the admin if exists
+      let admin = null;
+      if (messageData.adminId) {
+        const adminData = await db
+          .select({
+            id: admins.id,
+            displayName: admins.displayName,
+            profilePicture: admins.profilePicture,
+            isVerified: admins.isVerified,
+          })
+          .from(admins)
+          .where(eq(admins.id, messageData.adminId))
+          .limit(1);
+        admin = adminData[0] || null;
+      }
 
-    console.log('Returning flat replies structure with', allReplies.length, 'total replies');
-    return {
-      ...result,
-      replies: allReplies,
-      reactionCount: result.reactions?.length || 0,
-      replyCount: allReplies.length,
-    };
+      // Get all replies for this message
+      const repliesData = await db
+        .select()
+        .from(replies)
+        .where(eq(replies.messageId, id))
+        .orderBy(asc(replies.createdAt));
+
+      // Get users and admins for replies
+      const repliesWithUsers: ReplyWithUser[] = [];
+      for (const reply of repliesData) {
+        let replyUser = null;
+        let replyAdmin = null;
+
+        if (reply.userId) {
+          const userData = await db
+            .select({
+              id: users.id,
+              username: users.username,
+              displayName: users.displayName,
+              profilePicture: users.profilePicture,
+              isVerified: users.isVerified,
+            })
+            .from(users)
+            .where(eq(users.id, reply.userId))
+            .limit(1);
+          replyUser = userData[0] || null;
+        }
+
+        if (reply.adminId) {
+          const adminData = await db
+            .select({
+              id: admins.id,
+              displayName: admins.displayName,
+              profilePicture: admins.profilePicture,
+              isVerified: admins.isVerified,
+            })
+            .from(admins)
+            .where(eq(admins.id, reply.adminId))
+            .limit(1);
+          replyAdmin = adminData[0] || null;
+        }
+
+        repliesWithUsers.push({
+          ...reply,
+          user: replyUser,
+          admin: replyAdmin,
+        });
+      }
+
+      // Get reactions
+      const reactionsData = await db
+        .select()
+        .from(reactions)
+        .where(eq(reactions.messageId, id));
+
+      console.log(`Retrieved message ${id} with ${repliesWithUsers.length} replies`);
+      console.log('Raw replies:', repliesWithUsers.map(r => ({ id: r.id, parentId: r.parentId, content: r.content.substring(0, 50) })));
+
+      return {
+        ...messageData,
+        user,
+        admin,
+        replies: repliesWithUsers,
+        reactions: reactionsData,
+        reactionCount: reactionsData.length,
+        replyCount: repliesWithUsers.length,
+      };
+    } catch (error) {
+      console.error('Error in getMessageById:', error);
+      return null;
+    }
   }
 
   async getMessagesByRecipient(recipient: string): Promise<MessageWithReplies[]> {
