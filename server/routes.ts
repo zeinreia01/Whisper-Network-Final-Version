@@ -1185,8 +1185,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Check display name change cooldown
-      if (displayName && displayName !== admin.displayName) {
+      // Check display name change cooldown (bypass for ZEKE001)
+      if (displayName && displayName !== admin.displayName && admin.username !== "ZEKE001") {
         const lastChange = admin.lastDisplayNameChange;
         if (lastChange) {
           const daysSinceLastChange = Math.floor((Date.now() - new Date(lastChange).getTime()) / (1000 * 60 * 60 * 24));
@@ -1203,7 +1203,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
       if (bio !== undefined) updateData.bio = bio;
       if (backgroundPhoto !== undefined) updateData.backgroundPhoto = backgroundPhoto;
-      if (displayName && displayName !== admin.displayName) {
+      
+      // Only update lastDisplayNameChange if display name actually changed
+      if (displayName && displayName !== admin.displayName && admin.username !== "ZEKE001") {
         updateData.lastDisplayNameChange = new Date();
       }
 
@@ -1234,6 +1236,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!admin) {
         return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // ZEKE001 can always update display name
+      if (admin.username === "ZEKE001") {
+        return res.json({ canUpdate: true });
       }
 
       const lastChange = admin.lastDisplayNameChange;

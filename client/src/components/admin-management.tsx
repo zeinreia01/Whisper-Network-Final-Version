@@ -1,14 +1,15 @@
+
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Shield, ShieldCheck, ShieldX } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { UserPlus, Shield, Users, Settings, Heart } from "lucide-react";
 import type { Admin } from "@shared/schema";
 
 export function AdminManagement() {
@@ -17,13 +18,20 @@ export function AdminManagement() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState("admin");
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch all admins
   const { data: admins = [], isLoading } = useQuery<Admin[]>({
     queryKey: ["/api/admins"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admins");
+      return await response.json();
+    },
   });
 
+  // Create admin mutation
   const createAdminMutation = useMutation({
     mutationFn: async (data: { username: string; password: string; displayName: string; role: string }) => {
       return await apiRequest("POST", "/api/admins", data);
@@ -50,68 +58,72 @@ export function AdminManagement() {
     },
   });
 
-  const toggleAdminStatusMutation = useMutation({
-    mutationFn: async (data: { adminId: number; isActive: boolean }) => {
-      return await apiRequest("PATCH", `/api/admins/${data.adminId}`, { isActive: data.isActive });
+  // Toggle admin status mutation
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ adminId, isActive }: { adminId: number; isActive: boolean }) => {
+      return await apiRequest("PATCH", `/api/admins/${adminId}`, { isActive: !isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admins"] });
       queryClient.invalidateQueries({ queryKey: ["/api/recipients"] });
       toast({
-        title: "Whisper Listener status updated",
-        description: "Whisper Listener account status has been updated successfully.",
+        title: "Status updated",
+        description: "Whisper Listener status has been updated successfully.",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update Whisper Listener status. Please try again.",
+        description: "Failed to update Whisper Listener status.",
         variant: "destructive",
       });
     },
   });
 
-  const handleCreateAdmin = (e: React.FormEvent) => {
+  const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim() || !displayName.trim()) {
+    if (!username || !password || !displayName) {
       toast({
-        title: "Missing information",
+        title: "Missing fields",
         description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
     }
-
     createAdminMutation.mutate({ username, password, displayName, role });
   };
 
-  const handleToggleStatus = (adminId: number, currentStatus: boolean) => {
-    toggleAdminStatusMutation.mutate({ adminId, isActive: !currentStatus });
+  const handleToggleStatus = (adminId: number, isActive: boolean) => {
+    toggleStatusMutation.mutate({ adminId, isActive });
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "admin":
-        return <Shield className="w-4 h-4" />;
+        return <Shield className="w-4 h-4 text-purple-600" />;
       case "moderator":
-        return <ShieldCheck className="w-4 h-4" />;
+        return <Users className="w-4 h-4 text-blue-600" />;
+      case "support":
+        return <Heart className="w-4 h-4 text-green-600" />;
+      case "community_manager":
+        return <Settings className="w-4 h-4 text-orange-600" />;
       default:
-        return <ShieldX className="w-4 h-4" />;
+        return <Shield className="w-4 h-4 text-gray-600" />;
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
       case "admin":
-        return "bg-red-500/10 text-red-700";
+        return "bg-purple-100 text-purple-800 border-purple-300";
       case "moderator":
-        return "bg-blue-500/10 text-blue-700";
+        return "bg-blue-100 text-blue-800 border-blue-300";
       case "support":
-        return "bg-green-500/10 text-green-700";
+        return "bg-green-100 text-green-800 border-green-300";
       case "community_manager":
-        return "bg-purple-500/10 text-purple-700";
+        return "bg-orange-100 text-orange-800 border-orange-300";
       default:
-        return "bg-gray-500/10 text-gray-700";
+        return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
 
@@ -232,9 +244,9 @@ export function AdminManagement() {
                 </div>
                 <Button
                   onClick={() => handleToggleStatus(admin.id, admin.isActive ?? true)}
+                  disabled={toggleStatusMutation.isPending || admin.username === "ZEKE001"}
                   variant={admin.isActive ? "destructive" : "default"}
                   size="sm"
-                  disabled={toggleAdminStatusMutation.isPending}
                 >
                   {admin.isActive ? "Deactivate" : "Activate"}
                 </Button>
