@@ -276,10 +276,12 @@ export function NestedReplyThread({
 
   // Build threaded reply structure
   const threadedReplies = useMemo(() => {
+    if (!replies || replies.length === 0) return [];
+
     const replyMap = new Map<number, ThreadedReply>();
     const rootReplies: ThreadedReply[] = [];
 
-    // First pass: create map of all replies with children array
+    // First pass: create map of all replies with children array and initial level 0
     replies.forEach(reply => {
       replyMap.set(reply.id, {
         ...reply,
@@ -288,40 +290,33 @@ export function NestedReplyThread({
       });
     });
 
-    // Second pass: organize into parent-child relationships and calculate levels
-    const calculateLevel = (replyId: number, visited = new Set<number>()): number => {
-      if (visited.has(replyId)) return 0; // Prevent infinite loops
-      visited.add(replyId);
-
-      const reply = replyMap.get(replyId);
-      if (!reply || !reply.parentId) return 0;
-
-      const parent = replyMap.get(reply.parentId);
-      if (!parent) return 0;
-
-      return Math.min(calculateLevel(reply.parentId, visited) + 1, MAX_NESTING_LEVEL);
-    };
-
+    // Second pass: organize into parent-child relationships
     replies.forEach(reply => {
       const threadedReply = replyMap.get(reply.id)!;
-      threadedReply.level = calculateLevel(reply.id);
-
+      
       if (reply.parentId && replyMap.has(reply.parentId)) {
         // This is a child reply - add it to parent's children
         const parent = replyMap.get(reply.parentId);
-        if (parent && threadedReply.level <= MAX_NESTING_LEVEL) {
+        if (parent) {
           parent.children.push(threadedReply);
-        } else {
-          // If we hit max nesting, add as root level
-          rootReplies.push(threadedReply);
         }
       } else {
-        // This is a root reply - add to root array
+        // This is a root reply (no parent) - add to root array
         rootReplies.push(threadedReply);
       }
     });
 
-    // Sort by creation date
+    // Third pass: calculate levels recursively
+    const calculateLevels = (replies: ThreadedReply[], level: number = 0) => {
+      replies.forEach(reply => {
+        reply.level = Math.min(level, MAX_NESTING_LEVEL);
+        if (reply.children.length > 0) {
+          calculateLevels(reply.children, level + 1);
+        }
+      });
+    };
+
+    // Sort by creation date at each level
     const sortReplies = (replies: ThreadedReply[]) => {
       replies.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
       replies.forEach(reply => {
@@ -331,7 +326,9 @@ export function NestedReplyThread({
       });
     };
 
+    calculateLevels(rootReplies);
     sortReplies(rootReplies);
+    
     return rootReplies;
   }, [replies]);
 
