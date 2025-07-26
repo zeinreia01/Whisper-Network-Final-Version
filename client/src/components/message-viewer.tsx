@@ -284,7 +284,16 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             <blockquote 
               className="text-xl leading-relaxed text-center italic font-serif"
               style={{
-                color: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
+                background: document.documentElement.classList.contains('pink')
+                  ? 'linear-gradient(135deg, #dc2626 0%, #ef4444 25%, #f87171 50%, #fca5a5 75%, #ffffff 100%)'
+                  : document.documentElement.classList.contains('dark')
+                  ? '#ffffff'
+                  : '#1e293b',
+                WebkitBackgroundClip: document.documentElement.classList.contains('pink') ? 'text' : 'initial',
+                backgroundClip: document.documentElement.classList.contains('pink') ? 'text' : 'initial',
+                color: document.documentElement.classList.contains('pink') 
+                  ? 'transparent'
+                  : document.documentElement.classList.contains('dark')
                   ? '#ffffff' 
                   : '#1e293b'
               }}
