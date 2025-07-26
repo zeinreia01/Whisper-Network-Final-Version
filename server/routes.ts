@@ -390,7 +390,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/replies/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      await storage.deleteReply(parseInt(id));
+      const replyId = parseInt(id);
+      
+      // Delete the reply and all its nested children
+      await storage.deleteReplyWithChildren(replyId);
       res.json({ message: "Reply deleted successfully" });
     } catch (error) {
       console.error("Error deleting reply:", error);

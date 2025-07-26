@@ -33,6 +33,7 @@ export interface IStorage {
   getRepliesByMessageId(messageId: number): Promise<Reply[]>;
   getReplyById(id: number): Promise<Reply | null>;
   deleteReply(id: number): Promise<void>;
+  deleteReplyWithChildren(replyId: number): Promise<void>;
 
   // Admin operations
   createAdmin(admin: InsertAdmin): Promise<Admin>;
@@ -376,9 +377,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteReply(id: number): Promise<void> {
-    await db
-      .delete(replies)
-      .where(eq(replies.id, id));
+    try {
+      // 1. Delete notifications that reference this reply
+      await db.delete(notifications).where(eq(notifications.replyId, id));
+
+      // 2. Delete the reply itself
+      await db.delete(replies).where(eq(replies.id, id));
+    } catch (error) {
+      console.error('Error in deleteReply:', error);
+      throw error;
+    }
+  }
+
+  async deleteReplyWithChildren(replyId: number): Promise<void> {
+    try {
+      // Recursively collect all child reply IDs
+      const allReplyIds = await this.collectAllChildReplyIds(replyId);
+      
+      // Delete notifications for all these replies
+      for (const id of allReplyIds) {
+        await db.delete(notifications).where(eq(notifications.replyId, id));
+      }
+      
+      // Delete all replies in reverse order (children first, then parents)
+      for (let i = allReplyIds.length - 1; i >= 0; i--) {
+        await db.delete(replies).where(eq(replies.id, allReplyIds[i]));
+      }
+    } catch (error) {
+      console.error('Error in deleteReplyWithChildren:', error);
+      throw error;
+    }
+  }
+
+  private async collectAllChildReplyIds(parentId: number): Promise<number[]> {
+    const allIds: number[] = [parentId];
+    
+    // Get all direct children
+    const children = await db
+      .select({ id: replies.id })
+      .from(replies)
+      .where(eq(replies.parentId, parentId));
+    
+    // Recursively get all nested children
+    for (const child of children) {
+      const childIds = await this.collectAllChildReplyIds(child.id);
+      allIds.push(...childIds);
+    }
+    
+    return allIds;
   }
 
   async getMessageById(id: number): Promise<MessageWithReplies | null> {
@@ -607,15 +653,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMessage(messageId: number): Promise<void> {
-    // Delete in proper order to avoid foreign key constraints
-    // 1. Delete all reactions for this message
-    await db.delete(reactions).where(eq(reactions.messageId, messageId));
+    try {
+      // Delete in proper order to avoid foreign key constraints
+      
+      // 1. First, get all reply IDs for this message to clean up notifications
+      const messageReplies = await db
+        .select({ id: replies.id })
+        .from(replies)
+        .where(eq(replies.messageId, messageId));
 
-    // 2. Delete all replies to the message
-    await db.delete(replies).where(eq(replies.messageId, messageId));
+      // 2. Delete notifications that reference these replies
+      for (const reply of messageReplies) {
+        await db.delete(notifications).where(eq(notifications.replyId, reply.id));
+      }
 
-    // 3. Finally delete the message itself
-    await db.delete(messages).where(eq(messages.id, messageId));
+      // 3. Delete notifications that reference this message directly
+      await db.delete(notifications).where(eq(notifications.messageId, messageId));
+
+      // 4. Delete all liked message references
+      await db.delete(likedMessages).where(eq(likedMessages.messageId, messageId));
+
+      // 5. Delete all reactions for this message
+      await db.delete(reactions).where(eq(reactions.messageId, messageId));
+
+      // 6. Delete all replies to the message (now safe since notifications are gone)
+      await db.delete(replies).where(eq(replies.messageId, messageId));
+
+      // 7. Finally delete the message itself
+      await db.delete(messages).where(eq(messages.id, messageId));
+    } catch (error) {
+      console.error('Error in deleteMessage:', error);
+      throw error;
+    }
   }
 
   // Admin operations
