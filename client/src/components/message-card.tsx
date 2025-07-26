@@ -608,16 +608,60 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         />
       )}
 
-      {/* Replies Preview - Only show on dashboard, not in thread view - SHOW ONLY 2 REPLIES */}
+      {/* Replies Preview - Only show on dashboard, not in thread view - SHOW ONLY 2 REPLIES SIMPLE */}
       {showReplies && !showThreaded && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
-        <NestedReplyThread
-          replies={message.replies}
-          messageId={message.id}
-          messageUserId={message.userId ?? undefined}
-          showAll={false}
-          showReplyForm={false}
-          onWarning={handleWarning}
-        />
+        <div className="border-t pt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <MessageSquare className="h-4 w-4" />
+              <span>{message.replies.length} {message.replies.length === 1 ? 'reply' : 'replies'}</span>
+            </div>
+            <Link href={`/message/${message.id}`}>
+              <Button variant="outline" size="sm">
+                View all {message.replies.length} replies
+              </Button>
+            </Link>
+          </div>
+          
+          {/* Show only first 2 replies - SIMPLE, NO NESTING */}
+          <div className="space-y-3">
+            {message.replies.slice(0, 2).map((reply) => (
+              <div key={reply.id} className="flex items-start space-x-3 py-2">
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  <AvatarImage 
+                    src={reply.user?.profilePicture || reply.admin?.profilePicture || ''} 
+                    alt={reply.nickname} 
+                  />
+                  <AvatarFallback className="text-xs">
+                    {reply.nickname.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Link 
+                      href={reply.userId ? `/user/${reply.userId}` : reply.adminId ? `/admin/${reply.adminId}` : '#'}
+                      className="font-medium text-sm hover:underline text-foreground"
+                    >
+                      {reply.nickname}
+                    </Link>
+                    {(reply.userId || reply.adminId) && (
+                      <UserBadge 
+                        userType={reply.adminId ? "admin" : "user"} 
+                        variant="small" 
+                      />
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {formatTimeAgo(reply.createdAt || new Date())}
+                    </span>
+                  </div>
+                  <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+                    {reply.content}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Reply prompt for non-authenticated users on dashboard */}

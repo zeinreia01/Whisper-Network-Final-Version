@@ -192,21 +192,59 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         {/* Aesthetic Message Display */}
         <div 
           ref={messageRef}
-          className="bg-gradient-to-br from-gray-900 to-slate-800 dark:from-gray-900 dark:to-slate-800 p-8 rounded-2xl shadow-xl border border-gray-700 dark:border-gray-700"
+          className="p-8 rounded-2xl shadow-xl border relative overflow-hidden"
           style={{
             fontFamily: '"Times New Roman", serif',
-            backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(147, 51, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
             minHeight: '500px',
             maxWidth: '700px',
-            margin: '0 auto'
+            margin: '0 auto',
+            background: document.documentElement.classList.contains('pink') 
+              ? 'linear-gradient(135deg, #fce7f3 0%, #f9a8d4 25%, #ec4899 50%, #be185d 75%, #9d174d 100%)'
+              : document.documentElement.classList.contains('dark')
+              ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%)'
+              : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)',
+            backgroundImage: document.documentElement.classList.contains('pink')
+              ? 'radial-gradient(circle at 30% 20%, rgba(236, 72, 153, 0.2) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(190, 24, 93, 0.15) 0%, transparent 50%)'
+              : document.documentElement.classList.contains('dark')
+              ? 'radial-gradient(circle at 30% 20%, rgba(147, 51, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)'
+              : 'radial-gradient(circle at 30% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+            borderColor: document.documentElement.classList.contains('pink') 
+              ? '#f3e8ff'
+              : document.documentElement.classList.contains('dark')
+              ? '#374151'
+              : '#e2e8f0',
+            color: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') ? '#ffffff' : '#1e293b'
           }}
         >
           {/* Header with branding */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+            <h1 
+              className="text-3xl font-bold mb-2"
+              style={{
+                background: document.documentElement.classList.contains('pink')
+                  ? 'linear-gradient(135deg, #ffffff 0%, #fce7f3 30%, #f9a8d4 60%, #ec4899 100%)'
+                  : document.documentElement.classList.contains('dark')
+                  ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'
+                  : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                color: 'transparent'
+              }}
+            >
               Whisper Network
             </h1>
-            <p className="text-gray-300 dark:text-gray-300 text-sm font-serif">A place where voices unite and hearts connect</p>
+            <p 
+              className="text-sm font-serif"
+              style={{
+                color: document.documentElement.classList.contains('pink') 
+                  ? '#fce7f3'
+                  : document.documentElement.classList.contains('dark')
+                  ? '#cbd5e1'
+                  : '#64748b'
+              }}
+            >
+              A place where voices unite and hearts connect
+            </p>
           </div>
 
           {/* Category and timestamp */}
@@ -217,14 +255,40 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 {category?.name || message.category}
               </Badge>
             </div>
-            <div className="text-sm text-gray-400 dark:text-gray-400 font-serif">
+            <div 
+              className="text-sm font-serif"
+              style={{
+                color: document.documentElement.classList.contains('pink') 
+                  ? '#fce7f3'
+                  : document.documentElement.classList.contains('dark')
+                  ? '#cbd5e1'
+                  : '#64748b'
+              }}
+            >
               {formatTimeAgo(message.createdAt!)}
             </div>
           </div>
 
           {/* Main message content */}
-          <div className="bg-white/10 dark:bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border border-white/20 dark:border-white/20">
-            <blockquote className="text-xl leading-relaxed text-white dark:text-white text-center italic font-serif">
+          <div 
+            className="backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border"
+            style={{
+              background: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
+                ? 'rgba(255,255,255,0.1)' 
+                : 'rgba(255,255,255,0.7)',
+              borderColor: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
+                ? 'rgba(255,255,255,0.2)' 
+                : 'rgba(0,0,0,0.1)'
+            }}
+          >
+            <blockquote 
+              className="text-xl leading-relaxed text-center italic font-serif"
+              style={{
+                color: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
+                  ? '#ffffff' 
+                  : '#1e293b'
+              }}
+            >
               "{message.content}"
             </blockquote>
           </div>

@@ -393,31 +393,45 @@ export function NestedReplyThread({
   const displayReplies = showAll ? threadedReplies : threadedReplies.slice(0, 2);
 
   if (!replies || replies.length === 0) {
-    return showReplyForm && (user || admin) ? (
+    return showReplyForm ? (
       <div className="border-t pt-4">
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium">Start the discussion</h4>
-          <div className="space-y-3">
-            <Textarea
-              placeholder="Share your thoughts..."
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              className="min-h-[80px] resize-none"
-            />
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">
-                Be respectful and constructive
-              </span>
-              <Button
-                onClick={handleSubmitReply}
-                disabled={!replyContent.trim() || createReplyMutation.isPending}
-                size="sm"
-              >
-                {createReplyMutation.isPending ? "Posting..." : "Post Reply"}
-              </Button>
+        {(user || admin) ? (
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Start the discussion</h4>
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Share your thoughts..."
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                className="min-h-[80px] resize-none"
+              />
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">
+                  Be respectful and constructive
+                </span>
+                <Button
+                  onClick={handleSubmitReply}
+                  disabled={!replyContent.trim() || createReplyMutation.isPending}
+                  size="sm"
+                >
+                  {createReplyMutation.isPending ? "Posting..." : "Post Reply"}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-amber-50 dark:bg-amber-900/20 pink:bg-rose-50 border border-amber-200 dark:border-amber-700 pink:border-rose-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2 text-amber-800 dark:text-amber-400 pink:text-rose-800">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">Authentication Required</span>
+            </div>
+            <p className="text-sm text-amber-700 dark:text-amber-400 pink:text-rose-700 mt-2">
+              Please <Link href="/login" className="underline hover:no-underline">log in</Link> to start the discussion.
+            </p>
+          </div>
+        )}
       </div>
     ) : null;
   }
@@ -460,48 +474,64 @@ export function NestedReplyThread({
         ))}
       </div>
 
-      {/* Reply form for authenticated users */}
-      {showReplyForm && showAll && (user || admin) && (
+      {/* Reply form section */}
+      {showReplyForm && showAll && (
         <div className="space-y-3 pt-4 border-t">
-          {replyingToId && (
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Reply className="h-4 w-4" />
-              <span>Replying to {replyingToNickname}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setReplyingToId(null);
-                  setReplyingToNickname("");
-                  setReplyContent("");
-                }}
-                className="h-6 px-2 text-xs"
-              >
-                Cancel
-              </Button>
+          {(user || admin) ? (
+            <>
+              {replyingToId && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <Reply className="h-4 w-4" />
+                  <span>Replying to {replyingToNickname}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setReplyingToId(null);
+                      setReplyingToNickname("");
+                      setReplyContent("");
+                    }}
+                    className="h-6 px-2 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                <Textarea
+                  placeholder={replyingToId ? `Reply to ${replyingToNickname}...` : "Add to the discussion..."}
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  className="min-h-[80px] resize-none"
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">
+                    Be respectful and constructive
+                  </span>
+                  <Button
+                    onClick={handleSubmitReply}
+                    disabled={!replyContent.trim() || createReplyMutation.isPending}
+                    size="sm"
+                  >
+                    {createReplyMutation.isPending ? "Posting..." : "Post Reply"}
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="bg-amber-50 dark:bg-amber-900/20 pink:bg-rose-50 border border-amber-200 dark:border-amber-700 pink:border-rose-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2 text-amber-800 dark:text-amber-400 pink:text-rose-800">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 616 0z" clipRule="evenodd" />
+                </svg>
+                <span className="font-medium">Authentication Required</span>
+              </div>
+              <p className="text-sm text-amber-700 dark:text-amber-400 pink:text-rose-700 mt-2">
+                Please <Link href="/login" className="underline hover:no-underline">log in</Link> to join the conversation.
+              </p>
             </div>
           )}
-          
-          <div className="space-y-3">
-            <Textarea
-              placeholder={replyingToId ? `Reply to ${replyingToNickname}...` : "Add to the discussion..."}
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              className="min-h-[80px] resize-none"
-            />
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">
-                Be respectful and constructive
-              </span>
-              <Button
-                onClick={handleSubmitReply}
-                disabled={!replyContent.trim() || createReplyMutation.isPending}
-                size="sm"
-              >
-                {createReplyMutation.isPending ? "Posting..." : "Post Reply"}
-              </Button>
-            </div>
-          </div>
         </div>
       )}
     </div>
