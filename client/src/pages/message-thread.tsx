@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Info, Calendar, Music } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { MESSAGE_CATEGORIES } from "@shared/schema";
-import { NestedReplyThread } from "@/components/nested-reply-thread";
+import { ThreadedReplies } from "@/components/threaded-replies";
 import type { MessageWithReplies } from "@shared/schema";
 
 export default function MessageThread() {
@@ -170,12 +170,11 @@ export default function MessageThread() {
                   </h3>
                 </CardHeader>
                 <CardContent>
-                  <NestedReplyThread
+                  <ThreadedReplies
                     replies={message.replies || []}
                     messageId={message.id}
                     messageUserId={message.userId ?? undefined}
                     showAll={true}
-                    showReplyForm={true}
                     onWarning={(replyId) => {
                       sendWarningMutation.mutate({
                         replyId,
