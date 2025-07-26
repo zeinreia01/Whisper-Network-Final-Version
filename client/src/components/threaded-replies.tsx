@@ -426,13 +426,18 @@ export function ThreadedReplies({
         )}
       </div>
 
-      {/* Reply form - always show in thread view for authenticated users */}
+      {/* Reply form - ALWAYS show for authenticated users when showAll is true */}
       {showAll && (user || admin) && (
-        <div className="reply-form-container bg-muted/20 border rounded-lg p-4 mt-4">
+        <div className="reply-form-container bg-muted/20 border rounded-lg p-4 mt-6">
+          <div className="mb-4">
+            <h4 className="text-lg font-medium text-foreground mb-2">Add Your Reply</h4>
+            <p className="text-sm text-muted-foreground">Join the conversation and share your thoughts</p>
+          </div>
+
           {replyingTo && (
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3 p-2 bg-primary/10 rounded">
               <Reply className="h-4 w-4" />
-              <span>Replying to {replyingTo.nickname}</span>
+              <span>Replying to <strong>{replyingTo.nickname}</strong></span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -449,32 +454,46 @@ export function ThreadedReplies({
             </div>
           )}
 
-          <div className="space-y-3">
-            <Input
-              placeholder={defaultNickname ? `Replying as: ${defaultNickname}` : "Your nickname..."}
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              disabled={!!defaultNickname}
-              className={defaultNickname ? "bg-muted text-muted-foreground" : ""}
-            />
-            <Input
-              placeholder="Write your reply..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleReply();
-                }
-              }}
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                {defaultNickname ? "Posting as:" : "Your nickname:"}
+              </label>
+              <Input
+                placeholder={defaultNickname ? defaultNickname : "Enter your nickname..."}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                disabled={!!defaultNickname}
+                className={defaultNickname ? "bg-muted text-muted-foreground" : ""}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Your reply:
+              </label>
+              <textarea
+                placeholder="Write your reply here... (Press Enter to submit, Shift+Enter for new line)"
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleReply();
+                  }
+                }}
+                className="w-full min-h-[100px] p-3 border border-border rounded-md bg-background text-foreground resize-vertical"
+                style={{ whiteSpace: 'pre-wrap' }}
+              />
+            </div>
+            
             <div className="flex space-x-2">
               <Button 
                 onClick={handleReply}
                 disabled={createReplyMutation.isPending || !replyText.trim() || !nickname.trim()}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6"
               >
-                {createReplyMutation.isPending ? "Sending..." : "Send Reply"}
+                {createReplyMutation.isPending ? "Posting Reply..." : "Post Reply"}
               </Button>
               {replyingTo && (
                 <Button 
@@ -487,11 +506,22 @@ export function ThreadedReplies({
                   }}
                   className="bg-background hover:bg-muted border-border"
                 >
-                  Cancel
+                  Cancel Reply
                 </Button>
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Show login prompt for non-authenticated users */}
+      {showAll && !(user || admin) && (
+        <div className="reply-form-container bg-muted/10 border rounded-lg p-6 mt-6 text-center">
+          <h4 className="text-lg font-medium text-foreground mb-2">Join the Discussion</h4>
+          <p className="text-muted-foreground mb-4">Log in to share your thoughts and reply to this message</p>
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Link href="/login">Log In to Reply</Link>
+          </Button>
         </div>
       )}
     </div>
