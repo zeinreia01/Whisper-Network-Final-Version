@@ -344,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reply = await storage.createReply(validatedData);
 
       // Create notification for the message author or parent reply author
-      if (validatedData.parentId) {
+      if (validatedData.parentId && typeof validatedData.parentId === 'number') {
         // This is a nested reply - notify the parent reply author
         const parentReply = await storage.getReplyById(validatedData.parentId);
         if (parentReply && (parentReply.userId || parentReply.adminId)) {
@@ -352,26 +352,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId: parentReply.userId || undefined,
             adminId: parentReply.adminId || undefined,
             type: "reply",
-            messageId: validatedData.messageId,
+            messageId: validatedData.messageId as number,
             replyId: reply.id,
             fromUserId: validatedData.userId || undefined,
             fromAdminId: validatedData.adminId || undefined,
-            content: `${validatedData.nickname} replied to your comment: "${validatedData.content.substring(0, 50)}${validatedData.content.length > 50 ? '...' : ''}"`,
+            content: `${validatedData.nickname} replied to your comment: "${String(validatedData.content).substring(0, 50)}${String(validatedData.content).length > 50 ? '...' : ''}"`,
           });
         }
       } else {
         // This is a root reply - notify the message author
-        const message = await storage.getMessageById(validatedData.messageId);
+        const message = await storage.getMessageById(validatedData.messageId as number);
         if (message && (message.userId || message.adminId)) {
           await storage.createNotification({
             userId: message.userId || undefined,
             adminId: message.adminId || undefined,
             type: "reply",
-            messageId: validatedData.messageId,
+            messageId: validatedData.messageId as number,
             replyId: reply.id,
             fromUserId: validatedData.userId || undefined,
             fromAdminId: validatedData.adminId || undefined,
-            content: `${validatedData.nickname} replied to your message: "${validatedData.content.substring(0, 50)}${validatedData.content.length > 50 ? '...' : ''}"`,
+            content: `${validatedData.nickname} replied to your message: "${String(validatedData.content).substring(0, 50)}${String(validatedData.content).length > 50 ? '...' : ''}"`,
           });
         }
       }

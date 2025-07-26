@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { UserBadge } from "@/components/user-badge";
-import { ThreadedReplies } from "@/components/threaded-replies";
+import { NestedReplyThread } from "@/components/nested-reply-thread";
 import { MessageViewer } from "@/components/message-viewer";
 import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
@@ -595,11 +595,12 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
       {/* Threaded Replies Section - Only show if explicitly requested (message thread page) - SHOW ALL REPLIES */}
       {showThreaded && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
-        <ThreadedReplies
+        <NestedReplyThread
           replies={message.replies}
           messageId={message.id}
           messageUserId={message.userId ?? undefined}
           showAll={true}
+          showReplyForm={true}
           onWarning={(replyId) => {
             setSelectedReplyId(replyId);
             setShowWarningDialog(true);
@@ -609,38 +610,26 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
       {/* Replies Preview - Only show on dashboard, not in thread view - SHOW ONLY 2 REPLIES */}
       {showReplies && !showThreaded && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
-        <ThreadedReplies
+        <NestedReplyThread
           replies={message.replies}
           messageId={message.id}
           messageUserId={message.userId ?? undefined}
           showAll={false}
+          showReplyForm={false}
           onWarning={handleWarning}
         />
       )}
 
-      {/* Reply Form - Only show if not using threaded view */}
-      {showReplies && !showThreaded && (user || admin) && (
+      {/* Reply prompt for non-authenticated users on dashboard */}
+      {showReplies && !showThreaded && !(user || admin) && message.replies && Array.isArray(message.replies) && message.replies.length > 0 && (
         <div className="border-t pt-4">
-          <div className="space-y-3">
-            <Input
-              placeholder={defaultNickname ? `Replying as: ${defaultNickname}` : "Your nickname..."}
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              disabled={!!defaultNickname}
-              className={defaultNickname ? "bg-muted text-muted-foreground" : ""}
-            />
-            <Input
-              placeholder="Write a reply..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-            />
-            <Button 
-              onClick={handleReply}
-              disabled={createReplyMutation.isPending}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {createReplyMutation.isPending ? "Sending..." : "Send Reply"}
-            </Button>
+          <div className="text-center text-sm text-muted-foreground">
+            <Link href={`/message/${message.id}`}>
+              <Button variant="outline" size="sm">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Join the discussion
+              </Button>
+            </Link>
           </div>
         </div>
       )}

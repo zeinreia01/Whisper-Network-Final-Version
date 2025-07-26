@@ -1,0 +1,509 @@
+import React, { useState, useMemo } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { UserBadge } from "@/components/user-badge";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { formatTimeAgo } from "@/lib/utils";
+import { Link } from "wouter";
+import { 
+  MessageSquare, 
+  MoreVertical, 
+  Trash2, 
+  AlertTriangle,
+  Reply,
+  User
+} from "lucide-react";
+import type { ReplyWithUser } from "@shared/schema";
+
+interface NestedReplyThreadProps {
+  replies: ReplyWithUser[];
+  messageId: number;
+  messageUserId?: number;
+  onWarning?: (replyId: number) => void;
+  showAll?: boolean;
+  showReplyForm?: boolean;
+}
+
+interface ThreadedReply extends ReplyWithUser {
+  children: ThreadedReply[];
+  level: number;
+}
+
+interface ReplyItemProps {
+  reply: ThreadedReply;
+  messageId: number;
+  messageUserId?: number;
+  onWarning?: (replyId: number) => void;
+  onReply: (parentId: number, parentNickname: string) => void;
+  maxLevel: number;
+}
+
+const MAX_NESTING_LEVEL = 5;
+const MAX_REPLIES_PER_MESSAGE = 500;
+
+// Individual Reply Component with proper nesting
+function ReplyItem({ reply, messageId, messageUserId, onWarning, onReply, maxLevel }: ReplyItemProps) {
+  const { user, admin } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [showChildren, setShowChildren] = useState(true);
+
+  const deleteReplyMutation = useMutation({
+    mutationFn: async (replyId: number) => {
+      const response = await apiRequest("DELETE", `/api/replies/${replyId}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${messageId}`] });
+      toast({
+        title: "Reply deleted",
+        description: "The reply has been removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete reply.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isOwn = (user && reply.userId === user.id) || (admin && reply.adminId === admin.id);
+  const isAdminOrModerator = admin;
+  const canDelete = isOwn || isAdminOrModerator;
+  const canReply = (user || admin) && reply.level < maxLevel;
+
+  return (
+    <div className="relative">
+      {/* Threading lines for visual hierarchy */}
+      {reply.level > 0 && (
+        <>
+          {/* Vertical line connecting to parent */}
+          <div 
+            className="absolute top-0 w-0.5 bg-border/40"
+            style={{ 
+              left: `${(reply.level - 1) * 20 + 20}px`,
+              height: '20px'
+            }}
+          />
+          {/* Horizontal line to reply */}
+          <div 
+            className="absolute top-5 h-0.5 bg-border/40"
+            style={{ 
+              left: `${(reply.level - 1) * 20 + 20}px`,
+              width: '20px'
+            }}
+          />
+        </>
+      )}
+
+      {/* Main reply content */}
+      <div 
+        className={`flex items-start space-x-3 py-3 group relative border-l-2 border-transparent hover:border-border/20 transition-colors ${
+          reply.level > 0 ? 'ml-8' : ''
+        }`}
+        style={{ marginLeft: reply.level > 0 ? `${reply.level * 20}px` : '0' }}
+      >
+        {/* Avatar */}
+        <Avatar className="h-8 w-8 flex-shrink-0">
+          <AvatarImage 
+            src={reply.user?.profilePicture || reply.admin?.profilePicture || ''} 
+            alt={reply.nickname} 
+          />
+          <AvatarFallback className="text-xs">
+            {reply.nickname.slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+
+        {/* Reply content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2 mb-1">
+            <Link 
+              href={reply.userId ? `/user/${reply.userId}` : reply.adminId ? `/admin/${reply.adminId}` : '#'}
+              className="font-medium text-sm hover:underline text-foreground"
+            >
+              {reply.nickname}
+            </Link>
+            
+            {(reply.userId || reply.adminId) && (
+              <UserBadge 
+                userType={reply.adminId ? "admin" : "user"} 
+                variant="small" 
+              />
+            )}
+            
+            <span className="text-xs text-muted-foreground">
+              {formatTimeAgo(reply.createdAt || new Date())}
+            </span>
+            
+            {reply.children.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChildren(!showChildren)}
+                className="text-xs h-6 px-2"
+              >
+                {showChildren ? 'Hide' : 'Show'} {reply.children.length} {reply.children.length === 1 ? 'reply' : 'replies'}
+              </Button>
+            )}
+          </div>
+
+          <p className="text-sm text-foreground mb-2 whitespace-pre-wrap break-words">
+            {reply.content}
+          </p>
+
+          {/* Reply actions */}
+          <div className="flex items-center space-x-2">
+            {canReply && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onReply(reply.id, reply.nickname)}
+                className="text-xs h-6 px-2 text-muted-foreground hover:text-foreground"
+              >
+                <Reply className="h-3 w-3 mr-1" />
+                Reply
+              </Button>
+            )}
+
+            {/* Admin actions */}
+            {(canDelete || onWarning) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MoreVertical className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onWarning && (
+                    <DropdownMenuItem onClick={() => onWarning(reply.id)}>
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Send Warning
+                    </DropdownMenuItem>
+                  )}
+                  {canDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Reply
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Reply</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this reply? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => deleteReplyMutation.mutate(reply.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Child replies */}
+      {showChildren && reply.children.length > 0 && (
+        <div className="relative">
+          {reply.children.map((childReply) => (
+            <ReplyItem
+              key={childReply.id}
+              reply={childReply}
+              messageId={messageId}
+              messageUserId={messageUserId}
+              onWarning={onWarning}
+              onReply={onReply}
+              maxLevel={maxLevel}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function NestedReplyThread({ 
+  replies, 
+  messageId, 
+  messageUserId, 
+  onWarning, 
+  showAll = false,
+  showReplyForm = true 
+}: NestedReplyThreadProps) {
+  const { user, admin } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [replyContent, setReplyContent] = useState("");
+  const [replyingToId, setReplyingToId] = useState<number | null>(null);
+  const [replyingToNickname, setReplyingToNickname] = useState<string>("");
+
+  // Build threaded reply structure
+  const threadedReplies = useMemo(() => {
+    const replyMap = new Map<number, ThreadedReply>();
+    const rootReplies: ThreadedReply[] = [];
+
+    // First pass: create map of all replies with children array
+    replies.forEach(reply => {
+      replyMap.set(reply.id, {
+        ...reply,
+        children: [],
+        level: 0
+      });
+    });
+
+    // Second pass: organize into parent-child relationships and calculate levels
+    const calculateLevel = (replyId: number, visited = new Set<number>()): number => {
+      if (visited.has(replyId)) return 0; // Prevent infinite loops
+      visited.add(replyId);
+
+      const reply = replyMap.get(replyId);
+      if (!reply || !reply.parentId) return 0;
+
+      const parent = replyMap.get(reply.parentId);
+      if (!parent) return 0;
+
+      return Math.min(calculateLevel(reply.parentId, visited) + 1, MAX_NESTING_LEVEL);
+    };
+
+    replies.forEach(reply => {
+      const threadedReply = replyMap.get(reply.id)!;
+      threadedReply.level = calculateLevel(reply.id);
+
+      if (reply.parentId && replyMap.has(reply.parentId)) {
+        // This is a child reply - add it to parent's children
+        const parent = replyMap.get(reply.parentId);
+        if (parent && threadedReply.level <= MAX_NESTING_LEVEL) {
+          parent.children.push(threadedReply);
+        } else {
+          // If we hit max nesting, add as root level
+          rootReplies.push(threadedReply);
+        }
+      } else {
+        // This is a root reply - add to root array
+        rootReplies.push(threadedReply);
+      }
+    });
+
+    // Sort by creation date
+    const sortReplies = (replies: ThreadedReply[]) => {
+      replies.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+      replies.forEach(reply => {
+        if (reply.children.length > 0) {
+          sortReplies(reply.children);
+        }
+      });
+    };
+
+    sortReplies(rootReplies);
+    return rootReplies;
+  }, [replies]);
+
+  const createReplyMutation = useMutation({
+    mutationFn: async (data: { content: string; parentId?: number }) => {
+      if (!user && !admin) {
+        throw new Error("Must be authenticated to reply");
+      }
+
+      const nickname = admin ? admin.displayName : user!.username;
+      const replyData = {
+        content: data.content,
+        nickname,
+        messageId,
+        parentId: data.parentId || null,
+        userId: user?.id || null,
+        adminId: admin?.id || null,
+      };
+
+      const response = await apiRequest("POST", "/api/replies", replyData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${messageId}`] });
+      setReplyContent("");
+      setReplyingToId(null);
+      setReplyingToNickname("");
+      toast({
+        title: "Reply posted",
+        description: "Your reply has been added to the discussion.",
+      });
+    },
+    onError: (error) => {
+      console.error("Reply error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to post reply. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleReply = (parentId: number, parentNickname: string) => {
+    setReplyingToId(parentId);
+    setReplyingToNickname(parentNickname);
+    setReplyContent(`@${parentNickname} `);
+  };
+
+  const handleSubmitReply = () => {
+    if (!replyContent.trim() || createReplyMutation.isPending) return;
+
+    createReplyMutation.mutate({
+      content: replyContent.trim(),
+      parentId: replyingToId || undefined,
+    });
+  };
+
+  const displayReplies = showAll ? threadedReplies : threadedReplies.slice(0, 2);
+
+  if (!replies || replies.length === 0) {
+    return showReplyForm && (user || admin) ? (
+      <div className="border-t pt-4">
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium">Start the discussion</h4>
+          <div className="space-y-3">
+            <Textarea
+              placeholder="Share your thoughts..."
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              className="min-h-[80px] resize-none"
+            />
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">
+                Be respectful and constructive
+              </span>
+              <Button
+                onClick={handleSubmitReply}
+                disabled={!replyContent.trim() || createReplyMutation.isPending}
+                size="sm"
+              >
+                {createReplyMutation.isPending ? "Posting..." : "Post Reply"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : null;
+  }
+
+  return (
+    <div className="border-t pt-4 space-y-4">
+      {/* Reply count and status */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <MessageSquare className="h-4 w-4" />
+          <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
+          {replies.length >= MAX_REPLIES_PER_MESSAGE && (
+            <Badge variant="secondary" className="text-xs">
+              Reply limit reached
+            </Badge>
+          )}
+        </div>
+        
+        {!showAll && replies.length > 2 && (
+          <Link href={`/message/${messageId}`}>
+            <Button variant="outline" size="sm">
+              View all {replies.length} replies
+            </Button>
+          </Link>
+        )}
+      </div>
+
+      {/* Threaded replies */}
+      <div className="space-y-1">
+        {displayReplies.map((reply) => (
+          <ReplyItem
+            key={reply.id}
+            reply={reply}
+            messageId={messageId}
+            messageUserId={messageUserId}
+            onWarning={onWarning}
+            onReply={handleReply}
+            maxLevel={MAX_NESTING_LEVEL}
+          />
+        ))}
+      </div>
+
+      {/* Reply form for authenticated users */}
+      {showReplyForm && showAll && (user || admin) && (
+        <div className="space-y-3 pt-4 border-t">
+          {replyingToId && (
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Reply className="h-4 w-4" />
+              <span>Replying to {replyingToNickname}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setReplyingToId(null);
+                  setReplyingToNickname("");
+                  setReplyContent("");
+                }}
+                className="h-6 px-2 text-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+          
+          <div className="space-y-3">
+            <Textarea
+              placeholder={replyingToId ? `Reply to ${replyingToNickname}...` : "Add to the discussion..."}
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              className="min-h-[80px] resize-none"
+            />
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">
+                Be respectful and constructive
+              </span>
+              <Button
+                onClick={handleSubmitReply}
+                disabled={!replyContent.trim() || createReplyMutation.isPending}
+                size="sm"
+              >
+                {createReplyMutation.isPending ? "Posting..." : "Post Reply"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

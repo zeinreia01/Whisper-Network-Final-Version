@@ -37,7 +37,7 @@ export const messages = pgTable("messages", {
 export const replies = pgTable("replies", {
   id: serial("id").primaryKey(),
   messageId: integer("message_id").references(() => messages.id).notNull(),
-  parentId: integer("parent_id"), // Self-reference for nested replies - will be configured in relations
+  parentId: integer("parent_id"), // Self-reference for nested replies
   content: text("content").notNull(),
   nickname: text("nickname").notNull(),
   userId: integer("user_id").references(() => users.id), // Link to user account (optional)
@@ -162,10 +162,10 @@ export const repliesRelations = relations(replies, ({ one, many }) => ({
   parent: one(replies, {
     fields: [replies.parentId],
     references: [replies.id],
-    relationName: "parent_child"
+    relationName: "nested_replies"
   }),
   children: many(replies, {
-    relationName: "parent_child"
+    relationName: "nested_replies"
   }),
 }));
 
