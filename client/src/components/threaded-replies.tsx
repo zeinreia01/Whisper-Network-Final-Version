@@ -228,20 +228,24 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply 
         </div>
       </div>
 
-      {/* Nested replies - Always show children in threaded view */}
+      {/* Nested replies - Always render children regardless of showAll when they exist */}
       {childReplies.length > 0 && (
         <div className="mt-2">
-          {childReplies.map((childReply) => (
-            <ReplyItem
-              key={childReply.id}
-              reply={childReply}
-              messageId={messageId}
-              messageUserId={messageUserId}
-              level={level + 1}
-              onWarning={onWarning}
-              onReply={onReply}
-            />
-          ))}
+          {console.log(`Rendering ${childReplies.length} children for reply ${reply.id} at level ${level}`)}
+          {childReplies.map((childReply) => {
+            console.log(`Rendering child reply ${childReply.id} with content: ${childReply.content.substring(0, 30)}`);
+            return (
+              <ReplyItem
+                key={childReply.id}
+                reply={childReply}
+                messageId={messageId}
+                messageUserId={messageUserId}
+                level={level + 1}
+                onWarning={onWarning}
+                onReply={onReply}
+              />
+            );
+          })}
         </div>
       )}
     </div>
@@ -356,19 +360,19 @@ export function ThreadedReplies({
     if (!replies || replies.length === 0) return [];
 
     console.log('Processing replies for threading:', replies.length, 'showAll:', showAll);
+    console.log('All replies data:', replies.map(r => ({ id: r.id, parentId: r.parentId, content: r.content?.substring(0, 20) })));
 
-    // If showAll is true, we want to show ALL replies with proper nesting
-    // If showAll is false, we want to show only a preview (first 2 root replies)
-    
     const replyMap = new Map<number, ReplyWithUser>();
     const rootReplies: ReplyWithUser[] = [];
 
     // First pass: create reply objects with children array
     replies.forEach(reply => {
-      replyMap.set(reply.id, {
+      const threadedReply = {
         ...reply,
         children: []
-      } as ReplyWithUser);
+      } as ReplyWithUser;
+      replyMap.set(reply.id, threadedReply);
+      console.log(`Created threaded reply ${reply.id} with parentId: ${reply.parentId}`);
     });
 
     // Second pass: organize into threads
@@ -380,21 +384,29 @@ export function ThreadedReplies({
         if (parent) {
           parent.children = parent.children || [];
           parent.children.push(threadedReply);
+          console.log(`Added reply ${reply.id} as child of ${reply.parentId}`);
         }
       } else {
         // This is a root-level reply
         rootReplies.push(threadedReply);
+        console.log(`Added reply ${reply.id} as root reply`);
       }
     });
 
     console.log(`Threaded replies processed (showAll=${showAll}):`, rootReplies.length, 'root replies, total replies:', replies.length);
     
-    // Log the structure for debugging
+    // Log the complete structure for debugging
     rootReplies.forEach((root, index) => {
-      console.log(`Root reply ${index + 1}:`, root.content.substring(0, 30), 'Children:', root.children?.length || 0);
+      console.log(`Root reply ${index + 1} (ID: ${root.id}):`, root.content.substring(0, 30), 'Children:', root.children?.length || 0);
       if (root.children && root.children.length > 0) {
         root.children.forEach((child, childIndex) => {
-          console.log(`  Child ${childIndex + 1}:`, child.content.substring(0, 30));
+          console.log(`  Child ${childIndex + 1} (ID: ${child.id}):`, child.content.substring(0, 30), 'ParentId:', child.parentId);
+          // Check for grandchildren
+          if (child.children && child.children.length > 0) {
+            child.children.forEach((grandchild, grandchildIndex) => {
+              console.log(`    Grandchild ${grandchildIndex + 1} (ID: ${grandchild.id}):`, grandchild.content.substring(0, 30));
+            });
+          }
         });
       }
     });
@@ -413,17 +425,20 @@ export function ThreadedReplies({
       <div className="space-y-3">
         {showAll ? (
           // When showAll is true, display ALL threaded replies with full nesting (this is for message thread page)
-          threadedReplies.map((reply) => (
-            <ReplyItem
-              key={reply.id}
-              reply={reply}
-              messageId={messageId}
-              messageUserId={messageUserId}
-              level={0}
-              onWarning={onWarning}
-              onReply={onReply}
-            />
-          ))
+          threadedReplies.map((reply) => {
+            console.log('Rendering root reply in showAll mode:', reply.id, 'with children:', reply.children?.length || 0);
+            return (
+              <ReplyItem
+                key={reply.id}
+                reply={reply}
+                messageId={messageId}
+                messageUserId={messageUserId}
+                level={0}
+                onWarning={onWarning}
+                onReply={onReply}
+              />
+            );
+          })
         ) : (
           // When showAll is false, display only first 2 root replies (this is for dashboard preview)
           threadedReplies.slice(0, 2).map((reply) => (
