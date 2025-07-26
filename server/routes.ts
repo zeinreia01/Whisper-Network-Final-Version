@@ -401,10 +401,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete message (admin only)
+  // Delete message (admin/owner only)
   app.delete("/api/messages/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      const { adminUsername, userId } = req.body;
+      
+      // Get the message first to check ownership
+      const message = await storage.getMessageById(parseInt(id));
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      // Allow deletion if:
+      // 1. User is ZEKE001 (main admin - can delete any message)
+      // 2. Message belongs to the requesting admin
+      // 3. Message belongs to the requesting user
+      const canDelete = 
+        adminUsername === "ZEKE001" || 
+        (message.adminId && adminUsername && message.adminId === await storage.getAdminByUsername(adminUsername)?.then(a => a?.id)) ||
+        (message.userId && userId && message.userId === userId);
+      
+      if (!canDelete) {
+        return res.status(403).json({ message: "You can only delete your own messages or have admin privileges" });
+      }
+      
       await storage.deleteMessage(parseInt(id));
       res.json({ message: "Message deleted successfully" });
     } catch (error) {

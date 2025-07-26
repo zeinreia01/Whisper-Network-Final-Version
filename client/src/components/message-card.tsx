@@ -758,7 +758,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
             <Button onClick={() => {
               setShowAuthPrompt(false);
               setShowAuthModal(true);
-            }}>
+                          }}>
               Login / Sign Up
             </Button>
           </DialogFooter>

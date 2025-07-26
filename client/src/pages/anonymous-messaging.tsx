@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,13 @@ export default function AnonymousMessaging() {
     },
     enabled: !!username,
   });
+
+  // Sync isLinkPaused state with profile data
+  React.useEffect(() => {
+    if (recipientProfile?.isAnonymousLinkPaused !== undefined) {
+      setIsLinkPaused(recipientProfile.isAnonymousLinkPaused);
+    }
+  }, [recipientProfile?.isAnonymousLinkPaused]);
 
   // Get anonymous messages for authenticated user viewing their own inbox
   const { data: inboxMessages = [], isLoading: messagesLoading } = useQuery<AnonymousMessage[]>({
@@ -146,6 +154,8 @@ export default function AnonymousMessaging() {
     },
     onSuccess: (data) => {
       setIsLinkPaused(data.isAnonymousLinkPaused);
+      // Refresh the profile data to ensure UI consistency
+      queryClient.invalidateQueries({ queryKey: ["/api/users/profile", username] });
     },
   });
 
@@ -356,14 +366,14 @@ export default function AnonymousMessaging() {
               Send Anonymous Message
             </CardTitle>
             <CardDescription>
-              {recipientProfile.isAnonymousLinkPaused 
+              {isLinkPaused 
                 ? "This user has temporarily paused anonymous messages"
                 : "Your message will be sent completely anonymously"
               }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recipientProfile.isAnonymousLinkPaused ? (
+            {isLinkPaused ? (
               <div className="p-6 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                 <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Anonymous Messages Paused</h3>
