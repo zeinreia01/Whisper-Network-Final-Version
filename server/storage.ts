@@ -1,9 +1,9 @@
 import { 
-  messages, replies, admins, users, reactions, notifications, follows, likedMessages, honorableMentions,
+  messages, replies, admins, users, reactions, notifications, follows, likedMessages, honorableMentions, anonymousMessages,
   type Message, type Reply, type Admin, type User, type Reaction, type Notification, 
-  type Follow, type LikedMessage, type HonorableMention, type InsertMessage, type InsertReply, type InsertAdmin, 
+  type Follow, type LikedMessage, type HonorableMention, type AnonymousMessage, type InsertMessage, type InsertReply, type InsertAdmin, 
   type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, 
-  type InsertLikedMessage, type InsertHonorableMention, type MessageWithReplies, type UserProfile, 
+  type InsertLikedMessage, type InsertHonorableMention, type InsertAnonymousMessage, type MessageWithReplies, type UserProfile, 
   type NotificationWithDetails, type UpdateUserProfile, type ReplyWithUser
 } from "@shared/schema";
 import { db } from "./db";
@@ -101,6 +101,13 @@ export interface IStorage {
   createHonorableMention(mention: InsertHonorableMention): Promise<HonorableMention>;
   updateHonorableMention(id: number, updates: { name: string; emoji?: string | null }): Promise<HonorableMention>;
   deleteHonorableMention(id: number): Promise<void>;
+
+  // Anonymous messages operations (NGL-style)
+  sendAnonymousMessage(message: InsertAnonymousMessage): Promise<AnonymousMessage>;
+  getAnonymousMessages(userId: number, adminId?: number): Promise<AnonymousMessage[]>;
+  markAnonymousMessageAsRead(messageId: number): Promise<void>;
+  deleteAnonymousMessage(messageId: number): Promise<void>;
+  getAnonymousMessageCount(userId: number, adminId?: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1513,6 +1520,64 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     await db
       .delete(honorableMentions)
       .where(eq(honorableMentions.id, id));
+  }
+
+  // Anonymous messages operations (NGL-style)
+  async sendAnonymousMessage(messageData: InsertAnonymousMessage): Promise<AnonymousMessage> {
+    const [message] = await db
+      .insert(anonymousMessages)
+      .values(messageData)
+      .returning();
+    return message;
+  }
+
+  async getAnonymousMessages(userId: number, adminId?: number): Promise<AnonymousMessage[]> {
+    if (adminId) {
+      return await db
+        .select()
+        .from(anonymousMessages)
+        .where(eq(anonymousMessages.recipientAdminId, adminId))
+        .orderBy(desc(anonymousMessages.createdAt));
+    } else {
+      return await db
+        .select()
+        .from(anonymousMessages)
+        .where(eq(anonymousMessages.recipientUserId, userId))
+        .orderBy(desc(anonymousMessages.createdAt));
+    }
+  }
+
+  async markAnonymousMessageAsRead(messageId: number): Promise<void> {
+    await db
+      .update(anonymousMessages)
+      .set({ isRead: true })
+      .where(eq(anonymousMessages.id, messageId));
+  }
+
+  async deleteAnonymousMessage(messageId: number): Promise<void> {
+    await db.delete(anonymousMessages).where(eq(anonymousMessages.id, messageId));
+  }
+
+  async getAnonymousMessageCount(userId: number, adminId?: number): Promise<number> {
+    if (adminId) {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(anonymousMessages)
+        .where(and(
+          eq(anonymousMessages.recipientAdminId, adminId),
+          eq(anonymousMessages.isRead, false)
+        ));
+      return Number(result[0].count);
+    } else {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(anonymousMessages)
+        .where(and(
+          eq(anonymousMessages.recipientUserId, userId),
+          eq(anonymousMessages.isRead, false)
+        ));
+      return Number(result[0].count);
+    }
   }
 }
 

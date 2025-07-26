@@ -116,10 +116,25 @@ export const honorableMentions = pgTable("honorable_mentions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Anonymous messages sent to specific users (NGL-style)
+export const anonymousMessages = pgTable("anonymous_messages", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  recipientUserId: integer("recipient_user_id").references(() => users.id).notNull(),
+  recipientAdminId: integer("recipient_admin_id").references(() => admins.id),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Create insert and select schemas for honorable mentions
 export const insertHonorableMentionSchema = createInsertSchema(honorableMentions);
 export type InsertHonorableMention = z.infer<typeof insertHonorableMentionSchema>;
 export type HonorableMention = typeof honorableMentions.$inferSelect;
+
+// Create insert and select schemas for anonymous messages
+export const insertAnonymousMessageSchema = createInsertSchema(anonymousMessages);
+export type InsertAnonymousMessage = z.infer<typeof insertAnonymousMessageSchema>;
+export type AnonymousMessage = typeof anonymousMessages.$inferSelect;
 
 export const usersRelations = relations(users, ({ many }) => ({
   messages: many(messages),

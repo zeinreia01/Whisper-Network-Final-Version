@@ -1140,6 +1140,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user profile by username (for anonymous messaging)
+  app.get("/api/users/profile/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Return basic profile info (no password)
+      const { password, ...userProfile } = user;
+      res.json(userProfile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ error: "Failed to fetch user profile" });
+    }
+  });
+
   // Update user profile
   app.patch("/api/users/:id/profile", async (req, res) => {
     try {
@@ -1431,6 +1450,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting honorable mention:", error);
       res.status(500).json({ message: "Failed to delete honorable mention" });
+    }
+  });
+
+  // Anonymous messages endpoints (NGL-style)
+  app.post("/api/anonymous-messages", async (req, res) => {
+    try {
+      const { content, recipientUserId, recipientAdminId } = req.body;
+
+      if (!content || (!recipientUserId && !recipientAdminId)) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (content.length > 500) {
+        return res.status(400).json({ error: "Message too long (max 500 characters)" });
+      }
+
+      const message = await storage.sendAnonymousMessage({
+        content: content.trim(),
+        recipientUserId: recipientUserId || null,
+        recipientAdminId: recipientAdminId || null,
+      });
+
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Error sending anonymous message:", error);
+      res.status(500).json({ error: "Failed to send anonymous message" });
+    }
+  });
+
+  app.get("/api/anonymous-messages/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const adminId = req.query.adminId ? parseInt(req.query.adminId as string) : undefined;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ error: "Invalid user ID or admin ID" });
+      }
+
+      const messages = await storage.getAnonymousMessages(userId, adminId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching anonymous messages:", error);
+      res.status(500).json({ error: "Failed to fetch anonymous messages" });
+    }
+  });
+
+  app.patch("/api/anonymous-messages/:id/read", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      if (!messageId) {
+        return res.status(400).json({ error: "Invalid message ID" });
+      }
+
+      await storage.markAnonymousMessageAsRead(messageId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error marking anonymous message as read:", error);
+      res.status(500).json({ error: "Failed to mark message as read" });
+    }
+  });
+
+  app.delete("/api/anonymous-messages/:id", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      if (!messageId) {
+        return res.status(400).json({ error: "Invalid message ID" });
+      }
+
+      await storage.deleteAnonymousMessage(messageId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting anonymous message:", error);
+      res.status(500).json({ error: "Failed to delete message" });
+    }
+  });
+
+  app.get("/api/anonymous-messages/:userId/count", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const adminId = req.query.adminId ? parseInt(req.query.adminId as string) : undefined;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ error: "Invalid user ID or admin ID" });
+      }
+
+      const count = await storage.getAnonymousMessageCount(userId, adminId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching anonymous message count:", error);
+      res.status(500).json({ error: "Failed to fetch message count" });
     }
   });
 

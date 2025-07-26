@@ -19,6 +19,7 @@ import PersonalPage from "@/pages/personal";
 import AdminProfilePage from "@/pages/admin-profile";
 import AdminPersonalPage from "@/pages/admin-personal";
 import AdminProfileViewPage from "@/pages/admin-profile-view";
+import AnonymousMessaging from "@/pages/anonymous-messaging";
 import { useState, useEffect } from "react";
 
 function Router() {
@@ -54,6 +55,7 @@ function Router() {
         <Route path="/admin-personal" component={AdminPersonalPage} />
         <Route path="/personal" component={PersonalPage} />
         <Route path="/personal-archive" component={PersonalArchivePage} />
+        <Route path="/u/:username" component={AnonymousMessaging} />
         <Route component={NotFound} />
       </Switch>
     </div>
