@@ -1466,6 +1466,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Message too long (max 500 characters)" });
       }
 
+      // Check if recipient has paused their anonymous link
+      if (recipientUserId) {
+        const recipient = await storage.getUserById(recipientUserId);
+        if (recipient?.isAnonymousLinkPaused) {
+          return res.status(403).json({ error: "This user has paused anonymous messages" });
+        }
+      }
+
       const message = await storage.sendAnonymousMessage({
         content: content.trim(),
         recipientUserId: recipientUserId || null,
@@ -1540,6 +1548,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching anonymous message count:", error);
       res.status(500).json({ error: "Failed to fetch message count" });
+    }
+  });
+
+  // Toggle anonymous link status
+  app.patch("/api/users/:userId/toggle-anonymous-link", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { isAnonymousLinkPaused } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      const updatedUser = await storage.updateUserProfile(userId, { 
+        isAnonymousLinkPaused 
+      });
+
+      res.json({ isAnonymousLinkPaused: updatedUser.isAnonymousLinkPaused });
+    } catch (error) {
+      console.error("Error toggling anonymous link:", error);
+      res.status(500).json({ error: "Failed to toggle anonymous link" });
     }
   });
 
