@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -342,76 +343,53 @@ export function ThreadedReplies({
     return null;
   }
 
-  // Organize replies into a threaded structure first
+  // FIXED: Organize replies into a threaded structure properly
   const threadedReplies = React.useMemo(() => {
     if (!replies || replies.length === 0) return [];
 
     console.log('Processing replies for threading:', replies.length, 'showAll:', showAll);
 
-    // If showAll is true, we want to show ALL replies as a flat list, not just root replies
-    if (showAll) {
-      // Return all replies with their children properly nested
-      const replyMap = new Map<number, ReplyWithUser>();
-      const rootReplies: ReplyWithUser[] = [];
+    const replyMap = new Map<number, ReplyWithUser>();
+    const rootReplies: ReplyWithUser[] = [];
 
-      // First pass: create reply objects with children array
-      replies.forEach(reply => {
-        replyMap.set(reply.id, {
-          ...reply,
-          children: []
-        } as ReplyWithUser);
-      });
+    // First pass: create reply objects with children array
+    replies.forEach(reply => {
+      replyMap.set(reply.id, {
+        ...reply,
+        children: []
+      } as ReplyWithUser);
+    });
 
-      // Second pass: organize into threads
-      replies.forEach(reply => {
-        const threadedReply = replyMap.get(reply.id)!;
-        if (reply.parentId && replyMap.has(reply.parentId)) {
-          const parent = replyMap.get(reply.parentId);
-          if (parent) {
-            parent.children = parent.children || [];
-            parent.children.push(threadedReply);
-          }
-        } else {
-          // This is a root-level reply
-          rootReplies.push(threadedReply);
+    // Second pass: organize into threads
+    replies.forEach(reply => {
+      const threadedReply = replyMap.get(reply.id)!;
+      if (reply.parentId && replyMap.has(reply.parentId)) {
+        // This is a nested reply
+        const parent = replyMap.get(reply.parentId);
+        if (parent) {
+          parent.children = parent.children || [];
+          parent.children.push(threadedReply);
         }
-      });
+      } else {
+        // This is a root-level reply
+        rootReplies.push(threadedReply);
+      }
+    });
 
-      console.log('Threaded replies processed (showAll=true):', rootReplies.length, 'root replies, total replies:', replies.length);
-      return rootReplies;
-    } else {
-      // For preview mode (showAll=false), show only limited replies
-      const replyMap = new Map<number, ReplyWithUser>();
-      const rootReplies: ReplyWithUser[] = [];
+    console.log('Threaded replies processed:', rootReplies.length, 'root replies, total replies:', replies.length);
+    
+    // Log the structure for debugging
+    rootReplies.forEach((root, index) => {
+      console.log(`Root reply ${index + 1}:`, root.content.substring(0, 30), 'Children:', root.children?.length || 0);
+      if (root.children && root.children.length > 0) {
+        root.children.forEach((child, childIndex) => {
+          console.log(`  Child ${childIndex + 1}:`, child.content.substring(0, 30));
+        });
+      }
+    });
 
-      // First pass: create reply objects with children array
-      replies.forEach(reply => {
-        replyMap.set(reply.id, {
-          ...reply,
-          children: []
-        } as ReplyWithUser);
-      });
-
-      // Second pass: organize into threads
-      replies.forEach(reply => {
-        const threadedReply = replyMap.get(reply.id)!;
-        if (reply.parentId && replyMap.has(reply.parentId)) {
-          const parent = replyMap.get(reply.parentId);
-          if (parent) {
-            parent.children = parent.children || [];
-            parent.children.push(threadedReply);
-          }
-        } else {
-          // This is a root-level reply
-          rootReplies.push(threadedReply);
-        }
-      });
-
-      console.log('Threaded replies processed (showAll=false):', rootReplies.length, 'root replies');
-      return rootReplies;
-    }
+    return rootReplies;
   }, [replies, showAll]);
-
 
   return (
     <div className="border-t pt-4 space-y-4">
@@ -423,7 +401,7 @@ export function ThreadedReplies({
       {/* Threaded replies */}
       <div className="space-y-3">
         {showAll ? (
-          // When showAll is true, display ALL threaded replies (this is for message thread page)
+          // When showAll is true, display ALL threaded replies with full nesting (this is for message thread page)
           threadedReplies.map((reply) => (
             <ReplyItem
               key={reply.id}
