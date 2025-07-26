@@ -298,74 +298,78 @@ export class DatabaseStorage implements IStorage {
     const result = await db.query.messages.findFirst({
       where: eq(messages.id, id),
       with: {
-        replies: {
-          orderBy: asc(replies.createdAt),
-          with: {
-            user: true,
-            admin: true,
-            mentionedUser: true,
-            mentionedAdmin: true,
-            children: {
-              with: {
-                user: true,
-                admin: true,
-                mentionedUser: true,
-                mentionedAdmin: true,
-              },
-              orderBy: asc(replies.createdAt),
-            },
-          },
+        user: {
+          columns: {
+            id: true,
+            username: true,
+            displayName: true,
+            profilePicture: true,
+            isVerified: true,
+          }
         },
-        user: true,
-        admin: true,
-      },
+        admin: {
+          columns: {
+            id: true,
+            displayName: true,
+            profilePicture: true,
+            isVerified: true,
+          }
+        },
+        replies: {
+          with: {
+            user: {
+              columns: {
+                id: true,
+                username: true,
+                displayName: true,
+                profilePicture: true,
+                isVerified: true,
+              }
+            },
+            admin: {
+              columns: {
+                id: true,
+                displayName: true,
+                profilePicture: true,
+                isVerified: true,
+              }
+            }
+          },
+          orderBy: asc(replies.createdAt),
+        },
+        reactions: {
+          with: {
+            user: {
+              columns: {
+                id: true,
+                username: true,
+              }
+            },
+            admin: {
+              columns: {
+                id: true,
+                displayName: true,
+              }
+            }
+          }
+        }
+      }
     });
 
     if (!result) return null;
 
-    // Build nested replies structure
+    console.log(`Retrieved message ${id} with ${result.replies?.length || 0} replies`);
+    console.log('Raw replies:', result.replies?.map(r => ({ id: r.id, parentId: r.parentId, content: r.content.substring(0, 50) })));
+
+    // Return all replies in flat structure - let frontend handle threading
     const allReplies = result.replies || [];
-    const rootReplies = allReplies.filter(reply => !reply.parentId);
-    const childRepliesMap = new Map();
 
-    // Group child replies by parent ID
-    allReplies.forEach(reply => {
-      if (reply.parentId) {
-        if (!childRepliesMap.has(reply.parentId)) {
-          childRepliesMap.set(reply.parentId, []);
-        }
-        childRepliesMap.get(reply.parentId).push(reply);
-      }
-    });
-
-    // Attach children to their parents recursively
-    const attachChildren = (reply: any): any => {
-      const children = childRepliesMap.get(reply.id) || [];
-      return {
-        ...reply,
-        children: children.map(attachChildren),
-      };
-    };
-
-    const nestedReplies = rootReplies.map(attachChildren);
-
-    // Count all replies (including nested ones)
-    const countAllReplies = (replies: any[]): number => {
-      return replies.reduce((count, reply) => {
-        return count + 1 + countAllReplies(reply.children || []);
-      }, 0);
-    };
-
-    const totalReplyCount = countAllReplies(nestedReplies);
-
-    // Add reaction data
-    const messageReactions = await this.getMessageReactions(result.id);
+    console.log('Returning flat replies structure with', allReplies.length, 'total replies');
     return {
       ...result,
-      replies: nestedReplies,
-      replyCount: totalReplyCount,
-      reactionCount: messageReactions.length,
-      reactions: messageReactions,
+      replies: allReplies,
+      reactionCount: result.reactions?.length || 0,
+      replyCount: allReplies.length,
     };
   }
 

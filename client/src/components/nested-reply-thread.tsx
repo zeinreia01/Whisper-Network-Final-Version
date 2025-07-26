@@ -104,18 +104,18 @@ function ReplyItem({ reply, messageId, messageUserId, onWarning, onReply, maxLev
         <>
           {/* Vertical line connecting to parent */}
           <div 
-            className="absolute top-0 w-0.5 bg-border/40"
+            className="absolute top-0 w-0.5 bg-border/60"
             style={{ 
-              left: `${(reply.level - 1) * 20 + 20}px`,
-              height: '20px'
+              left: `${reply.level * 16}px`,
+              height: '24px'
             }}
           />
           {/* Horizontal line to reply */}
           <div 
-            className="absolute top-5 h-0.5 bg-border/40"
+            className="absolute top-6 h-0.5 bg-border/60"
             style={{ 
-              left: `${(reply.level - 1) * 20 + 20}px`,
-              width: '20px'
+              left: `${reply.level * 16}px`,
+              width: '16px'
             }}
           />
         </>
@@ -123,10 +123,8 @@ function ReplyItem({ reply, messageId, messageUserId, onWarning, onReply, maxLev
 
       {/* Main reply content */}
       <div 
-        className={`flex items-start space-x-3 py-3 group relative border-l-2 border-transparent hover:border-border/20 transition-colors ${
-          reply.level > 0 ? 'ml-8' : ''
-        }`}
-        style={{ marginLeft: reply.level > 0 ? `${reply.level * 20}px` : '0' }}
+        className={`flex items-start space-x-3 py-3 group relative border-l-2 border-transparent hover:border-border/20 transition-colors`}
+        style={{ marginLeft: reply.level > 0 ? `${reply.level * 24}px` : '0' }}
       >
         {/* Avatar */}
         <Avatar className="h-8 w-8 flex-shrink-0">
@@ -240,7 +238,7 @@ function ReplyItem({ reply, messageId, messageUserId, onWarning, onReply, maxLev
       </div>
 
       {/* Child replies */}
-      {showChildren && reply.children.length > 0 && (
+      {reply.children && reply.children.length > 0 && showChildren && (
         <div className="relative">
           {reply.children.map((childReply) => (
             <ReplyItem
@@ -278,6 +276,8 @@ export function NestedReplyThread({
   const threadedReplies = useMemo(() => {
     if (!replies || replies.length === 0) return [];
 
+    console.log('Building threaded replies from:', replies);
+
     const replyMap = new Map<number, ThreadedReply>();
     const rootReplies: ThreadedReply[] = [];
 
@@ -290,6 +290,8 @@ export function NestedReplyThread({
       });
     });
 
+    console.log('Reply map created with', replyMap.size, 'replies');
+
     // Second pass: organize into parent-child relationships
     replies.forEach(reply => {
       const threadedReply = replyMap.get(reply.id)!;
@@ -299,12 +301,17 @@ export function NestedReplyThread({
         const parent = replyMap.get(reply.parentId);
         if (parent) {
           parent.children.push(threadedReply);
+          console.log(`Added reply ${reply.id} as child of ${reply.parentId}`);
         }
       } else {
-        // This is a root reply (no parent) - add to root array
+        // This is a root reply (no parent or parent not found) - add to root array
         rootReplies.push(threadedReply);
+        console.log(`Added reply ${reply.id} as root reply (parentId: ${reply.parentId})`);
       }
     });
+
+    console.log('Root replies:', rootReplies.length);
+    console.log('Root replies with children:', rootReplies.map(r => ({ id: r.id, children: r.children.length })));
 
     // Third pass: calculate levels recursively
     const calculateLevels = (replies: ThreadedReply[], level: number = 0) => {
@@ -329,6 +336,7 @@ export function NestedReplyThread({
     calculateLevels(rootReplies);
     sortReplies(rootReplies);
     
+    console.log('Final threaded structure:', rootReplies);
     return rootReplies;
   }, [replies]);
 
@@ -388,6 +396,14 @@ export function NestedReplyThread({
   };
 
   const displayReplies = showAll ? threadedReplies : threadedReplies.slice(0, 2);
+
+  console.log('NestedReplyThread render:', {
+    totalReplies: replies?.length || 0,
+    threadedReplies: threadedReplies.length,
+    displayReplies: displayReplies.length,
+    showAll,
+    showReplyForm
+  });
 
   if (!replies || replies.length === 0) {
     return showReplyForm ? (
