@@ -348,34 +348,68 @@ export function ThreadedReplies({
 
     console.log('Processing replies for threading:', replies.length, 'showAll:', showAll);
 
-    const replyMap = new Map<number, ReplyWithUser>();
-    const rootReplies: ReplyWithUser[] = [];
+    // If showAll is true, we want to show ALL replies as a flat list, not just root replies
+    if (showAll) {
+      // Return all replies with their children properly nested
+      const replyMap = new Map<number, ReplyWithUser>();
+      const rootReplies: ReplyWithUser[] = [];
 
-    // First pass: create reply objects with children array
-    replies.forEach(reply => {
-      replyMap.set(reply.id, {
-        ...reply,
-        children: []
-      } as ReplyWithUser);
-    });
+      // First pass: create reply objects with children array
+      replies.forEach(reply => {
+        replyMap.set(reply.id, {
+          ...reply,
+          children: []
+        } as ReplyWithUser);
+      });
 
-    // Second pass: organize into threads
-    replies.forEach(reply => {
-      const threadedReply = replyMap.get(reply.id)!;
-      if (reply.parentId && replyMap.has(reply.parentId)) {
-        const parent = replyMap.get(reply.parentId);
-        if (parent) {
-          parent.children = parent.children || [];
-          parent.children.push(threadedReply);
+      // Second pass: organize into threads
+      replies.forEach(reply => {
+        const threadedReply = replyMap.get(reply.id)!;
+        if (reply.parentId && replyMap.has(reply.parentId)) {
+          const parent = replyMap.get(reply.parentId);
+          if (parent) {
+            parent.children = parent.children || [];
+            parent.children.push(threadedReply);
+          }
+        } else {
+          // This is a root-level reply
+          rootReplies.push(threadedReply);
         }
-      } else {
-        // This is a root-level reply
-        rootReplies.push(threadedReply);
-      }
-    });
+      });
 
-    console.log('Threaded replies processed:', rootReplies.length, 'root replies');
-    return rootReplies;
+      console.log('Threaded replies processed (showAll=true):', rootReplies.length, 'root replies, total replies:', replies.length);
+      return rootReplies;
+    } else {
+      // For preview mode (showAll=false), show only limited replies
+      const replyMap = new Map<number, ReplyWithUser>();
+      const rootReplies: ReplyWithUser[] = [];
+
+      // First pass: create reply objects with children array
+      replies.forEach(reply => {
+        replyMap.set(reply.id, {
+          ...reply,
+          children: []
+        } as ReplyWithUser);
+      });
+
+      // Second pass: organize into threads
+      replies.forEach(reply => {
+        const threadedReply = replyMap.get(reply.id)!;
+        if (reply.parentId && replyMap.has(reply.parentId)) {
+          const parent = replyMap.get(reply.parentId);
+          if (parent) {
+            parent.children = parent.children || [];
+            parent.children.push(threadedReply);
+          }
+        } else {
+          // This is a root-level reply
+          rootReplies.push(threadedReply);
+        }
+      });
+
+      console.log('Threaded replies processed (showAll=false):', rootReplies.length, 'root replies');
+      return rootReplies;
+    }
   }, [replies, showAll]);
 
 
@@ -388,17 +422,33 @@ export function ThreadedReplies({
 
       {/* Threaded replies */}
       <div className="space-y-3">
-        {(showAll ? threadedReplies : threadedReplies.slice(0, 2)).map((reply) => (
-          <ReplyItem
-            key={reply.id}
-            reply={reply}
-            messageId={messageId}
-            messageUserId={messageUserId}
-            level={0}
-            onWarning={onWarning}
-            onReply={onReply}
-          />
-        ))}
+        {showAll ? (
+          // When showAll is true, display ALL threaded replies (this is for message thread page)
+          threadedReplies.map((reply) => (
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              messageId={messageId}
+              messageUserId={messageUserId}
+              level={0}
+              onWarning={onWarning}
+              onReply={onReply}
+            />
+          ))
+        ) : (
+          // When showAll is false, display only first 2 root replies (this is for dashboard preview)
+          threadedReplies.slice(0, 2).map((reply) => (
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              messageId={messageId}
+              messageUserId={messageUserId}
+              level={0}
+              onWarning={onWarning}
+              onReply={onReply}
+            />
+          ))
+        )}
         
         {/* Show "View all replies" link when in preview mode and there are more replies */}
         {!showAll && threadedReplies.length > 2 && (
