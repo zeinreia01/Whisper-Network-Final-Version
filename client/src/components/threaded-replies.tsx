@@ -426,11 +426,11 @@ export function ThreadedReplies({
         )}
       </div>
 
-      {/* Reply form - ALWAYS show for authenticated users when showAll is true */}
-      {showAll && (user || admin) && (
-        <div className="reply-form-container bg-muted/20 border rounded-lg p-4 mt-6">
+      {/* Reply form - ALWAYS show for authenticated users when on thread page */}
+      {(user || admin) && (
+        <div className="reply-form-container bg-muted/20 border rounded-lg p-6 mt-6">
           <div className="mb-4">
-            <h4 className="text-lg font-medium text-foreground mb-2">Add Your Reply</h4>
+            <h4 className="text-lg font-semibold text-foreground mb-2">💬 Add Your Reply</h4>
             <p className="text-sm text-muted-foreground">Join the conversation and share your thoughts</p>
           </div>
 
@@ -515,9 +515,9 @@ export function ThreadedReplies({
       )}
 
       {/* Show login prompt for non-authenticated users */}
-      {showAll && !(user || admin) && (
+      {!(user || admin) && (
         <div className="reply-form-container bg-muted/10 border rounded-lg p-6 mt-6 text-center">
-          <h4 className="text-lg font-medium text-foreground mb-2">Join the Discussion</h4>
+          <h4 className="text-lg font-medium text-foreground mb-2">🔐 Join the Discussion</h4>
           <p className="text-muted-foreground mb-4">Log in to share your thoughts and reply to this message</p>
           <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Link href="/login">Log In to Reply</Link>
