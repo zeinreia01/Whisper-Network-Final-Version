@@ -289,27 +289,18 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             className="backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border"
             style={{
               background: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
-                ? 'rgba(255,255,255,0.1)' 
-                : 'rgba(255,255,255,0.7)',
+                ? 'rgba(255,255,255,0.15)' 
+                : 'rgba(255,255,255,0.9)',
               borderColor: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
-                ? 'rgba(255,255,255,0.2)' 
+                ? 'rgba(255,255,255,0.3)' 
                 : 'rgba(0,0,0,0.1)'
             }}
           >
             <blockquote 
               className="text-xl leading-relaxed text-center italic font-serif"
               style={{
-                background: document.documentElement.classList.contains('pink')
-                  ? 'linear-gradient(135deg, #dc2626 0%, #ef4444 25%, #f87171 50%, #fca5a5 75%, #ffffff 100%)'
-                  : document.documentElement.classList.contains('dark')
+                color: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark')
                   ? '#ffffff'
-                  : '#1e293b',
-                WebkitBackgroundClip: document.documentElement.classList.contains('pink') ? 'text' : 'initial',
-                backgroundClip: document.documentElement.classList.contains('pink') ? 'text' : 'initial',
-                color: document.documentElement.classList.contains('pink') 
-                  ? 'transparent'
-                  : document.documentElement.classList.contains('dark')
-                  ? '#ffffff' 
                   : '#1e293b'
               }}
             >
