@@ -32,6 +32,7 @@ export const messages = pgTable("messages", {
   adminId: integer("admin_id").references(() => admins.id), // Link to admin account (optional)
   isAuthenticated: boolean("is_authenticated").default(false), // Whether posted as authenticated user
   isOwnerPrivate: boolean("is_owner_private").default(false), // Whether owner set this as private
+  isPinned: boolean("is_pinned").default(false), // Whether message is pinned by admin
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -168,12 +168,12 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log('Loading public messages...');
       
-      // Get all public messages
+      // Get all public messages, pinned messages first
       const messagesData = await db
         .select()
         .from(messages)
         .where(eq(messages.isPublic, true))
-        .orderBy(desc(messages.createdAt));
+        .orderBy(desc(messages.isPinned), desc(messages.createdAt));
 
       const result: MessageWithReplies[] = [];
 
@@ -1582,6 +1582,16 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         ));
       return Number(result[0].count);
     }
+  }
+
+  // Pin/Unpin message operations
+  async updateMessagePinStatus(messageId: number, isPinned: boolean): Promise<Message> {
+    const [message] = await db
+      .update(messages)
+      .set({ isPinned })
+      .where(eq(messages.id, messageId))
+      .returning();
+    return message;
   }
 }
 

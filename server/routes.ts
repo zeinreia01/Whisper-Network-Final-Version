@@ -417,10 +417,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 1. User is ZEKE001 (main admin - can delete any message)
       // 2. Message belongs to the requesting admin
       // 3. Message belongs to the requesting user
-      const canDelete = 
-        adminUsername === "ZEKE001" || 
-        (message.adminId && adminUsername && message.adminId === await storage.getAdminByUsername(adminUsername)?.then(a => a?.id)) ||
-        (message.userId && userId && message.userId === userId);
+      let canDelete = false;
+      
+      if (adminUsername === "ZEKE001") {
+        canDelete = true;
+      } else if (message.adminId && adminUsername) {
+        const admin = await storage.getAdminByUsername(adminUsername);
+        canDelete = admin && message.adminId === admin.id;
+      } else if (message.userId && userId) {
+        canDelete = message.userId === parseInt(userId);
+      }
       
       if (!canDelete) {
         return res.status(403).json({ message: "You can only delete your own messages or have admin privileges" });
