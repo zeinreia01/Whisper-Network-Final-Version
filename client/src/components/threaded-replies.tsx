@@ -34,6 +34,11 @@ import {
   Reply
 } from "lucide-react";
 import type { ReplyWithUser } from "@shared/schema";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 
 interface ThreadedRepliesProps {
   replies: ReplyWithUser[];
@@ -104,9 +109,12 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply,
         style={{ marginLeft: `${level * 24}px` }}
       >
         {/* Avatar */}
-        <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm relative z-10">
-          {reply.nickname.charAt(0).toUpperCase()}
-        </div>
+        <Avatar className="w-8 h-8 flex-shrink-0">
+          <AvatarImage src={reply.user?.profilePicture || undefined} />
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+            {reply.user?.displayName?.charAt(0) || reply.user?.username?.charAt(0) || reply.senderName?.charAt(0) || "A"}
+          </AvatarFallback>
+        </Avatar>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -478,7 +486,7 @@ export function ThreadedReplies({
                 className={defaultNickname ? "bg-muted text-muted-foreground" : ""}
               />
             </div>
-            
+
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Your reply:
@@ -497,7 +505,7 @@ export function ThreadedReplies({
                 style={{ whiteSpace: 'pre-wrap' }}
               />
             </div>
-            
+
             <div className="flex space-x-2">
               <Button 
                 onClick={handleReply}
