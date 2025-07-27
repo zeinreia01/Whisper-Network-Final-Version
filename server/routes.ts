@@ -792,6 +792,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Pin/Unpin message routes (admin only)
+  app.patch("/api/messages/:messageId/pin", async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const { adminId, isPinned } = req.body;
+
+      if (!adminId) {
+        return res.status(400).json({ message: "Admin authentication required" });
+      }
+
+      // Verify admin exists and is active
+      const admin = await storage.getAdminById(adminId);
+      if (!admin || !admin.isActive) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const message = await storage.updateMessagePinStatus(parseInt(messageId), isPinned);
+      res.json(message);
+    } catch (error) {
+      console.error("Error updating message pin status:", error);
+      res.status(500).json({ message: "Failed to update message pin status" });
+    }
+  });
+
   // Verified badge routes (only ZEKE001 can manage)
   app.patch("/api/users/:userId/verification", async (req, res) => {
     try {

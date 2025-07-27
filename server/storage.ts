@@ -925,7 +925,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getUserProfile(userId: number, currentUserId?: number): Promise<UserProfile | null> {
+  async getUserProfile(userId: number): Promise<UserProfile | null> {
     try {
       const user = await this.getUserById(userId);
       if (!user) return null;
@@ -972,14 +972,7 @@ export class DatabaseStorage implements IStorage {
 
       // Check if current user is following this user
       let isFollowing = false;
-      try {
-        if (currentUserId && currentUserId !== userId) {
-          isFollowing = await this.isFollowing(currentUserId, userId);
-        }
-      } catch (error) {
-        // Skip if follows table doesn't exist yet
-        isFollowing = false;
-      }
+      // This will be handled separately in the frontend
 
       return {
         ...user,
@@ -1197,18 +1190,18 @@ export class DatabaseStorage implements IStorage {
 
   async getFollowStats(userId: number): Promise<{ followersCount: number; followingCount: number }> {
     const [followersResult] = await db
-      .select({ count: follows.id })
+      .select({ count: sql<number>`count(*)` })
       .from(follows)
       .where(eq(follows.followingId, userId));
 
     const [followingResult] = await db
-      .select({ count: follows.id })
+      .select({ count: sql<number>`count(*)` })
       .from(follows)
       .where(eq(follows.followerId, userId));
 
     return {
-      followersCount: followersResult?.count || 0,
-      followingCount: followingResult?.count || 0,
+      followersCount: Number(followersResult?.count) || 0,
+      followingCount: Number(followingResult?.count) || 0,
     };
   }
 

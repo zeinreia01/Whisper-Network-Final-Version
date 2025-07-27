@@ -371,7 +371,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
           <span>Pinned Post</span>
         </div>
       )}
-      
+
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="flex items-center space-x-2">
           <span className={`category-dot ${category?.color}`}></span>
@@ -759,7 +759,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
       {/* Warning Dialog */}
       {showWarningDialog && (
-        <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+        <AlertDialog open={showWarningDialog} onOpenChange{setShowWarningDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Send Warning</AlertDialogTitle>
