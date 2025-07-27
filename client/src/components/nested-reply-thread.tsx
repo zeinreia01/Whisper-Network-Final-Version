@@ -132,8 +132,8 @@ function ReplyItem({ reply, messageId, messageUserId, onWarning, onReply, maxLev
             src={reply.user?.profilePicture || reply.admin?.profilePicture || ''} 
             alt={reply.nickname} 
           />
-          <AvatarFallback className="text-xs">
-            {reply.nickname.slice(0, 2).toUpperCase()}
+          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white text-xs">
+            {reply.admin?.displayName?.charAt(0) || reply.user?.displayName?.charAt(0) || reply.nickname?.charAt(0) || "A"}
           </AvatarFallback>
         </Avatar>
 

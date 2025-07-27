@@ -110,9 +110,9 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply,
       >
         {/* Avatar */}
         <Avatar className="w-8 h-8 flex-shrink-0">
-          <AvatarImage src={reply.user?.profilePicture || undefined} />
+          <AvatarImage src={reply.user?.profilePicture || reply.admin?.profilePicture || undefined} />
           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-            {reply.user?.displayName?.charAt(0) || reply.user?.username?.charAt(0) || reply.senderName?.charAt(0) || "A"}
+            {reply.admin?.displayName?.charAt(0) || reply.user?.displayName?.charAt(0) || reply.user?.username?.charAt(0) || reply.nickname?.charAt(0) || "A"}
           </AvatarFallback>
         </Avatar>
 
