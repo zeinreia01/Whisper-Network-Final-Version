@@ -198,25 +198,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Pin/unpin message (only ZEKE001 can do this)
-  app.patch("/api/messages/:id/pin", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { adminUsername, isPinned } = req.body;
-
-      // Only ZEKE001 can pin/unpin messages
-      if (adminUsername !== "ZEKE001") {
-        return res.status(403).json({ message: "Only ZEKE001 can pin/unpin messages" });
-      }
-
-      const message = await storage.updateMessagePinStatus(parseInt(id), isPinned);
-      res.json(message);
-    } catch (error) {
-      console.error("Error updating pin status:", error);
-      res.status(500).json({ message: "Failed to update pin status" });
-    }
-  });
-
   // Get all public messages
   app.get("/api/messages/public", async (req, res) => {
     try {
@@ -789,30 +770,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating message privacy:", error);
       res.status(500).json({ message: "Failed to update message privacy" });
-    }
-  });
-
-  // Pin/Unpin message routes (admin only)
-  app.patch("/api/messages/:messageId/pin", async (req, res) => {
-    try {
-      const { messageId } = req.params;
-      const { adminId, isPinned } = req.body;
-
-      if (!adminId) {
-        return res.status(400).json({ message: "Admin authentication required" });
-      }
-
-      // Verify admin exists and is active
-      const admin = await storage.getAdminById(adminId);
-      if (!admin || !admin.isActive) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      const message = await storage.updateMessagePinStatus(parseInt(messageId), isPinned);
-      res.json(message);
-    } catch (error) {
-      console.error("Error updating message pin status:", error);
-      res.status(500).json({ message: "Failed to update message pin status" });
     }
   });
 

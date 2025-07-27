@@ -16,7 +16,7 @@ import { NestedReplyThread } from "@/components/nested-reply-thread";
 import { MessageViewer } from "@/components/message-viewer";
 import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark, MessageSquare, Pin, PinOff } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark, MessageSquare } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { getSpotifyDisplayName } from "@/lib/spotify";
@@ -283,30 +283,6 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
     },
   });
 
-  const pinMutation = useMutation({
-    mutationFn: async (isPinned: boolean) => {
-      const response = await apiRequest("PATCH", `/api/messages/${message.id}/pin`, {
-        adminUsername: admin?.username,
-        isPinned: !isPinned
-      });
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages/public"] });
-      toast({
-        title: message.isPinned ? "Message unpinned" : "Message pinned",
-        description: message.isPinned ? "Message has been unpinned" : "Message has been pinned to the top",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update pin status.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleReply = () => {
     if (!replyText.trim() || !nickname.trim()) {
       toast({
@@ -364,14 +340,6 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
   return (
     <div className="message-card bg-card pink:romantic-card rounded-xl shadow-lg pink:pink-glow p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-xl pink:hover:pink-glow transition-all duration-300">
-      {/* Pinned Post Indicator */}
-      {message.isPinned && (
-        <div className="flex items-center space-x-2 mb-3 text-sm font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
-          <Pin className="w-4 h-4" />
-          <span>Pinned Post</span>
-        </div>
-      )}
-
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="flex items-center space-x-2">
           <span className={`category-dot ${category?.color}`}></span>
@@ -573,26 +541,6 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {/* Pin/Unpin option for ZEKE001 only */}
-                {admin.username === "ZEKE001" && (
-                  <DropdownMenuItem
-                    onClick={() => pinMutation.mutate(message.isPinned || false)}
-                    className="text-blue-600"
-                    disabled={pinMutation.isPending}
-                  >
-                    {message.isPinned ? (
-                      <>
-                        <PinOff className="h-4 w-4 mr-2" />
-                        Unpin Message
-                      </>
-                    ) : (
-                      <>
-                        <Pin className="h-4 w-4 mr-2" />
-                        Pin Message
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem
                   onClick={() => {
                     setSelectedReplyId(null);
@@ -759,7 +707,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
       {/* Warning Dialog */}
       {showWarningDialog && (
-        <AlertDialog open={showWarningDialog} onOpenChange{setShowWarningDialog}>
+        <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Send Warning</AlertDialogTitle>
