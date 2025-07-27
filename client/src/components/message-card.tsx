@@ -219,7 +219,29 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      const response = await apiRequest("DELETE", `/api/messages/${messageId}`);
+      const body: any = {};
+      
+      // Include authentication data
+      if (user) {
+        body.userId = user.id.toString();
+      }
+      if (admin) {
+        body.adminUsername = admin.username;
+      }
+      
+      const response = await fetch(`/api/messages/${messageId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete message");
+      }
+      
       return await response.json();
     },
     onSuccess: () => {
