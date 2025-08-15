@@ -214,7 +214,7 @@ export default function AnonymousMessaging() {
             className="h-48 bg-cover bg-center relative"
             style={{ backgroundImage: `url(${recipientProfile.backgroundPhoto})` }}
           >
-            <div className="absolute inset-0 bg-black/30"></div>
+            <div className="absolute inset-0 bg-black/50"></div>
           </div>
         )}
 
@@ -230,10 +230,10 @@ export default function AnonymousMessaging() {
               </AvatarFallback>
             </Avatar>
           </div>
-          <CardTitle className={`text-2xl ${recipientProfile.backgroundPhoto ? 'text-white' : ''}`}>
+          <CardTitle className={`text-2xl ${recipientProfile.backgroundPhoto ? 'text-white drop-shadow-lg' : 'text-foreground'}`}>
             {recipientProfile.displayName || recipientProfile.username}
           </CardTitle>
-          <CardDescription className={recipientProfile.backgroundPhoto ? 'text-gray-200' : ''}>
+          <CardDescription className={recipientProfile.backgroundPhoto ? 'text-gray-200 drop-shadow-lg' : 'text-muted-foreground'}>
             Send an anonymous message to @{recipientProfile.username}
           </CardDescription>
         </CardHeader>

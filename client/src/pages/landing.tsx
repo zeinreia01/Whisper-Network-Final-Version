@@ -9,7 +9,7 @@ interface LandingProps {
 
 export default function Landing({ onEnter }: LandingProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted pink:from-pink-50 pink:to-pink-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted pink:from-pink-50 pink:to-pink-100 flex items-center justify-center pt-16">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <div className="space-y-10">
           {/* Logo/Icon */}
