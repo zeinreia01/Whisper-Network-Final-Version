@@ -278,7 +278,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             }}
           >
             <blockquote 
-              className="text-xl leading-relaxed text-center italic font-serif"
+              className="text-xl leading-relaxed text-center italic message-text"
               style={{
                 color: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark')
                   ? '#ffffff'

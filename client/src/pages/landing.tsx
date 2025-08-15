@@ -61,7 +61,7 @@ export default function Landing({ onEnter }: LandingProps) {
           <Card className="border-none shadow-2xl bg-card/50 pink:romantic-card backdrop-blur-sm pink:pink-glow">
             <CardContent className="p-8 lg:p-12">
               <div className="text-center mb-12">
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">
+                <h2 className="text-4xl font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 page-title">
                   About Whispering Network
                 </h2>
                 <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-blue-500 mx-auto rounded-full"></div>
@@ -70,7 +70,7 @@ export default function Landing({ onEnter }: LandingProps) {
               <div className="max-w-4xl mx-auto">
                 <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 mb-8 border border-purple-100 dark:border-gray-700">
                   <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Creator's Vision</h3>
-                  <blockquote className="text-lg italic leading-relaxed text-gray-700 dark:text-gray-300 border-l-4 border-purple-400 pl-6 font-serif">
+                  <blockquote className="text-lg italic leading-relaxed text-gray-700 dark:text-gray-300 border-l-4 border-purple-400 pl-6 message-text">
                     "I wanted to create a space where connection transcends visibility—where voices unite not through faces, but through the raw authenticity of shared experience. In a world that demands we be seen to be heard, I envisioned a sanctuary where anonymity becomes strength, where vulnerability finds safety, and where the whispers of the heart can echo without judgment.
                     <br/><br/>
                     This is a place where souls can open without having to shatter, where the silent can finally speak, and where the deepest truths find their way to listening hearts. Every whisper here carries the weight of human experience, every reply the warmth of genuine understanding.

@@ -38,7 +38,7 @@ export function PersonalArchivePage() {
             <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-blue-500/10 rounded-full">
               <Bookmark className="w-8 h-8 text-blue-500" />
             </div>
-            <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Authentication Required</h1>
+            <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white page-title">Authentication Required</h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               You need to be logged in as a Silent Messenger to view your personal archive.
             </p>
@@ -72,7 +72,7 @@ export function PersonalArchivePage() {
                   <Bookmark className="w-6 h-6 text-blue-500" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Personal Archive</h1>
+                  <h1 className="text-3xl font-semibold text-gray-900 dark:text-white page-title">Personal Archive</h1>
                   <p className="text-gray-600 dark:text-gray-400">Your saved messages</p>
                 </div>
               </div>

@@ -117,7 +117,7 @@ export default function Admin() {
         <div className="mb-8 sm:mb-12">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground break-words">Whisper Network Admin</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-foreground break-words page-title">Whisper Network Admin</h1>
             </div>
             <div className="flex-shrink-0">
               <Button

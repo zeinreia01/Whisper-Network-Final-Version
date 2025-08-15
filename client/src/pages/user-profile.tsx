@@ -148,7 +148,7 @@ export function UserProfilePage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Authentication Required</h1>
+            <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white page-title">Authentication Required</h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">You need to be logged in to view user profiles.</p>
             <Link href="/">
               <Button className="bg-primary hover:bg-primary/90 text-white">Go Home</Button>
@@ -188,7 +188,7 @@ export function UserProfilePage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">User Not Found</h1>
+            <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white page-title">User Not Found</h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">The user profile you're looking for doesn't exist.</p>
             <Link href="/dashboard">
               <Button className="bg-primary hover:bg-primary/90 text-white">Back to Dashboard</Button>

@@ -34,9 +34,10 @@ export function Navigation() {
                   localStorage.removeItem('hasVisitedWhisperingNetwork');
                   window.location.reload();
                 }}
-                className="text-lg font-medium text-gray-900 dark:text-gray-100 pink:text-pink-900 cursor-pointer tracking-tight hover:text-purple-600 pink:hover:text-pink-700 transition-colors"
+                className="text-lg font-extrabold text-gray-900 dark:text-gray-100 pink:text-pink-900 cursor-pointer tracking-tight hover:text-purple-600 pink:hover:text-pink-700 transition-colors lowercase"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
               >
-                Whisper Network
+                whisper network
               </button>
             </div>
 

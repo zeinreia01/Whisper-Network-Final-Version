@@ -147,7 +147,7 @@ export default function Home() {
             whisper network
           </h1>
           <div className="w-12 h-px bg-border mx-auto mb-6"></div>
-          <p className="text-lg text-muted-foreground max-w-md mx-auto font-light leading-relaxed">
+          <p className="text-lg text-muted-foreground max-w-md mx-auto font-light leading-relaxed uppercase tracking-wider" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             A gentle space for anonymous thoughts and supportive connections
           </p>
         </div>

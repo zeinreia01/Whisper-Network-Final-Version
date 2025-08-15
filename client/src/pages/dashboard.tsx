@@ -70,7 +70,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="text-center mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">Community Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-foreground mb-4 page-title">Community Dashboard</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             A place where voices unite and hearts connect
           </p>

@@ -461,7 +461,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         </div>
       )}
 
-      <p className="text-foreground mb-4 leading-relaxed">{message.content}</p>
+      <p className="text-foreground mb-4 leading-relaxed message-text">{message.content}</p>
 
       {message.spotifyLink && (
         <div className="bg-muted rounded-lg p-3 mb-4">
