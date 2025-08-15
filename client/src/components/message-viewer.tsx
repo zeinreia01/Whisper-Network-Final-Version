@@ -37,139 +37,113 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (!messageRef.current) return;
 
     try {
-      // Create optimized download container
+      // Clone the actual modal content for perfect accuracy
+      const originalElement = messageRef.current;
+      const clonedElement = originalElement.cloneNode(true) as HTMLElement;
+      
+      // Create container for the cloned element with calm umamin-inspired styling
       const downloadContainer = document.createElement('div');
       downloadContainer.style.position = 'absolute';
       downloadContainer.style.left = '-9999px';
       downloadContainer.style.top = '-9999px';
-      downloadContainer.style.width = '600px';
-      downloadContainer.style.height = 'auto';
+      downloadContainer.style.width = '700px';
+      downloadContainer.style.background = 'transparent';
       downloadContainer.style.fontFamily = '"Times New Roman", serif';
+      downloadContainer.style.padding = '0';
 
-      // Check theme for proper styling
+      // Apply exact same styling as the modal with enhanced contrast for image
+      clonedElement.style.margin = '0';
+      clonedElement.style.transform = 'none';
+      clonedElement.style.maxWidth = '700px';
+      clonedElement.style.width = '700px';
+      clonedElement.style.minHeight = '500px';
+      clonedElement.style.position = 'relative';
+
+      // Enhance text contrast for better readability in saved image
       const isPinkTheme = document.documentElement.classList.contains('pink');
       const isDarkTheme = document.documentElement.classList.contains('dark');
       
-      if (isPinkTheme) {
-        downloadContainer.style.background = 'linear-gradient(135deg, #e91e63 0%, #f06292 25%, #ec407a 50%, #ad1457 75%, #880e4f 100%)';
-        downloadContainer.style.boxShadow = '0 20px 40px rgba(233, 30, 99, 0.3), 0 8px 16px rgba(240, 98, 146, 0.2)';
-      } else if (isDarkTheme) {
-        downloadContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
-      } else {
-        downloadContainer.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)';
-      }
+      // Fix text visibility issues in the saved image
+      const allTextElements = clonedElement.querySelectorAll('*');
+      allTextElements.forEach((element: any) => {
+        const computedStyle = window.getComputedStyle(element);
+        
+        // Ensure all text is properly visible
+        if (element.tagName === 'H1' && element.style.background) {
+          // Keep gradient text as is for titles
+        } else if (computedStyle.color === 'rgba(0, 0, 0, 0)' || computedStyle.color === 'transparent') {
+          // Fix invisible text
+          if (isPinkTheme || isDarkTheme) {
+            element.style.color = '#ffffff';
+          } else {
+            element.style.color = '#1e293b';
+          }
+        }
+        
+        // Enhance backdrop elements for better contrast
+        if (element.classList.contains('backdrop-blur-sm')) {
+          if (isPinkTheme || isDarkTheme) {
+            element.style.background = 'rgba(255, 255, 255, 0.25)';
+            element.style.backdropFilter = 'blur(16px)';
+          } else {
+            element.style.background = 'rgba(255, 255, 255, 0.95)';
+            element.style.backdropFilter = 'blur(8px)';
+          }
+        }
+      });
 
-      downloadContainer.style.padding = '32px';
-      downloadContainer.style.borderRadius = '16px';
-      downloadContainer.style.color = '#ffffff';
+      // Enhance badge visibility
+      const badges = clonedElement.querySelectorAll('[class*="badge"]');
+      badges.forEach((badge: any) => {
+        if (isPinkTheme || isDarkTheme) {
+          badge.style.background = 'rgba(255, 255, 255, 0.3)';
+          badge.style.color = '#ffffff';
+          badge.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+        } else {
+          badge.style.background = 'rgba(0, 0, 0, 0.1)';
+          badge.style.color = '#1e293b';
+          badge.style.border = '1px solid rgba(0, 0, 0, 0.2)';
+        }
+      });
 
-      // Create Instagram-optimized content
-      downloadContainer.innerHTML = `
-        <div style="text-align: center; margin-bottom: 32px;">
-          <h1 style="font-size: 28px; font-weight: bold; background: ${isPinkTheme ? 'linear-gradient(135deg, #ffffff 0%, #fce4ec 50%, #f8bbd9 100%)' : isDarkTheme ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)' : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%)'}; -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px 0; font-family: 'Times New Roman', serif;">
-            Whisper Network
-          </h1>
-          <p style="color: ${isPinkTheme || isDarkTheme ? '#94a3b8' : '#64748b'}; font-size: 14px; margin: 0; font-family: 'Times New Roman', serif;">
-            A place where voices unite and hearts connect
-          </p>
-        </div>
-
-        <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${category?.color?.replace('bg-', '') || '#8b5cf6'};"></div>
-            <span style="background-color: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: #e2e8f0; font-family: 'Times New Roman', serif;">
-              ${category?.name || message.category}
-            </span>
-          </div>
-          <span style="color: #94a3b8; font-size: 14px; font-family: 'Times New Roman', serif;">
-            ${formatTimeAgo(message.createdAt!)}
-          </span>
-        </div>
-
-        <div style="background: ${isPinkTheme || isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}; backdrop-filter: blur(10px); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid ${isPinkTheme || isDarkTheme ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};">
-          <blockquote style="font-size: 20px; line-height: 1.6; color: ${isPinkTheme || isDarkTheme ? '#f8fafc' : '#1e293b'}; text-align: center; font-style: italic; margin: 0; font-family: 'Times New Roman', serif;">
-            "${message.content}"
-          </blockquote>
-        </div>
-
-        ${message.spotifyLink ? `
-          <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-              <span style="color: #22c55e; font-size: 20px;">🎵</span>
-              <div style="text-align: center;">
-                <p style="font-size: 14px; font-weight: 500; color: #22c55e; margin: 0 0 4px 0; font-family: 'Times New Roman', serif;">
-                  ${getSpotifyDisplayName(message.spotifyLink)}
-                </p>
-                <p style="color: #16a34a; font-size: 12px; margin: 0; font-family: 'Times New Roman', serif;">
-                  Listen on Spotify
-                </p>
-              </div>
-            </div>
-          </div>
-        ` : ''}
-
-        <div style="text-align: center; margin-bottom: 24px;">
-          <p style="color: ${isPinkTheme || isDarkTheme ? '#94a3b8' : '#64748b'}; font-style: italic; font-size: 16px; margin: 0; font-family: 'Times New Roman', serif;">
-            — ${message.senderName || 'Anonymous Whisper'}
-          </p>
-        </div>
-
-        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; font-size: 14px; color: ${isPinkTheme || isDarkTheme ? '#94a3b8' : '#64748b'}; margin-bottom: 24px;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <span style="color: #f87171;">♥</span>
-            <span style="font-family: 'Times New Roman', serif;">${message.reactionCount || 0} hearts</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <span style="color: #60a5fa;">💬</span>
-            <span style="font-family: 'Times New Roman', serif;">${message.replies?.length || 0} replies</span>
-          </div>
-        </div>
-
-        <div style="text-align: center; padding-top: 24px; border-top: 1px solid ${isPinkTheme || isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};">
-          <p style="font-size: 12px; color: ${isPinkTheme || isDarkTheme ? '#64748b' : '#94a3b8'}; margin: 0; font-family: 'Times New Roman', serif;">
-            This whisper was shared on Whispering Network • ${new Date(message.createdAt!).toLocaleDateString()}
-          </p>
-        </div>
-      `;
-
+      downloadContainer.appendChild(clonedElement);
       document.body.appendChild(downloadContainer);
 
-      const canvasBackground = isPinkTheme 
-        ? '#e91e63' 
-        : isDarkTheme 
-        ? '#1a1a2e' 
-        : '#f8fafc';
-
-      const canvas = await html2canvas(downloadContainer, {
-        backgroundColor: canvasBackground,
-        scale: 4, // Ultra high resolution for Instagram quality
-        width: 600,
-        height: downloadContainer.scrollHeight,
+      // Wait for fonts and styles to load properly
+      await document.fonts.ready;
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const canvas = await html2canvas(clonedElement, {
+        backgroundColor: null,
+        scale: 3, // High quality for sharing
         useCORS: true,
-        allowTaint: false,
+        allowTaint: true,
         logging: false,
+        width: 700,
+        height: clonedElement.scrollHeight,
+        foreignObjectRendering: false,
+        imageTimeout: 0,
+        removeContainer: false,
         onclone: (clonedDoc) => {
-          // Ensure gradients render properly in cloned document
-          const clonedContainer = clonedDoc.querySelector('div') as HTMLElement;
-          if (clonedContainer) {
-            if (isPinkTheme) {
-              clonedContainer.style.background = 'linear-gradient(135deg, #e91e63 0%, #f06292 25%, #ec407a 50%, #ad1457 75%, #880e4f 100%)';
-            } else if (isDarkTheme) {
-              clonedContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
-            } else {
-              clonedContainer.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)';
-            }
-          }
+          // Ensure proper font loading in cloned document
+          const fontLink = clonedDoc.createElement('link');
+          fontLink.rel = 'preconnect';
+          fontLink.href = 'https://fonts.googleapis.com';
+          clonedDoc.head.appendChild(fontLink);
         }
       });
 
       // Clean up
       document.body.removeChild(downloadContainer);
 
+      // Download with better quality and naming
       const link = document.createElement('a');
-      link.download = `whispering-network-${message.id}-${Date.now()}.png`;
+      link.download = `whisper-${message.id}-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+
     } catch (error) {
       console.error('Failed to download image:', error);
     }

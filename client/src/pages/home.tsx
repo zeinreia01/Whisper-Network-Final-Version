@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MessageCard } from "@/components/message-card";
 import { categories } from "@/lib/categories";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { User, Eye, EyeOff } from "lucide-react";
+import { User, Eye, EyeOff, MessageCircle, ChevronDown, Plus } from "lucide-react";
 import type { MessageWithReplies } from "@shared/schema";
 
 export default function Home() {
@@ -24,6 +25,7 @@ export default function Home() {
   const [senderName, setSenderName] = useState("");
   const [showRecipientSelector, setShowRecipientSelector] = useState(false);
   const [postAsAuthenticated, setPostAsAuthenticated] = useState(false);
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, admin } = useAuth();
@@ -131,21 +133,43 @@ export default function Home() {
   const selectedCategory = categories.find(c => c.id === category);
 
   return (
-    <div className="min-h-screen bg-background py-4 sm:py-8">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8">
-        <div className="text-center mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">Share Your Voice</h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {admin 
-              ? "Create network announcements and communicate with the community"
-              : "Create a message to share with the community or keep private for admin review"
-            }
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 py-6 sm:py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Hero Section - Calming and Minimal */}
+        <div className="text-center mb-12 sm:mb-16">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-white dark:bg-gray-800 shadow-lg rounded-3xl flex items-center justify-center border border-gray-200 dark:border-gray-700">
+              <MessageCircle className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+            </div>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-light text-gray-800 dark:text-gray-100 mb-4 tracking-tight">
+            Whisper Network
+          </h1>
+          <div className="w-12 h-px bg-gray-300 dark:bg-gray-600 mx-auto mb-6"></div>
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-md mx-auto font-light leading-relaxed">
+            A gentle space for anonymous thoughts and supportive connections
           </p>
         </div>
 
-        {/* Message Creation Card */}
-        <Card className="mb-8 sm:mb-12">
-          <CardContent className="p-4 sm:p-6 lg:p-8">
+        {/* Gentle Send Message Button */}
+        <div className="text-center mb-12">
+          <Collapsible open={isComposeOpen} onOpenChange={setIsComposeOpen}>
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="outline"
+                size="lg"
+                className="group px-8 py-4 text-base font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 shadow-sm transition-all duration-200 rounded-2xl"
+              >
+                <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-200" />
+                {isComposeOpen ? "Close" : "Send a message?"}
+                <ChevronDown className={`w-4 h-4 ml-2 transition-transform duration-200 ${isComposeOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent>
+              <Card className="mt-6 border border-gray-200 dark:border-gray-700 shadow-sm bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+                <CardContent className="p-6 sm:p-8">
             <div className="space-y-6">
               <div>
                 <Label htmlFor="category">Category</Label>
@@ -284,11 +308,14 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
 
         {/* Recent Messages Preview */}
-        <Card>
+        <Card className="mt-8">
           <CardContent className="p-4 sm:p-6 lg:p-8">
             <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">Recent Community Messages</h2>
             {isLoading ? (
