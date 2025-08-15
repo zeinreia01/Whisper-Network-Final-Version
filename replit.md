@@ -3,6 +3,14 @@
 ## Overview
 Whisper Network is a comprehensive full-stack web application designed as a compassionate digital sanctuary for anonymous emotional expression. The platform enables secure anonymous messaging with robust moderation, user identity protection, and comprehensive safety features. It allows users to send anonymous messages, engage in threaded replies, and utilize social features like heart reactions and following other users. The project aims to provide a safe space for emotional expression, ready for deployment with complete admin oversight and user-friendly onboarding.
 
+## Recent Changes
+
+### August 15, 2025 - Enhanced UI & Image Download Fixes ✅ COMPLETED
+- ✅ **Fixed Image Download Transparency**: Resolved saved images having transparent backgrounds by setting proper solid background colors
+- ✅ **UI Consistency Improved**: Made home page styling consistent with rest of app using standard theme colors instead of custom gradients  
+- ✅ **Calming UX Enhanced**: Transformed main interface to be more gentle and umamin-inspired with collapsible message creation
+- ✅ **Enhanced Image Quality**: Improved downloaded image accuracy to perfectly match modal preview with proper contrast
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

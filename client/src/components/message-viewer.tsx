@@ -113,8 +113,15 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       await document.fonts.ready;
       await new Promise(resolve => setTimeout(resolve, 200));
       
+      // Set proper background color instead of transparent
+      const backgroundColor = isPinkTheme 
+        ? '#e91e63' // Pink theme background
+        : isDarkTheme 
+        ? '#1a1a2e' // Dark theme background  
+        : '#f8fafc'; // Light theme background
+
       const canvas = await html2canvas(clonedElement, {
-        backgroundColor: null,
+        backgroundColor: backgroundColor, // Use solid background instead of null
         scale: 3, // High quality for sharing
         useCORS: true,
         allowTaint: true,
