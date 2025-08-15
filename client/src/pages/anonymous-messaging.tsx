@@ -161,7 +161,7 @@ export default function AnonymousMessaging() {
 
   const handleSendMessage = () => {
     if (!message.replace(/\s+/g, '').length || !recipientProfile) return;
-    
+
     sendMessageMutation.mutate({
       content: message,
       category: category,
@@ -217,7 +217,7 @@ export default function AnonymousMessaging() {
             <div className="absolute inset-0 bg-black/30"></div>
           </div>
         )}
-        
+
         <CardHeader className={`text-center ${recipientProfile.backgroundPhoto ? "-mt-16 relative z-10" : ""}`}>
           <div className="flex justify-center mb-4">
             <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
@@ -278,7 +278,7 @@ export default function AnonymousMessaging() {
                   <CardContent className="p-4">
                     {/* Message content */}
                     <p className="mb-3 text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">{msg.content}</p>
-                    
+
                     {/* Category, sender name, and spotify link */}
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                       {msg.category && (
@@ -303,7 +303,7 @@ export default function AnonymousMessaging() {
                         </a>
                       )}
                     </div>
-                    
+
                     <div className="flex justify-between items-center text-sm text-muted-foreground">
                       <span>{new Date(msg.createdAt).toLocaleDateString()}</span>
                       <div className="flex gap-2">
@@ -365,11 +365,8 @@ export default function AnonymousMessaging() {
               <MessageSquare className="h-5 w-5" />
               Send Anonymous Message
             </CardTitle>
-            <CardDescription>
-              {isLinkPaused 
-                ? "This user has temporarily paused anonymous messages"
-                : "Your message will be sent completely anonymously"
-              }
+            <CardDescription className={`text-center ${recipientProfile.backgroundPhoto ? 'text-gray-200' : ''}`}>
+              Send an anonymous message to @{recipientProfile.username}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -458,7 +455,7 @@ export default function AnonymousMessaging() {
                 </div>
               </div>
             )}
-            
+
             {sendMessageMutation.isSuccess && (
               <Alert>
                 <AlertDescription>
@@ -466,7 +463,7 @@ export default function AnonymousMessaging() {
                 </AlertDescription>
               </Alert>
             )}
-            
+
             {sendMessageMutation.isError && (
               <Alert variant="destructive">
                 <AlertDescription>

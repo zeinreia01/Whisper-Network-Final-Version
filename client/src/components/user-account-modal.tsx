@@ -99,11 +99,11 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Username</label>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Username</label>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-gray-900">{currentUser.username}</span>
+                    <span className="text-gray-900 dark:text-gray-100">{currentUser.username}</span>
                     {isAdmin && (
-                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                      <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
                         <Shield className="w-3 h-3 mr-1" />
                         Whisper Listener
                       </Badge>
@@ -111,21 +111,21 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Member Since</label>
-                  <p className="text-gray-900 mt-1">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Member Since</label>
+                  <p className="text-gray-900 dark:text-gray-100 mt-1">
                     {formatTimeAgo(currentUser.createdAt!)}
                   </p>
                 </div>
                 {isAdmin && 'role' in currentUser && (
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Role</label>
-                    <p className="text-gray-900 mt-1 capitalize">{currentUser.role}</p>
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Role</label>
+                    <p className="text-gray-900 dark:text-gray-100 mt-1 capitalize">{currentUser.role}</p>
                   </div>
                 )}
                 {isAdmin && 'displayName' in currentUser && (
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Display Name</label>
-                    <p className="text-gray-900 mt-1">{currentUser.displayName}</p>
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Display Name</label>
+                    <p className="text-gray-900 dark:text-gray-100 mt-1">{currentUser.displayName}</p>
                   </div>
                 )}
               </div>
@@ -187,8 +187,8 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
                   <div className="text-center py-8 text-gray-500">
                     <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p>
-                      {searchTerm 
-                        ? "No messages found matching your search" 
+                      {searchTerm
+                        ? "No messages found matching your search"
                         : "You haven't sent any messages yet"
                       }
                     </p>
@@ -208,7 +208,7 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
                 <div className="p-4 border border-red-200 rounded-lg bg-red-50">
                   <h4 className="font-medium text-red-900 mb-2">Delete Account</h4>
                   <p className="text-sm text-red-700 mb-4">
-                    This action cannot be undone. This will permanently delete your account 
+                    This action cannot be undone. This will permanently delete your account
                     {user ? " and all your messages." : " and remove your admin access."}
                   </p>
                   <Button

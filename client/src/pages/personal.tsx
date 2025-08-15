@@ -24,6 +24,7 @@ export function PersonalPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const backgroundFileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [backgroundPhoto, setBackgroundPhoto] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -46,6 +47,7 @@ export function PersonalPage() {
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || user.username);
+      setBio(user.bio || "");
       setProfilePicture(user.profilePicture || "");
       setBackgroundPhoto(user.backgroundPhoto || "");
       setProfileImagePreview(user.profilePicture || null);
@@ -192,7 +194,7 @@ export function PersonalPage() {
   };
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: { displayName?: string; profilePicture?: string, backgroundPhoto?: string, bio?: string }) => {
+    mutationFn: async (updates: { displayName?: string; profilePicture?: string; backgroundPhoto?: string; bio?: string }) => {
       if (!user) throw new Error("Not authenticated as user");
 
       // Validate the updates
@@ -234,10 +236,14 @@ export function PersonalPage() {
   });
 
   const handleSaveProfile = () => {
-    const updates: { displayName?: string; profilePicture?: string; backgroundPhoto?: string } = {};
+    const updates: { displayName?: string; profilePicture?: string; backgroundPhoto?: string; bio?: string } = {};
 
     if (displayName !== (user?.displayName || user?.username)) {
       updates.displayName = displayName;
+    }
+
+    if (bio !== (user?.bio || "")) {
+      updates.bio = bio;
     }
 
     if (profilePicture !== (user?.profilePicture || "")) {
@@ -247,7 +253,6 @@ export function PersonalPage() {
     if (backgroundPhoto !== (user?.backgroundPhoto || "")) {
       updates.backgroundPhoto = backgroundPhoto || undefined;
     }
-
 
     if (Object.keys(updates).length === 0) {
       setIsEditing(false);
@@ -260,6 +265,7 @@ export function PersonalPage() {
   const handleCancel = () => {
     setIsEditing(false);
     setDisplayName(user?.displayName || user?.username || "");
+    setBio(user?.bio || "");
     setProfilePicture(user?.profilePicture || "");
     setBackgroundPhoto(user?.backgroundPhoto || "");
     setProfileImagePreview(user?.profilePicture || null);
@@ -535,13 +541,15 @@ export function PersonalPage() {
                     {isEditing ? (
                       <div className="space-y-3">
                         <Input
-                          value={displayName}
-                          onChange={(e) => setDisplayName(e.target.value)}
-                          placeholder="Enter bio (2-50 characters)"
-                          maxLength={50}
-                          disabled={!canUpdateDisplayName}
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          placeholder="Tell others about yourself... (max 200 characters)"
+                          maxLength={200}
                           className="bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                         />
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {bio.length}/200 characters
+                        </p>
                       </div>
                     ) : (
                       <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
