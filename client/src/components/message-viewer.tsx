@@ -113,9 +113,9 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       await document.fonts.ready;
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Set proper background color instead of transparent
+      // Set proper background color instead of transparent - using solid colors for pink
       const backgroundColor = isPinkTheme 
-        ? '#e91e63' // Pink theme background
+        ? '#f4e6ec' // Pink theme background (solid color matching CSS)
         : isDarkTheme 
         ? '#1a1a2e' // Dark theme background  
         : '#f8fafc'; // Light theme background

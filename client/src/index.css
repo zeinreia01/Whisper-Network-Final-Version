@@ -83,20 +83,20 @@
 
 .pink {
   /* Minimalistic Pink Background - Soft and Clean */
-  --background: linear-gradient(135deg, hsl(350, 40%, 94%) 0%, hsl(345, 35%, 96%) 50%, hsl(340, 30%, 98%) 100%);
+  --background: hsl(345, 35%, 96%);
   --background-solid: hsl(345, 35%, 96%);
   --foreground: hsl(340, 60%, 25%);
-  --muted: linear-gradient(135deg, hsl(345, 25%, 90%) 0%, hsl(340, 20%, 92%) 100%);
+  --muted: hsl(345, 22%, 91%);
   --muted-solid: hsl(345, 22%, 91%);
   --muted-foreground: hsl(340, 40%, 45%);
-  --popover: linear-gradient(135deg, hsl(345, 30%, 97%) 0%, hsl(340, 25%, 98%) 100%);
+  --popover: hsl(345, 28%, 97%);
   --popover-solid: hsl(345, 28%, 97%);
   --popover-foreground: hsl(340, 60%, 25%);
-  --card: linear-gradient(135deg, hsl(345, 35%, 96%) 0%, hsl(340, 30%, 98%) 100%);
+  --card: hsl(345, 32%, 97%);
   --card-solid: hsl(345, 32%, 97%);
   --card-foreground: hsl(340, 60%, 25%);
   --border: hsl(345, 30%, 85%);
-  --input: linear-gradient(135deg, hsl(345, 20%, 92%) 0%, hsl(340, 15%, 94%) 100%);
+  --input: hsl(345, 18%, 93%);
   --input-solid: hsl(345, 18%, 93%);
   
   /* Light Pink Primary - Elegant and Soft */
@@ -137,20 +137,32 @@
   --pink-glow: 0 0 15px hsla(345, 50%, 85%, 0.4);
 }
 
-/* Pink Theme Enhanced Components - No Gray Overlays */
+/* Pink Theme Enhanced Components - Clean and Minimal */
 .pink .bg-card {
   background: var(--card-solid) !important;
-  border: none !important;
+  border: 1px solid var(--border) !important;
 }
 
 .pink .bg-popover {
   background: var(--popover-solid) !important;
-  border: none !important;
+  border: 1px solid var(--border) !important;
 }
 
 .pink .bg-muted {
   background: var(--muted-solid) !important;
-  border: none !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Ensure proper font rendering for Montserrat */
+.font-extrabold {
+  font-weight: 800 !important;
+}
+
+/* Umamin-inspired minimalist styling */
+.umamin-title {
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
 }
 
 .pink .bg-primary {

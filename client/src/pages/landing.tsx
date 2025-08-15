@@ -21,8 +21,8 @@ export default function Landing({ onEnter }: LandingProps) {
           
           {/* Main Title */}
           <div className="space-y-4">
-            <h1 className="text-5xl lg:text-6xl font-light text-foreground tracking-tight">
-              Whisper Network
+            <h1 className="text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight lowercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              whisper network
             </h1>
             <div className="w-16 h-px bg-border mx-auto"></div>
           </div>

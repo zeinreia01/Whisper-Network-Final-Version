@@ -143,8 +143,8 @@ export default function Home() {
               <MessageCircle className="w-8 h-8 text-primary" />
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-light text-foreground mb-4 tracking-tight">
-            Whisper Network
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-4 tracking-tight lowercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            whisper network
           </h1>
           <div className="w-12 h-px bg-border mx-auto mb-6"></div>
           <p className="text-lg text-muted-foreground max-w-md mx-auto font-light leading-relaxed">
