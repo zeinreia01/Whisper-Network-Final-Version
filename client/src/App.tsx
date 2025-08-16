@@ -69,6 +69,7 @@ function App() {
         <TooltipProvider>
           <div className="min-h-screen">
             <AccessibilityMenu />
+            <Router />
             <Toaster />
           </div>
         </TooltipProvider>
