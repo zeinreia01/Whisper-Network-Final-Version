@@ -8,18 +8,12 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  email: text("email").unique(), // User's email address (optional)
-  emailVerified: boolean("email_verified").default(false), // Whether email is verified
-  emailVerificationToken: text("email_verification_token"), // Token for email verification
-  emailVerificationExpires: timestamp("email_verification_expires"), // Expiration for verification token
-  passwordResetToken: text("password_reset_token"), // Token for password reset
-  passwordResetExpires: timestamp("password_reset_expires"), // Expiration for reset token
   displayName: text("display_name"), // User's display name (can be changed with cooldown)
   profilePicture: text("profile_picture"), // URL or path to profile picture
   backgroundPhoto: text("background_photo"), // URL or path to background profile photo
   bio: text("bio"), // User's bio/description (200 character limit)
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
-  isVerified: boolean("is_verified").default(false), // Verified badge (ZEKE001 can grant OR auto-granted via email verification)
+  isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
   likedMessagesPrivacy: text("liked_messages_privacy").default("private"), // "public" or "private"
   isAnonymousLinkPaused: boolean("is_anonymous_link_paused").default(false), // Whether user has paused anonymous messaging
   createdAt: timestamp("created_at").defaultNow(),
@@ -311,25 +305,6 @@ export const updateUserProfileSchema = z.object({
   backgroundPhoto: z.string().optional(),
   bio: z.string().max(200).optional(),
   isAnonymousLinkPaused: z.boolean().optional(),
-  email: z.string().email().optional(),
-});
-
-// Email verification schemas
-export const emailVerificationSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
-
-export const verifyEmailTokenSchema = z.object({
-  token: z.string().min(1, "Verification token is required"),
-});
-
-export const passwordResetSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
-
-export const resetPasswordSchema = z.object({
-  token: z.string().min(1, "Reset token is required"),
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -349,10 +324,6 @@ export type Follow = typeof follows.$inferSelect;
 export type InsertLikedMessage = z.infer<typeof insertLikedMessageSchema>;
 export type LikedMessage = typeof likedMessages.$inferSelect;
 export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
-export type EmailVerification = z.infer<typeof emailVerificationSchema>;
-export type VerifyEmailToken = z.infer<typeof verifyEmailTokenSchema>;
-export type PasswordReset = z.infer<typeof passwordResetSchema>;
-export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 
 export type MessageWithReplies = Message & {
   replies: ReplyWithUser[];

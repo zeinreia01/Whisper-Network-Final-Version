@@ -4,14 +4,8 @@ config();
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { apiLimiter, securityHeaders } from "./middleware/security";
 
 const app = express();
-
-// Apply security middleware
-app.use(securityHeaders);
-app.use('/api', apiLimiter);
-
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 

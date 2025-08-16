@@ -391,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const replyId = parseInt(id);
-
+      
       // Delete the reply and all its nested children
       await storage.deleteReplyWithChildren(replyId);
       res.json({ message: "Reply deleted successfully" });
@@ -406,19 +406,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { adminUsername, userId } = req.body;
-
+      
       // Get the message first to check ownership
       const message = await storage.getMessageById(parseInt(id));
       if (!message) {
         return res.status(404).json({ message: "Message not found" });
       }
-
+      
       // Allow deletion if:
       // 1. User is ZEKE001 (main admin - can delete any message)
       // 2. Message belongs to the requesting admin
       // 3. Message belongs to the requesting user
       let canDelete = false;
-
+      
       if (adminUsername === "ZEKE001") {
         canDelete = true;
       } else if (message.adminId && adminUsername) {
@@ -427,11 +427,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (message.userId && userId) {
         canDelete = message.userId === parseInt(userId);
       }
-
+      
       if (!canDelete) {
         return res.status(403).json({ message: "You can only delete your own messages or have admin privileges" });
       }
-
+      
       await storage.deleteMessage(parseInt(id));
       res.json({ message: "Message deleted successfully" });
     } catch (error) {
@@ -760,6 +760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile update routes
   // Message privacy routes
   app.patch("/api/messages/:messageId/privacy", async (req, res) => {
     try {
@@ -1170,7 +1171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/profile/:username", async (req, res) => {
     try {
       const { username } = req.params;
-
+      
       const user = await storage.getUserByUsername(username);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -1248,7 +1249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
       if (bio !== undefined) updateData.bio = bio;
       if (backgroundPhoto !== undefined) updateData.backgroundPhoto = backgroundPhoto;
-
+      
       // Only update lastDisplayNameChange if display name actually changed
       if (displayName && displayName !== admin.displayName && admin.username !== "ZEKE001") {
         updateData.lastDisplayNameChange = new Date();
@@ -1323,7 +1324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get admin messages count
       const adminMessages = await storage.getAdminMessages(adminId);
-
+      
       // Get admin replies count
       const adminReplies = await storage.getAdminReplies(adminId);
 
@@ -1600,170 +1601,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling anonymous link:", error);
       res.status(500).json({ error: "Failed to toggle anonymous link" });
-    }
-  });
-
-  // Email verification routes
-  app.post("/api/users/:userId/add-email", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const { email } = req.body;
-
-      if (!userId || !email) {
-        return res.status(400).json({ error: "User ID and email are required" });
-      }
-
-      // Check if email is already in use
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser && existingUser.id !== userId) {
-        return res.status(400).json({ error: "Email is already in use by another account" });
-      }
-
-      // Generate verification token
-      const { generateSecureToken, sendEmailVerification } = await import("./email");
-      const verificationToken = generateSecureToken();
-
-      // Add email to user account
-      const user = await storage.addEmailToUser(userId, email, verificationToken);
-
-      // Send verification email
-      await sendEmailVerification(email, verificationToken, user.username);
-
-      res.json({ 
-        message: "Verification email sent. Check your inbox to verify your email address.",
-        email: email,
-        emailVerified: false
-      });
-    } catch (error) {
-      console.error("Error adding email:", error);
-      res.status(500).json({ error: "Failed to add email" });
-    }
-  });
-
-  // Email verification endpoint
-  app.get("/verify-email", async (req, res) => {
-    try {
-      const { token, username } = req.query;
-
-      if (!token || !username || typeof token !== 'string' || typeof username !== 'string') {
-        return res.redirect(`/?error=${encodeURIComponent("Invalid verification link")}`);
-      }
-
-      const user = await db.select()
-        .from(users)
-        .where(and(
-          eq(users.username, username),
-          eq(users.emailVerificationToken, token),
-          eq(users.emailVerified, false)
-        ))
-        .limit(1);
-
-      if (!user.length) {
-        return res.redirect(`/?error=${encodeURIComponent("Invalid or expired verification link")}`);
-      }
-
-      // Verify the email
-      await db.update(users)
-        .set({
-          emailVerified: true,
-          emailVerificationToken: null,
-          isVerified: true
-        })
-        .where(eq(users.id, user[0].id));
-
-      res.redirect(`/?verified=true&username=${encodeURIComponent(username)}`);
-    } catch (error) {
-      console.error("Email verification error:", error);
-      res.redirect(`/?error=${encodeURIComponent("Verification failed")}`);
-    }
-  });
-
-  app.post("/api/auth/forgot-password", async (req, res) => {
-    try {
-      const { email } = req.body;
-
-      if (!email) {
-        return res.status(400).json({ error: "Email is required" });
-      }
-
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        // Don't reveal if email exists or not
-        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
-      }
-
-      if (!user.emailVerified) {
-        return res.status(400).json({ error: "Email must be verified before you can reset your password" });
-      }
-
-      // Generate reset token
-      const { generateSecureToken, sendPasswordResetEmail } = await import("./email");
-      const resetToken = generateSecureToken();
-
-      // Set reset token
-      await storage.setPasswordResetToken(user.id, resetToken);
-
-      // Send reset email
-      await sendPasswordResetEmail(email, resetToken, user.username);
-
-      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
-    } catch (error) {
-      console.error("Error initiating password reset:", error);
-      res.status(500).json({ error: "Failed to process password reset request" });
-    }
-  });
-
-  app.post("/api/auth/reset-password", async (req, res) => {
-    try {
-      const { token, newPassword } = req.body;
-
-      if (!token || !newPassword) {
-        return res.status(400).json({ error: "Token and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters long" });
-      }
-
-      // Hash new password
-      const hashedPassword = await hashPassword(newPassword);
-
-      // Reset password
-      const user = await storage.resetUserPassword(token, hashedPassword);
-
-      res.json({ 
-        message: "Password reset successfully. You can now log in with your new password.",
-        username: user.username
-      });
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      res.status(400).json({ error: error.message || "Failed to reset password" });
-    }
-  });
-
-  app.get("/api/reset-password", async (req, res) => {
-    try {
-      const { token } = req.query;
-
-      if (!token || typeof token !== "string") {
-        return res.redirect("/?error=" + encodeURIComponent("Invalid reset token"));
-      }
-
-      // Verify token exists and is not expired (without actually resetting)
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.passwordResetToken, token));
-
-      if (!user || (user.passwordResetExpires && new Date() > user.passwordResetExpires)) {
-        return res.redirect("/?error=" + encodeURIComponent("Reset token is invalid or expired"));
-      }
-
-      // Redirect to frontend with token for password reset form
-      res.redirect(`/?resetToken=${encodeURIComponent(token)}&username=${encodeURIComponent(user.username)}`);
-    } catch (error) {
-      console.error("Error validating reset token:", error);
-      res.redirect("/?error=" + encodeURIComponent("Invalid reset token"));
     }
   });
 

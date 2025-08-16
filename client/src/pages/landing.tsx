@@ -2,96 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, MessageCircle, Heart } from "lucide-react";
 import { HonorableMentionsModal } from "@/components/honorable-mentions-modal";
-import { MessageCard } from "@/components/message-card";
-import { AuthModal } from "@/components/auth-modal";
-import { GlobalSearch } from "@/components/global-search";
-import { InfoDialog } from "@/components/info-dialog";
-import { AdminAuthModal } from "@/components/admin-auth-modal";
-import { CookieConsent } from "@/components/cookie-consent";
-import { PasswordResetForm } from "@/components/password-reset-form";
-import React, { useState, useEffect, useMemo } from 'react';
-import { useToast } from "@/hooks/use-toast";
 
 interface LandingProps {
   onEnter: () => void;
 }
 
 export default function Landing({ onEnter }: LandingProps) {
-  const { toast } = useToast();
-  const [messages, setMessages] = useState<any[]>([]); // Assuming messages are fetched elsewhere or passed as props
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
-  // State for modals
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [isHonorableMentionsOpen, setIsHonorableMentionsOpen] = useState(false);
-  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
-  const [resetToken, setResetToken] = useState<string>("");
-  const [resetUsername, setResetUsername] = useState<string>("");
-
-  // Handle URL parameters for verification and password reset
-  React.useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const verified = urlParams.get('verified');
-    const username = urlParams.get('username');
-    const error = urlParams.get('error');
-    const resetToken = urlParams.get('resetToken');
-
-    if (verified === 'true' && username) {
-      toast({
-        title: "Email Verified Successfully!",
-        description: `Welcome ${username}! Your email has been verified and you've earned a verified badge.`,
-      });
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (verified === 'false' && error) {
-      toast({
-        title: "Email Verification Failed",
-        description: decodeURIComponent(error),
-        variant: "destructive",
-      });
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (error) {
-      toast({
-        title: "Error",
-        description: decodeURIComponent(error),
-        variant: "destructive",
-      });
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    if (resetToken) {
-      // Show password reset form
-      setIsResetPasswordOpen(true);
-      setResetToken(resetToken);
-      setResetUsername(username || "");
-    }
-  }, [toast]);
-
-  // Filter and search messages
-  const filteredMessages = useMemo(() => {
-    let filtered = messages || [];
-
-    if (selectedCategory && selectedCategory !== "All") {
-      filtered = filtered.filter(msg => msg.category === selectedCategory);
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(msg =>
-        msg.content.toLowerCase().includes(query) ||
-        msg.category.toLowerCase().includes(query) ||
-        (msg.senderName && msg.senderName.toLowerCase().includes(query))
-      );
-    }
-
-    return filtered;
-  }, [messages, selectedCategory, searchQuery]);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted pink:from-pink-50 pink:to-pink-100 flex items-center justify-center pt-16">
       <div className="max-w-3xl mx-auto px-6 text-center">
@@ -102,7 +18,7 @@ export default function Landing({ onEnter }: LandingProps) {
               <MessageCircle className="w-10 h-10 text-foreground" />
             </div>
           </div>
-
+          
           {/* Main Title */}
           <div className="space-y-4">
             <h1 className="text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight lowercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -110,15 +26,15 @@ export default function Landing({ onEnter }: LandingProps) {
             </h1>
             <div className="w-16 h-px bg-border mx-auto"></div>
           </div>
-
+          
           {/* Subtitle */}
           <p className="text-lg text-muted-foreground font-light max-w-xl mx-auto leading-relaxed">
             Where Silent Messengers share thoughts and Whisper Listeners provide guidance in a space of understanding
           </p>
-
+          
           {/* CTA Button */}
           <div className="pt-6">
-            <Button
+            <Button 
               onClick={onEnter}
               size="lg"
               className="group px-8 py-3 text-base font-medium transition-all duration-300 shadow-lg hover:shadow-xl pink:elegant-button"
@@ -127,7 +43,7 @@ export default function Landing({ onEnter }: LandingProps) {
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
-
+          
           {/* Simple feature list */}
           <div className="pt-8">
             <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground font-medium">
@@ -170,7 +86,7 @@ export default function Landing({ onEnter }: LandingProps) {
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
                     <h4 className="text-lg font-semibold mb-3 text-purple-600 dark:text-purple-400">The Philosophy</h4>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                      Born from the understanding that authentic connection requires courage, not visibility.
+                      Born from the understanding that authentic connection requires courage, not visibility. 
                       In anonymity, we find freedom. In listening, we discover empathy. In sharing, we heal together.
                     </p>
                   </div>
@@ -178,7 +94,7 @@ export default function Landing({ onEnter }: LandingProps) {
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
                     <h4 className="text-lg font-semibold mb-3 text-blue-600 dark:text-blue-400">The Mission</h4>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                      To provide a digital sanctuary where every whisper matters, every story has value,
+                      To provide a digital sanctuary where every whisper matters, every story has value, 
                       and every person finds solace in the knowledge that they are not alone in their journey.
                     </p>
                   </div>
@@ -199,42 +115,6 @@ export default function Landing({ onEnter }: LandingProps) {
         <div className="mt-12 text-center">
           <HonorableMentionsModal />
         </div>
-
-        <CookieConsent />
-
-        {/* Password Reset Modal */}
-        {isResetPasswordOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="w-full max-w-md">
-              <PasswordResetForm
-                resetToken={resetToken}
-                username={resetUsername}
-                onSuccess={() => {
-                  setIsResetPasswordOpen(false);
-                  setResetToken("");
-                  setResetUsername("");
-                  // Clean up URL
-                  window.history.replaceState({}, document.title, window.location.pathname);
-                  // Show login modal
-                  setIsAuthModalOpen(true);
-                }}
-              />
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setIsResetPasswordOpen(false);
-                  setResetToken("");
-                  setResetUsername("");
-                  // Clean up URL
-                  window.history.replaceState({}, document.title, window.location.pathname);
-                }}
-                className="w-full mt-4"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
