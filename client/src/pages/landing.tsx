@@ -10,7 +10,7 @@ import { AdminAuthModal } from "@/components/admin-auth-modal";
 import { CookieConsent } from "@/components/cookie-consent";
 import { PasswordResetForm } from "@/components/password-reset-form";
 import React, { useState, useEffect, useMemo } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface LandingProps {
   onEnter: () => void;

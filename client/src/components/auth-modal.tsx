@@ -93,15 +93,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl font-bold">
-            {activeTab === "login" ? "Welcome back" : activeTab === "register" ? "Create Account" : "Password Reset"}
+          <DialogTitle className="text-center flex items-center justify-center gap-2">
+            <User className="w-5 h-5" />
+            Account Access
           </DialogTitle>
-          <DialogDescription className="text-center text-sm text-muted-foreground">
-            {activeTab === "login"
-              ? "Sign in to your account to continue"
-              : activeTab === "register"
-              ? "Create a new account to get started"
-              : "Enter your email to reset your password"}
+          <DialogDescription className="text-center text-muted-foreground">
+            Sign in to your existing account or create a new one to access all features.
           </DialogDescription>
         </DialogHeader>
 
