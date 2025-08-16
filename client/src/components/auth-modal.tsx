@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, UserPlus, LogIn, Loader2, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, User, UserPlus, CheckCircle, XCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { PasswordResetForm } from "@/components/password-reset-form";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,7 +27,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setUsernameAvailability(null);
       return;
     }
-    
+
     setIsCheckingUsername(true);
     try {
       const response = await fetch(`/api/auth/check-username/${username}`);
@@ -46,7 +48,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       return () => clearTimeout(timeoutId);
     }
   }, [registerForm.username, activeTab]);
-  
+
   // Reset username availability when changing tabs
   useEffect(() => {
     setUsernameAvailability(null);
@@ -96,7 +98,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             Create an account to save your messages and use nicknames when replying
           </p>
         </DialogHeader>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Sign In</TabsTrigger>
@@ -130,10 +132,22 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
-                  <User className="h-4 w-4 mr-2" />
+                  <LogIn className="h-4 w-4 mr-2" />
                 )}
                 Sign In
               </Button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("forgot-password");
+                  }}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot your password?
+                </button>
+              </div>
             </form>
           </TabsContent>
 
@@ -215,12 +229,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </Button>
             </form>
           </TabsContent>
+
+          <TabsContent value="forgot-password">
+            <PasswordResetForm 
+              onSuccess={() => {
+                setActiveTab("login");
+                onClose();
+              }}
+            />
+          </TabsContent>
         </Tabs>
 
         <div className="mt-4 p-4 bg-muted rounded-lg">
           <p className="text-sm text-gray-600">
-            <strong>Privacy Note:</strong> No email required. Your username keeps your messages organized 
-            while maintaining anonymity. Only you can see your private messages.
+            <strong>Privacy Note:</strong> No email required for basic usage. Add an email to enable password reset and earn a verified badge.
           </p>
         </div>
       </DialogContent>

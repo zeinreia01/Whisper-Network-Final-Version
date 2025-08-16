@@ -16,6 +16,9 @@ import { formatTimeAgo } from "@/lib/utils";
 import { updateUserProfileSchema } from "@shared/schema";
 import { z } from "zod";
 import { compressImage } from "@/lib/image-utils";
+import { PhotoUpload } from "@/components/photo-upload";
+import { PersonalMessagesArchive } from "@/components/personal-messages-archive";
+import { EmailManagement } from "@/components/email-management";
 
 export function PersonalPage() {
   const { user, admin } = useAuth();
@@ -362,6 +365,12 @@ export function PersonalPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-8">
+                  {/* Profile Picture Upload */}
+          <PhotoUpload />
+
+          {/* Email Management */}
+          <EmailManagement />
+                  
                   {/* Avatar Section */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
                     <div className="relative">
@@ -647,7 +656,5 @@ export function PersonalPage() {
     </div>
   );
 }
-
-
 
 export default PersonalPage;

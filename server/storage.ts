@@ -93,6 +93,13 @@ export interface IStorage {
   deleteUserAccount(userId: number): Promise<void>;
   deleteAdminAccount(adminId: number): Promise<void>;
 
+  // Email verification and password reset
+  addEmailToUser(userId: number, email: string, verificationToken: string): Promise<User>;
+  verifyUserEmail(token: string): Promise<User>;
+  getUserByEmail(email: string): Promise<User | null>;
+  setPasswordResetToken(userId: number, token: string): Promise<User>;
+  resetUserPassword(token: string, newPasswordHash: string): Promise<User>;
+
   // Message privacy operations
   updateMessagePrivacy(messageId: number, userId: number, isOwnerPrivate: boolean): Promise<Message>;
 
@@ -167,7 +174,7 @@ export class DatabaseStorage implements IStorage {
   async getPublicMessages(): Promise<MessageWithReplies[]> {
     try {
       console.log('Loading public messages...');
-      
+
       // Get all public messages, pinned messages first
       const messagesData = await db
         .select()
@@ -400,12 +407,12 @@ export class DatabaseStorage implements IStorage {
     try {
       // Recursively collect all child reply IDs
       const allReplyIds = await this.collectAllChildReplyIds(replyId);
-      
+
       // Delete notifications for all these replies
       for (const id of allReplyIds) {
         await db.delete(notifications).where(eq(notifications.replyId, id));
       }
-      
+
       // Delete all replies in reverse order (children first, then parents)
       for (let i = allReplyIds.length - 1; i >= 0; i--) {
         await db.delete(replies).where(eq(replies.id, allReplyIds[i]));
@@ -418,19 +425,19 @@ export class DatabaseStorage implements IStorage {
 
   private async collectAllChildReplyIds(parentId: number): Promise<number[]> {
     const allIds: number[] = [parentId];
-    
+
     // Get all direct children
     const children = await db
       .select({ id: replies.id })
       .from(replies)
       .where(eq(replies.parentId, parentId));
-    
+
     // Recursively get all nested children
     for (const child of children) {
       const childIds = await this.collectAllChildReplyIds(child.id);
       allIds.push(...childIds);
     }
-    
+
     return allIds;
   }
 
@@ -662,7 +669,7 @@ export class DatabaseStorage implements IStorage {
   async deleteMessage(messageId: number): Promise<void> {
     try {
       // Delete in proper order to avoid foreign key constraints
-      
+
       // 1. First, get all reply IDs for this message to clean up notifications
       const messageReplies = await db
         .select({ id: replies.id })
@@ -1381,8 +1388,126 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .set({ isVerified })
       .where(eq(admins.id, adminId))
       .returning();
+
+    if (!admin) {
+      throw new Error("Admin not found");
+    }
+
     return admin;
   }
+
+  // Email verification methods
+  async addEmailToUser(userId: number, email: string, verificationToken: string): Promise<User> {
+    const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const [user] = await db
+      .update(users)
+      .set({ 
+        email, 
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: expirationTime
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  }
+
+  async verifyUserEmail(token: string): Promise<User> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(and(
+        eq(users.emailVerificationToken, token),
+        eq(users.emailVerified, false)
+      ));
+
+    if (!user) {
+      throw new Error("Invalid or expired verification token");
+    }
+
+    // Check if token is expired
+    if (user.emailVerificationExpires && new Date() > user.emailVerificationExpires) {
+      throw new Error("Verification token has expired");
+    }
+
+    // Verify email and grant verified badge
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        emailVerified: true,
+        isVerified: true, // Auto-grant verified badge
+        emailVerificationToken: null,
+        emailVerificationExpires: null
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return updatedUser;
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+
+    return user || null;
+  }
+
+  async setPasswordResetToken(userId: number, token: string): Promise<User> {
+    const expirationTime = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    const [user] = await db
+      .update(users)
+      .set({ 
+        passwordResetToken: token,
+        passwordResetExpires: expirationTime
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  }
+
+  async resetUserPassword(token: string, newPasswordHash: string): Promise<User> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.passwordResetToken, token));
+
+    if (!user) {
+      throw new Error("Invalid or expired reset token");
+    }
+
+    // Check if token is expired
+    if (user.passwordResetExpires && new Date() > user.passwordResetExpires) {
+      throw new Error("Reset token has expired");
+    }
+
+    // Update password and clear reset token
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        password: newPasswordHash,
+        passwordResetToken: null,
+        passwordResetExpires: null
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return updatedUser;
+  }
+
 
   async followAdmin(followerId: number, adminId: number): Promise<Follow> {
     const [follow] = await db
