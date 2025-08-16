@@ -88,6 +88,9 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
               </>
             )}
           </DialogTitle>
+          <DialogDescription>
+            Manage your account settings, profile information, and preferences.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-6">

@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { User, Admin } from "@shared/schema";
-import { User as UserIcon } from "lucide-react";
 
 interface AuthContextType {
   user: User | null;
