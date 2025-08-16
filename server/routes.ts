@@ -391,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const replyId = parseInt(id);
-      
+
       // Delete the reply and all its nested children
       await storage.deleteReplyWithChildren(replyId);
       res.json({ message: "Reply deleted successfully" });
@@ -406,19 +406,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { adminUsername, userId } = req.body;
-      
+
       // Get the message first to check ownership
       const message = await storage.getMessageById(parseInt(id));
       if (!message) {
         return res.status(404).json({ message: "Message not found" });
       }
-      
+
       // Allow deletion if:
       // 1. User is ZEKE001 (main admin - can delete any message)
       // 2. Message belongs to the requesting admin
       // 3. Message belongs to the requesting user
       let canDelete = false;
-      
+
       if (adminUsername === "ZEKE001") {
         canDelete = true;
       } else if (message.adminId && adminUsername) {
@@ -427,11 +427,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (message.userId && userId) {
         canDelete = message.userId === parseInt(userId);
       }
-      
+
       if (!canDelete) {
         return res.status(403).json({ message: "You can only delete your own messages or have admin privileges" });
       }
-      
+
       await storage.deleteMessage(parseInt(id));
       res.json({ message: "Message deleted successfully" });
     } catch (error) {
@@ -760,7 +760,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User profile update routes
   // Message privacy routes
   app.patch("/api/messages/:messageId/privacy", async (req, res) => {
     try {
@@ -1171,7 +1170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/profile/:username", async (req, res) => {
     try {
       const { username } = req.params;
-      
+
       const user = await storage.getUserByUsername(username);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -1249,7 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
       if (bio !== undefined) updateData.bio = bio;
       if (backgroundPhoto !== undefined) updateData.backgroundPhoto = backgroundPhoto;
-      
+
       // Only update lastDisplayNameChange if display name actually changed
       if (displayName && displayName !== admin.displayName && admin.username !== "ZEKE001") {
         updateData.lastDisplayNameChange = new Date();
@@ -1324,7 +1323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get admin messages count
       const adminMessages = await storage.getAdminMessages(adminId);
-      
+
       // Get admin replies count
       const adminReplies = await storage.getAdminReplies(adminId);
 
@@ -1626,7 +1625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Add email to user account
       const user = await storage.addEmailToUser(userId, email, verificationToken);
-      
+
       // Send verification email
       await sendEmailVerification(email, verificationToken, user.username);
 
@@ -1641,21 +1640,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/verify-email", async (req, res) => {
+  // Email verification endpoint
+  app.get("/verify-email", async (req, res) => {
     try {
-      const { token } = req.query;
+      const { token, username } = req.query;
 
-      if (!token || typeof token !== "string") {
-        return res.status(400).json({ error: "Verification token is required" });
+      if (!token || !username || typeof token !== 'string' || typeof username !== 'string') {
+        return res.redirect(`/?error=${encodeURIComponent("Invalid verification link")}`);
       }
 
-      const user = await storage.verifyUserEmail(token);
+      const user = await db.select()
+        .from(users)
+        .where(and(
+          eq(users.username, username),
+          eq(users.emailVerificationToken, token),
+          eq(users.emailVerified, false)
+        ))
+        .limit(1);
 
-      // Redirect to success page with verification status
-      res.redirect(`/?verified=true&username=${encodeURIComponent(user.username)}`);
+      if (!user.length) {
+        return res.redirect(`/?error=${encodeURIComponent("Invalid or expired verification link")}`);
+      }
+
+      // Verify the email
+      await db.update(users)
+        .set({
+          emailVerified: true,
+          emailVerificationToken: null,
+          isVerified: true
+        })
+        .where(eq(users.id, user[0].id));
+
+      res.redirect(`/?verified=true&username=${encodeURIComponent(username)}`);
     } catch (error) {
-      console.error("Error verifying email:", error);
-      res.redirect(`/?verified=false&error=${encodeURIComponent("Invalid or expired verification token")}`);
+      console.error("Email verification error:", error);
+      res.redirect(`/?error=${encodeURIComponent("Verification failed")}`);
     }
   });
 
@@ -1683,7 +1702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set reset token
       await storage.setPasswordResetToken(user.id, resetToken);
-      
+
       // Send reset email
       await sendPasswordResetEmail(email, resetToken, user.username);
 

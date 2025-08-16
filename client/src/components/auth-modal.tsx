@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,10 +93,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Silent Messenger Account</DialogTitle>
-          <p className="text-sm text-gray-600 mt-2">
-            Create an account to save your messages and use nicknames when replying
-          </p>
+          <DialogTitle className="text-center text-xl font-bold">
+            {activeTab === "login" ? "Welcome back" : activeTab === "register" ? "Create Account" : "Password Reset"}
+          </DialogTitle>
+          <DialogDescription className="text-center text-sm text-muted-foreground">
+            {activeTab === "login"
+              ? "Sign in to your account to continue"
+              : activeTab === "register"
+              ? "Create a new account to get started"
+              : "Enter your email to reset your password"}
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -210,11 +216,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {registerForm.password !== registerForm.confirmPassword && registerForm.confirmPassword && (
                 <p className="text-sm text-red-600">Passwords do not match</p>
               )}
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={
-                  isLoading || 
+                  isLoading ||
                   registerForm.password !== registerForm.confirmPassword ||
                   (usernameAvailability && !usernameAvailability.available) ||
                   isCheckingUsername
@@ -231,7 +237,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </TabsContent>
 
           <TabsContent value="forgot-password">
-            <PasswordResetForm 
+            <PasswordResetForm
               onSuccess={() => {
                 setActiveTab("login");
                 onClose();
