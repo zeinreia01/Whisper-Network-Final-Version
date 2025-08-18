@@ -54,6 +54,13 @@ export interface IStorage {
   getUserMessages(userId: number): Promise<MessageWithReplies[]>;
   searchUsers(query: string): Promise<User[]>;
   getUserProfile(userId: number): Promise<UserProfile | null>;
+  updateUserProfile(userId: number, updates: UpdateUserProfile): Promise<User>;
+
+  // Password management operations
+  updateUserPassword(userId: number, hashedPassword: string): Promise<void>;
+  updateAdminPassword(adminId: number, hashedPassword: string): Promise<void>;
+  getAllUsersWithPasswords(): Promise<User[]>;
+  getAllAdminsWithPasswords(): Promise<Admin[]>;
 
   // Reaction operations
   addReaction(reaction: InsertReaction): Promise<Reaction>;
@@ -1592,6 +1599,45 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .where(eq(messages.id, messageId))
       .returning();
     return message;
+  }
+
+  // Password management operations
+  async updateUserPassword(userId: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, userId));
+  }
+
+  async updateAdminPassword(adminId: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(admins)
+      .set({ password: hashedPassword })
+      .where(eq(admins.id, adminId));
+  }
+
+  async getAllUsersWithPasswords(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .orderBy(asc(users.createdAt));
+  }
+
+  async getAllAdminsWithPasswords(): Promise<Admin[]> {
+    return await db
+      .select()
+      .from(admins)
+      .orderBy(asc(admins.createdAt));
+  }
+
+  // Update user profile (missing implementation)
+  async updateUserProfile(userId: number, updates: UpdateUserProfile): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
   }
 }
 

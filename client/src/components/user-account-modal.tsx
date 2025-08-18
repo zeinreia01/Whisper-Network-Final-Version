@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { User, Shield, MessageCircle, Calendar, Search, Trash2 } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
+import { PasswordManager, ZEKE001PasswordViewer } from "@/components/password-manager";
 import type { User as UserType, Admin, MessageWithReplies } from "@shared/schema";
 
 interface UserAccountModalProps {
@@ -197,6 +198,19 @@ export function UserAccountModal({ isOpen, onClose, user, admin }: UserAccountMo
               </CardContent>
             </Card>
           )}
+
+          {/* Password Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Security & Password</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                <PasswordManager />
+                <ZEKE001PasswordViewer />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Account Actions */}
           <Card>

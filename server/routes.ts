@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows } from "@shared/schema";
+import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -1601,6 +1601,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling anonymous link:", error);
       res.status(500).json({ error: "Failed to toggle anonymous link" });
+    }
+  });
+
+  // Password management routes
+  // Change user password
+  app.post("/api/users/:id/change-password", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const validatedData = changePasswordSchema.parse(req.body);
+      
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash and update new password
+      const hashedNewPassword = await hashPassword(validatedData.newPassword);
+      await storage.updateUserPassword(userId, hashedNewPassword);
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error changing user password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  // Change admin password
+  app.post("/api/admins/:id/change-password", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.id);
+      const validatedData = adminChangePasswordSchema.parse(req.body);
+      
+      const admin = await storage.getAdminById(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // For ZEKE001, skip current password verification
+      if (admin.username !== "ZEKE001" && validatedData.currentPassword) {
+        const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, admin.password || "");
+        if (!isCurrentPasswordValid) {
+          return res.status(400).json({ message: "Current password is incorrect" });
+        }
+      }
+
+      // Hash and update new password
+      const hashedNewPassword = await hashPassword(validatedData.newPassword);
+      await storage.updateAdminPassword(adminId, hashedNewPassword);
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error changing admin password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  // ZEKE001 special privilege: View all user passwords
+  app.post("/api/admin/view-all-passwords", async (req, res) => {
+    try {
+      const validatedData = viewAllPasswordsSchema.parse(req.body);
+      
+      // Only ZEKE001 can access this endpoint
+      if (validatedData.adminUsername !== "ZEKE001") {
+        return res.status(403).json({ message: "Access denied. Only ZEKE001 can access this feature." });
+      }
+
+      // Get all users with their passwords (hashed)
+      const users = await storage.getAllUsersWithPasswords();
+      const admins = await storage.getAllAdminsWithPasswords();
+
+      res.json({
+        message: "Password data retrieved successfully",
+        users: users.map(user => ({
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          hashedPassword: user.password,
+          createdAt: user.createdAt
+        })),
+        admins: admins.map(admin => ({
+          id: admin.id,
+          username: admin.username,
+          displayName: admin.displayName,
+          hashedPassword: admin.password,
+          createdAt: admin.createdAt
+        }))
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request", errors: error.errors });
+      }
+      console.error("Error retrieving password data:", error);
+      res.status(500).json({ message: "Failed to retrieve password data" });
     }
   });
 

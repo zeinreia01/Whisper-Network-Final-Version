@@ -307,6 +307,22 @@ export const updateUserProfileSchema = z.object({
   isAnonymousLinkPaused: z.boolean().optional(),
 });
 
+// Password change schemas
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+});
+
+export const adminChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required").optional(), // Optional for ZEKE001
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+});
+
+// ZEKE001 special schemas
+export const viewAllPasswordsSchema = z.object({
+  adminUsername: z.literal("ZEKE001"),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
@@ -324,6 +340,9 @@ export type Follow = typeof follows.$inferSelect;
 export type InsertLikedMessage = z.infer<typeof insertLikedMessageSchema>;
 export type LikedMessage = typeof likedMessages.$inferSelect;
 export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
+export type ChangePassword = z.infer<typeof changePasswordSchema>;
+export type AdminChangePassword = z.infer<typeof adminChangePasswordSchema>;
+export type ViewAllPasswords = z.infer<typeof viewAllPasswordsSchema>;
 
 export type MessageWithReplies = Message & {
   replies: ReplyWithUser[];
