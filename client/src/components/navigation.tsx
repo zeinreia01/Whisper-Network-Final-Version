@@ -9,7 +9,7 @@ import { GlobalSearch } from "@/components/global-search";
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X } from "lucide-react";
 
 // Mobile notification button component for bottom navigation
 function MobileNotificationButton() {
@@ -48,8 +48,13 @@ function MobileNotificationButton() {
           <div className="bg-white dark:bg-gray-900 w-full sm:max-w-md sm:mx-4 sm:rounded-lg max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold">Notifications</h2>
-              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-                ✕
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex-1 overflow-hidden p-4">
@@ -77,7 +82,7 @@ export function Navigation() {
       {/* Top Navigation Bar - Minimal and Clean */}
       <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-12">
             {/* Logo */}
             <div className="flex items-center">
               <button
@@ -99,11 +104,11 @@ export function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex h-10 px-3 rounded-full"
+                  className="hidden sm:flex h-8 px-2 rounded-full text-sm"
                   onClick={() => setShowGlobalSearch(true)}
                 >
-                  <Search className="h-4 w-4" />
-                  <span className="ml-2">Search</span>
+                  <Search className="h-3 w-3" />
+                  <span className="ml-1 text-xs">Search</span>
                 </Button>
               )}
 
@@ -118,9 +123,9 @@ export function Navigation() {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-10 px-3 rounded-full">
-                      <User className="h-4 w-4" />
-                      <span className="hidden sm:inline ml-2">{user.username}</span>
+                    <Button variant="ghost" size="sm" className="h-8 px-2 rounded-full text-sm">
+                      <User className="h-3 w-3" />
+                      <span className="hidden sm:inline ml-1 text-xs">{user.username}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2">
@@ -151,10 +156,10 @@ export function Navigation() {
               ) : admin ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-10 px-3 rounded-full">
-                      <Shield className="h-4 w-4" />
-                      <span className="hidden sm:inline ml-2">{admin.displayName}</span>
-                      <Badge variant="outline" className="hidden sm:inline-flex ml-2 text-xs">
+                    <Button variant="ghost" size="sm" className="h-8 px-2 rounded-full text-sm">
+                      <Shield className="h-3 w-3" />
+                      <span className="hidden sm:inline ml-1 text-xs">{admin.displayName}</span>
+                      <Badge variant="outline" className="hidden sm:inline-flex ml-1 text-xs">
                         Listener
                       </Badge>
                     </Button>
@@ -177,28 +182,28 @@ export function Navigation() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-10 px-3 rounded-full hidden sm:flex" 
+                    className="h-8 px-2 rounded-full hidden sm:flex text-sm" 
                     onClick={() => setShowAuthModal(true)}
                   >
-                    <User className="h-4 w-4" />
-                    <span className="ml-2">Silent Messenger</span>
+                    <User className="h-3 w-3" />
+                    <span className="ml-1 text-xs">Silent Messenger</span>
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-10 px-3 rounded-full hidden sm:flex" 
+                    className="h-8 px-2 rounded-full hidden sm:flex text-sm" 
                     onClick={() => setShowAdminAuthModal(true)}
                   >
-                    <Shield className="h-4 w-4" />
-                    <span className="ml-2">Whisper Listener</span>
+                    <Shield className="h-3 w-3" />
+                    <span className="ml-1 text-xs">Whisper Listener</span>
                   </Button>
                   
                   {/* Mobile login menu */}
                   <div className="sm:hidden">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-10 w-10 rounded-full p-0">
-                          <Menu className="h-5 w-5" />
+                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0">
+                          <Menu className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 mt-2">

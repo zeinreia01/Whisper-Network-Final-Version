@@ -41,6 +41,16 @@ export function AdminDashboard() {
     },
   });
 
+  // Fetch all users with passwords (main admin only)
+  const { data: allUsersWithPasswords, isLoading: loadingPasswords } = useQuery({
+    queryKey: ["/api/admin/user-passwords"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/user-passwords");
+      return await response.json();
+    },
+    enabled: admin?.username === "ZEKE001",
+  });
+
   // Create admin mutation
   const createAdminMutation = useMutation({
     mutationFn: async (adminData: typeof newAdmin) => {
@@ -139,9 +149,10 @@ export function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="messages" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="messages">Private Messages</TabsTrigger>
           <TabsTrigger value="admins">Manage Admins</TabsTrigger>
+          <TabsTrigger value="passwords">User Passwords</TabsTrigger>
           <TabsTrigger value="create">Create Admin</TabsTrigger>
         </TabsList>
 
@@ -259,6 +270,55 @@ export function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="passwords" className="space-y-4">
+          {admin?.username === "ZEKE001" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>User Passwords</CardTitle>
+                <CardDescription>View all user passwords (ZEKE001 only)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingPasswords ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : allUsersWithPasswords?.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No users found.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {allUsersWithPasswords?.map((user: any) => (
+                      <Card key={user.id} className="border">
+                        <CardHeader>
+                          <div className="space-y-2">
+                            <h3 className="font-semibold">{user.displayName || user.username}</h3>
+                            <p className="text-sm text-gray-600">@{user.username}</p>
+                            <div className="bg-gray-100 p-3 rounded-md">
+                              <p className="text-sm font-mono">Password: {user.password}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant={user.isActive ? "default" : "secondary"}>
+                                {user.isActive ? "Active" : "Inactive"}
+                              </Badge>
+                              {user.isVerified && <Badge variant="outline">Verified</Badge>}
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Access Denied</CardTitle>
+                <CardDescription>Only ZEKE001 can view user passwords.</CardDescription>
+              </CardHeader>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="create" className="space-y-4">

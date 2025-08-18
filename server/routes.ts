@@ -175,11 +175,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/list", async (req, res) => {
     try {
       const admins = await storage.getAllAdmins();
-      const adminsWithoutPasswords = admins.map(({ password, ...admin }) => admin);
-      res.json(adminsWithoutPasswords);
+      res.json(admins);
     } catch (error) {
       console.error("Error fetching admins:", error);
       res.status(500).json({ message: "Failed to fetch admins" });
+    }
+  });
+
+  app.get("/api/admin/user-passwords", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const token = authHeader.substring(7);
+      const admin = await storage.getAdminByToken(token);
+
+      if (!admin || admin.username !== "ZEKE001") {
+        return res.status(403).json({ message: "Access denied - ZEKE001 only" });
+      }
+
+      const users = await storage.getAllUsersWithPasswords();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching user passwords:", error);
+      res.status(500).json({ message: "Failed to fetch user passwords" });
     }
   });
 
@@ -391,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const replyId = parseInt(id);
-      
+
       // Delete the reply and all its nested children
       await storage.deleteReplyWithChildren(replyId);
       res.json({ message: "Reply deleted successfully" });
@@ -406,19 +427,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { adminUsername, userId } = req.body;
-      
+
       // Get the message first to check ownership
       const message = await storage.getMessageById(parseInt(id));
       if (!message) {
         return res.status(404).json({ message: "Message not found" });
       }
-      
+
       // Allow deletion if:
       // 1. User is ZEKE001 (main admin - can delete any message)
       // 2. Message belongs to the requesting admin
       // 3. Message belongs to the requesting user
       let canDelete = false;
-      
+
       if (adminUsername === "ZEKE001") {
         canDelete = true;
       } else if (message.adminId && adminUsername) {
@@ -427,11 +448,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (message.userId && userId) {
         canDelete = message.userId === parseInt(userId);
       }
-      
+
       if (!canDelete) {
         return res.status(403).json({ message: "You can only delete your own messages or have admin privileges" });
       }
-      
+
       await storage.deleteMessage(parseInt(id));
       res.json({ message: "Message deleted successfully" });
     } catch (error) {
@@ -514,7 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // User management routes
   app.get("/api/user/messages/:userId", async (req, res) => {
@@ -1131,7 +1152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/profile/:username", async (req, res) => {
     try {
       const { username } = req.params;
-      
+
       const user = await storage.getUserByUsername(username);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -1209,7 +1230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
       if (bio !== undefined) updateData.bio = bio;
       if (backgroundPhoto !== undefined) updateData.backgroundPhoto = backgroundPhoto;
-      
+
       // Only update lastDisplayNameChange if display name actually changed
       if (displayName && displayName !== admin.displayName && admin.username !== "ZEKE001") {
         updateData.lastDisplayNameChange = new Date();
@@ -1284,7 +1305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get admin messages count
       const adminMessages = await storage.getAdminMessages(adminId);
-      
+
       // Get admin replies count
       const adminReplies = await storage.getAdminReplies(adminId);
 
@@ -1570,7 +1591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       const validatedData = changePasswordSchema.parse(req.body);
-      
+
       const user = await storage.getUserById(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -1601,7 +1622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const adminId = parseInt(req.params.id);
       const validatedData = adminChangePasswordSchema.parse(req.body);
-      
+
       const admin = await storage.getAdminById(adminId);
       if (!admin) {
         return res.status(404).json({ message: "Admin not found" });
@@ -1633,7 +1654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/view-all-passwords", async (req, res) => {
     try {
       const validatedData = viewAllPasswordsSchema.parse(req.body);
-      
+
       // Only ZEKE001 can access this endpoint
       if (validatedData.adminUsername !== "ZEKE001") {
         return res.status(403).json({ message: "Access denied. Only ZEKE001 can access this feature." });

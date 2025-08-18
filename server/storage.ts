@@ -174,7 +174,7 @@ export class DatabaseStorage implements IStorage {
   async getPublicMessages(): Promise<MessageWithReplies[]> {
     try {
       console.log('Loading public messages...');
-      
+
       // Get all public messages, pinned messages first
       const messagesData = await db
         .select()
@@ -407,12 +407,12 @@ export class DatabaseStorage implements IStorage {
     try {
       // Recursively collect all child reply IDs
       const allReplyIds = await this.collectAllChildReplyIds(replyId);
-      
+
       // Delete notifications for all these replies
       for (const id of allReplyIds) {
         await db.delete(notifications).where(eq(notifications.replyId, id));
       }
-      
+
       // Delete all replies in reverse order (children first, then parents)
       for (let i = allReplyIds.length - 1; i >= 0; i--) {
         await db.delete(replies).where(eq(replies.id, allReplyIds[i]));
@@ -425,19 +425,19 @@ export class DatabaseStorage implements IStorage {
 
   private async collectAllChildReplyIds(parentId: number): Promise<number[]> {
     const allIds: number[] = [parentId];
-    
+
     // Get all direct children
     const children = await db
       .select({ id: replies.id })
       .from(replies)
       .where(eq(replies.parentId, parentId));
-    
+
     // Recursively get all nested children
     for (const child of children) {
       const childIds = await this.collectAllChildReplyIds(child.id);
       allIds.push(...childIds);
     }
-    
+
     return allIds;
   }
 
@@ -669,7 +669,7 @@ export class DatabaseStorage implements IStorage {
   async deleteMessage(messageId: number): Promise<void> {
     try {
       // Delete in proper order to avoid foreign key constraints
-      
+
       // 1. First, get all reply IDs for this message to clean up notifications
       const messageReplies = await db
         .select({ id: replies.id })

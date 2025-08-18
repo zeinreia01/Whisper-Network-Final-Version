@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Heart, MessageSquare, Check, CheckCheck, UserPlus } from "lucide-react";
+import { Bell, Heart, MessageSquare, Check, CheckCheck, UserPlus, X } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { Link } from "wouter";
 import type { NotificationWithDetails } from "@shared/schema";
@@ -93,14 +93,14 @@ export function NotificationCenter() {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="w-5 h-5" />
+        <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0">
+          <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0"
+              className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center text-xs p-0"
             >
-              {unreadCount > 99 ? "99+" : unreadCount}
+              {unreadCount > 99 ? "9+" : unreadCount}
             </Badge>
           )}
         </Button>
@@ -110,17 +110,27 @@ export function NotificationCenter() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Notifications</CardTitle>
-              {Array.isArray(notifications) && notifications.length > 0 && (
+              <div className="flex items-center space-x-2">
+                {Array.isArray(notifications) && notifications.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markAllAsReadMutation.mutate()}
+                    disabled={markAllAsReadMutation.isPending || unreadCount === 0}
+                  >
+                    <CheckCheck className="w-4 h-4 mr-1" />
+                    Mark all read
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => markAllAsReadMutation.mutate()}
-                  disabled={markAllAsReadMutation.isPending || unreadCount === 0}
+                  onClick={() => setIsOpen(false)}
+                  className="h-6 w-6 p-0"
                 >
-                  <CheckCheck className="w-4 h-4 mr-1" />
-                  Mark all read
+                  <X className="w-4 h-4" />
                 </Button>
-              )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
