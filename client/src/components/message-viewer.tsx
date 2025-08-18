@@ -37,79 +37,183 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (!messageRef.current) return;
 
     try {
-      // Clone the actual modal content for perfect accuracy
-      const originalElement = messageRef.current;
-      const clonedElement = originalElement.cloneNode(true) as HTMLElement;
-      
-      // Create container with Instagram-style padding and styling
+      // Create a temporary container that mimics the actual app styling
       const downloadContainer = document.createElement('div');
-      downloadContainer.style.position = 'absolute';
-      downloadContainer.style.left = '-9999px';
-      downloadContainer.style.top = '-9999px';
-      downloadContainer.style.width = '800px';
-      downloadContainer.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-      downloadContainer.style.fontFamily = '"Times New Roman", serif';
-      downloadContainer.style.padding = '60px';
-      downloadContainer.style.borderRadius = '20px';
-      downloadContainer.style.boxShadow = '0 20px 40px rgba(0,0,0,0.1)';
+      downloadContainer.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 600px;
+        min-height: 400px;
+        background: #1a1a2e;
+        padding: 40px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        box-sizing: border-box;
+        border-radius: 20px;
+        border: 2px solid #4a5568;
+      `;
 
-      // Create inner card with proper spacing
-      const cardWrapper = document.createElement('div');
-      cardWrapper.style.background = 'white';
-      cardWrapper.style.borderRadius = '16px';
-      cardWrapper.style.padding = '40px';
-      cardWrapper.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
-      cardWrapper.style.position = 'relative';
+      // Create the message card with actual app styling
+      const messageCard = document.createElement('div');
+      messageCard.style.cssText = `
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 30px;
+        color: white;
+        position: relative;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      `;
 
-      // Apply styling to cloned element with better spacing
-      clonedElement.style.margin = '0';
-      clonedElement.style.transform = 'none';
-      clonedElement.style.maxWidth = '100%';
-      clonedElement.style.width = '100%';
-      clonedElement.style.minHeight = 'auto';
-      clonedElement.style.position = 'relative';
-      clonedElement.style.background = 'transparent';
+      // Add app title header
+      const header = document.createElement('div');
+      header.style.cssText = `
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+      `;
 
-      // Enhance text contrast and styling for Instagram-ready image
-      const allTextElements = clonedElement.querySelectorAll('*');
-      allTextElements.forEach((element: any) => {
-        // Force white background and dark text for readability
-        if (element.tagName === 'H1') {
-          element.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          element.style.webkitBackgroundClip = 'text';
-          element.style.webkitTextFillColor = 'transparent';
-          element.style.fontSize = '2.5rem';
-          element.style.fontWeight = '700';
-          element.style.marginBottom = '1.5rem';
-        } else if (element.tagName === 'P') {
-          element.style.color = '#374151';
-          element.style.fontSize = '1.125rem';
-          element.style.lineHeight = '1.6';
-          element.style.marginBottom = '1rem';
-        } else {
-          element.style.color = '#374151';
-        }
-      });
+      const appTitle = document.createElement('h2');
+      appTitle.style.cssText = `
+        color: white;
+        font-size: 18px;
+        font-weight: 500;
+        margin: 0;
+        opacity: 0.9;
+      `;
+      appTitle.textContent = 'A place where voices unite and hearts connect';
 
-      // Add elements to DOM structure
-      cardWrapper.appendChild(clonedElement);
-      downloadContainer.appendChild(cardWrapper);
+      header.appendChild(appTitle);
+
+      // Add category and time info
+      const metaInfo = document.createElement('div');
+      metaInfo.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      `;
+
+      const categoryDot = document.createElement('span');
+      categoryDot.style.cssText = `
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: white;
+        display: inline-block;
+      `;
+
+      const categoryName = document.createElement('span');
+      categoryName.style.cssText = `
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+      `;
+      categoryName.textContent = category?.name || message.category;
+
+      const timeAgo = document.createElement('span');
+      timeAgo.style.cssText = `
+        color: rgba(255,255,255,0.7);
+        font-size: 14px;
+      `;
+      timeAgo.textContent = `• ${formatTimeAgo(message.createdAt!)}`;
+
+      metaInfo.appendChild(categoryDot);
+      metaInfo.appendChild(categoryName);
+      metaInfo.appendChild(timeAgo);
+
+      // Add message content
+      const content = document.createElement('div');
+      content.style.cssText = `
+        font-size: 16px;
+        line-height: 1.6;
+        color: white;
+        margin: 20px 0;
+        font-style: italic;
+      `;
+      content.textContent = `"${message.content}"`;
+
+      // Add sender attribution
+      const attribution = document.createElement('div');
+      attribution.style.cssText = `
+        color: rgba(255,255,255,0.8);
+        font-style: italic;
+        margin: 20px 0;
+        text-align: center;
+      `;
+      attribution.textContent = '— Anonymous Whisper';
+
+      // Add interaction stats
+      const stats = document.createElement('div');
+      stats.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin: 20px 0;
+        padding: 15px 0;
+        border-top: 1px solid rgba(255,255,255,0.2);
+      `;
+
+      const heartsCount = document.createElement('div');
+      heartsCount.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255,255,255,0.8);
+        font-size: 14px;
+      `;
+      heartsCount.innerHTML = `♥ ${message.reactionCount || 0} hearts`;
+
+      const repliesCount = document.createElement('div');
+      repliesCount.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255,255,255,0.8);
+        font-size: 14px;
+      `;
+      const totalReplies = message.replies ? message.replies.length : 0;
+      repliesCount.innerHTML = `💬 ${totalReplies} replies`;
+
+      stats.appendChild(heartsCount);
+      stats.appendChild(repliesCount);
+
+      // Add footer with app branding
+      const footer = document.createElement('div');
+      footer.style.cssText = `
+        text-align: center;
+        color: rgba(255,255,255,0.6);
+        font-size: 12px;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255,255,255,0.2);
+      `;
+      footer.textContent = `This whisper was shared on Whisper Network • ${new Date().toLocaleDateString()}`;
+
+      // Assemble the message card
+      messageCard.appendChild(header);
+      messageCard.appendChild(metaInfo);
+      messageCard.appendChild(content);
+      messageCard.appendChild(attribution);
+      messageCard.appendChild(stats);
+      messageCard.appendChild(footer);
+
+      downloadContainer.appendChild(messageCard);
       document.body.appendChild(downloadContainer);
 
-      // Generate high-quality Instagram-ready image
+      // Generate high-quality image that matches the app design
       const canvas = await html2canvas(downloadContainer, {
         allowTaint: true,
         useCORS: true,
-        scale: 3, // Ultra high DPI for Instagram quality
-        backgroundColor: '#f0f2f5',
-        width: 800,
+        scale: 2,
+        backgroundColor: 'transparent',
+        width: 600,
         height: downloadContainer.scrollHeight,
         x: 0,
         y: 0,
         scrollX: 0,
         scrollY: 0,
         onclone: (clonedDoc) => {
-          // Ensure all fonts load properly
           const style = clonedDoc.createElement('style');
           style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -122,7 +226,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       // Clean up
       document.body.removeChild(downloadContainer);
 
-      // Download with Instagram-ready format
+      // Download the styled image
       const link = document.createElement('a');
       link.download = `whisper-${message.id}-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
@@ -199,7 +303,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 background: document.documentElement.classList.contains('pink')
                   ? 'linear-gradient(135deg, #ffffff 0%, #fce7f3 30%, #f9a8d4 60%, #ec4899 100%)'
                   : document.documentElement.classList.contains('dark')
-                  ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'
+                  ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #06b6d4 100%)'
                   : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
