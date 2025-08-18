@@ -165,11 +165,14 @@ export function ZEKE001PasswordViewer() {
 
   const viewPasswordsMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("POST", "/api/admin/view-all-passwords", {
+      const response = await apiRequest("POST", "/api/admin/view-all-passwords", {
         adminUsername: "ZEKE001"
       });
+      console.log("Password data response:", response);
+      return response;
     },
     onSuccess: (data) => {
+      console.log("Setting password data:", data);
       setPasswordData(data);
       toast({
         title: "Password Data Retrieved",
@@ -177,6 +180,7 @@ export function ZEKE001PasswordViewer() {
       });
     },
     onError: (error: any) => {
+      console.error("Password viewer error:", error);
       toast({
         title: "Access Denied",
         description: error.message || "Only ZEKE001 can access this feature.",

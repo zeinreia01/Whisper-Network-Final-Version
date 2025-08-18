@@ -1751,7 +1751,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getAllUsersWithPasswords();
       const admins = await storage.getAllAdminsWithPasswords();
 
-      res.json({
+      console.log("Retrieved users for ZEKE001:", users.length);
+      console.log("Retrieved admins for ZEKE001:", admins.length);
+
+      const responseData = {
         message: "Password data retrieved successfully",
         users: users.map(user => ({
           id: user.id,
@@ -1767,7 +1770,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hashedPassword: admin.password,
           createdAt: admin.createdAt
         }))
-      });
+      };
+
+      console.log("Sending password data response:", responseData);
+      res.json(responseData);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid request", errors: error.errors });

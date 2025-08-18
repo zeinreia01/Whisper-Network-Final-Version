@@ -125,11 +125,7 @@ export function NotificationCenter() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsOpen(false);
-                  }}
+                  onClick={() => setIsOpen(false)}
                   className="h-8 w-8 p-0"
                 >
                   <X className="h-4 w-4" />
@@ -167,7 +163,7 @@ export function NotificationCenter() {
                         <div className="flex-1 min-w-0">
                           <Link
                             href={getNotificationLink(notification)}
-                            onClick={() => {
+                            onClick={(e) => {
                               if (!notification.isRead) {
                                 markAsReadMutation.mutate(notification.id);
                               }
