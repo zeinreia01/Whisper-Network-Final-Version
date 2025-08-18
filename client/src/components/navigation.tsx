@@ -99,16 +99,16 @@ export function Navigation() {
 
             {/* Right side - Search and User Menu */}
             <div className="flex items-center space-x-4">
-              {/* Global search for authenticated users - Desktop only */}
+              {/* Global search for authenticated users */}
               {(user || admin) && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex"
+                  className="flex"
                   onClick={() => setShowGlobalSearch(true)}
                 >
                   <Search className="h-4 w-4 mr-2" />
-                  Search
+                  <span className="hidden sm:inline">Search</span>
                 </Button>
               )}
 
