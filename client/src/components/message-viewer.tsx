@@ -281,7 +281,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         {/* Aesthetic Message Display */}
         <div 
           ref={messageRef}
-          className="p-8 rounded-2xl shadow-xl border relative overflow-hidden"
+          className="p-12 rounded-2xl shadow-xl border-2 relative overflow-hidden"
           style={{
             fontFamily: '"Times New Roman", serif',
             minHeight: '500px',
