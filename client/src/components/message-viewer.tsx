@@ -37,7 +37,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (!messageRef.current) return;
 
     try {
-      // Create a temporary container that mimics the actual app styling
+      // Create a clean container for download image
       const downloadContainer = document.createElement('div');
       downloadContainer.style.cssText = `
         position: fixed;
@@ -45,59 +45,59 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         left: -9999px;
         width: 600px;
         min-height: 400px;
-        background: #1a1a2e;
-        padding: 40px;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: transparent;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
         box-sizing: border-box;
-        border-radius: 20px;
-        border: 2px solid #4a5568;
       `;
 
-      // Create the message card with actual app styling
+      // Create the message card with gradient background like the old style
       const messageCard = document.createElement('div');
       messageCard.style.cssText = `
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        padding: 30px;
+        border-radius: 20px;
+        padding: 40px;
         color: white;
         position: relative;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        box-shadow: none;
+        width: 100%;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
       `;
 
-      // Add app title header
+      // Header section
       const header = document.createElement('div');
       header.style.cssText = `
         text-align: center;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
+        margin-bottom: 30px;
       `;
 
-      const appTitle = document.createElement('h2');
+      const appTitle = document.createElement('div');
       appTitle.style.cssText = `
         color: white;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 500;
-        margin: 0;
+        margin-bottom: 20px;
         opacity: 0.9;
       `;
       appTitle.textContent = 'A place where voices unite and hearts connect';
 
-      header.appendChild(appTitle);
-
-      // Add category and time info
+      // Meta info
       const metaInfo = document.createElement('div');
       metaInfo.style.cssText = `
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 15px;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
       `;
 
       const categoryDot = document.createElement('span');
       categoryDot.style.cssText = `
-        width: 8px;
-        height: 8px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
         background: white;
         display: inline-block;
@@ -106,15 +106,15 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const categoryName = document.createElement('span');
       categoryName.style.cssText = `
         color: white;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 500;
       `;
       categoryName.textContent = category?.name || message.category;
 
       const timeAgo = document.createElement('span');
       timeAgo.style.cssText = `
-        color: rgba(255,255,255,0.7);
-        font-size: 14px;
+        color: rgba(255,255,255,0.8);
+        font-size: 16px;
       `;
       timeAgo.textContent = `• ${formatTimeAgo(message.createdAt!)}`;
 
@@ -122,36 +122,53 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       metaInfo.appendChild(categoryName);
       metaInfo.appendChild(timeAgo);
 
-      // Add message content
+      header.appendChild(appTitle);
+      header.appendChild(metaInfo);
+
+      // Main content section
+      const contentSection = document.createElement('div');
+      contentSection.style.cssText = `
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 40px 0;
+      `;
+
       const content = document.createElement('div');
       content.style.cssText = `
-        font-size: 16px;
-        line-height: 1.6;
+        font-size: 20px;
+        line-height: 1.5;
         color: white;
-        margin: 20px 0;
+        text-align: center;
         font-style: italic;
+        margin-bottom: 30px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
       `;
       content.textContent = `"${message.content}"`;
 
-      // Add sender attribution
       const attribution = document.createElement('div');
       attribution.style.cssText = `
-        color: rgba(255,255,255,0.8);
+        color: rgba(255,255,255,0.9);
         font-style: italic;
-        margin: 20px 0;
         text-align: center;
+        font-size: 16px;
       `;
       attribution.textContent = '— Anonymous Whisper';
 
-      // Add interaction stats
+      contentSection.appendChild(content);
+      contentSection.appendChild(attribution);
+
+      // Stats section
       const stats = document.createElement('div');
       stats.style.cssText = `
         display: flex;
         align-items: center;
-        gap: 20px;
-        margin: 20px 0;
-        padding: 15px 0;
-        border-top: 1px solid rgba(255,255,255,0.2);
+        justify-content: center;
+        gap: 30px;
+        padding: 20px 0;
+        border-top: 1px solid rgba(255,255,255,0.3);
+        margin-top: 30px;
       `;
 
       const heartsCount = document.createElement('div');
@@ -159,8 +176,8 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         display: flex;
         align-items: center;
         gap: 8px;
-        color: rgba(255,255,255,0.8);
-        font-size: 14px;
+        color: white;
+        font-size: 16px;
       `;
       heartsCount.innerHTML = `♥ ${message.reactionCount || 0} hearts`;
 
@@ -169,8 +186,8 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         display: flex;
         align-items: center;
         gap: 8px;
-        color: rgba(255,255,255,0.8);
-        font-size: 14px;
+        color: white;
+        font-size: 16px;
       `;
       const totalReplies = message.replies ? message.replies.length : 0;
       repliesCount.innerHTML = `💬 ${totalReplies} replies`;
@@ -178,46 +195,39 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       stats.appendChild(heartsCount);
       stats.appendChild(repliesCount);
 
-      // Add footer with app branding
+      // Footer
       const footer = document.createElement('div');
       footer.style.cssText = `
         text-align: center;
-        color: rgba(255,255,255,0.6);
-        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+        font-size: 14px;
         margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid rgba(255,255,255,0.2);
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.3);
       `;
       footer.textContent = `This whisper was shared on Whisper Network • ${new Date().toLocaleDateString()}`;
 
-      // Assemble the message card
+      // Assemble the card
       messageCard.appendChild(header);
-      messageCard.appendChild(metaInfo);
-      messageCard.appendChild(content);
-      messageCard.appendChild(attribution);
+      messageCard.appendChild(contentSection);
       messageCard.appendChild(stats);
       messageCard.appendChild(footer);
-
       downloadContainer.appendChild(messageCard);
       document.body.appendChild(downloadContainer);
 
-      // Generate high-quality image that matches the app design
+      // Generate image with transparent background
       const canvas = await html2canvas(downloadContainer, {
         allowTaint: true,
         useCORS: true,
         scale: 2,
-        backgroundColor: 'transparent',
+        backgroundColor: null, // Transparent background
         width: 600,
         height: downloadContainer.scrollHeight,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
         onclone: (clonedDoc) => {
           const style = clonedDoc.createElement('style');
           style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important; }
+            * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif !important; }
           `;
           clonedDoc.head.appendChild(style);
         }
@@ -226,10 +236,10 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       // Clean up
       document.body.removeChild(downloadContainer);
 
-      // Download the styled image
+      // Download the image
       const link = document.createElement('a');
       link.download = `whisper-${message.id}-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
+      link.href = canvas.toDataURL('image/png');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
