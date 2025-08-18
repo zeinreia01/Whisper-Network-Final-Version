@@ -8,7 +8,62 @@ import { AdminAuthModal } from "@/components/admin-auth-modal";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell } from "lucide-react";
+
+// Mobile notification button component for bottom navigation
+function MobileNotificationButton() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { user, admin } = useAuth();
+  
+  const { data: notifications } = useQuery({
+    queryKey: user 
+      ? [`/api/notifications/user/${user.id}`]
+      : admin 
+      ? [`/api/notifications/admin/${admin.id}`]
+      : [],
+    enabled: !!(user || admin),
+    refetchInterval: 30000,
+  });
+
+  const unreadCount = Array.isArray(notifications) ? notifications.filter((n: any) => !n.isRead).length : 0;
+
+  return (
+    <button
+      onClick={() => setIsOpen(true)}
+      className="flex flex-col items-center justify-center p-3 rounded-xl min-w-[64px] transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 relative"
+      data-testid="tab-notifications"
+    >
+      <Bell className="h-6 w-6 transition-transform" />
+      {unreadCount > 0 && (
+        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </div>
+      )}
+      <span className="text-xs mt-1 font-medium">Notifications</span>
+      
+      {/* Full notification center as modal */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center sm:justify-center">
+          <div className="bg-white dark:bg-gray-900 w-full sm:max-w-md sm:mx-4 sm:rounded-lg max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold">Notifications</h2>
+              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
+                ✕
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden p-4">
+              <div className="text-center text-gray-500 dark:text-gray-400">
+                <Bell className="h-8 w-8 mx-auto mb-2" />
+                <p>Notification center coming soon!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </button>
+  );
+}
 
 export function Navigation() {
   const [location] = useLocation();
@@ -50,6 +105,13 @@ export function Navigation() {
                   <Search className="h-4 w-4" />
                   <span className="ml-2">Search</span>
                 </Button>
+              )}
+
+              {/* Desktop notifications */}
+              {(user || admin) && (
+                <div className="hidden sm:block">
+                  <NotificationCenter />
+                </div>
               )}
 
               {/* User authentication section */}
@@ -158,7 +220,7 @@ export function Navigation() {
         </div>
       </nav>
 
-      {/* Bottom Navigation Bar - Mobile */}
+      {/* Bottom Navigation Bar - Mobile Only */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-50 sm:hidden">
         <div className="flex items-center justify-around px-2 py-2">
           {/* Home */}
@@ -205,9 +267,7 @@ export function Navigation() {
 
           {/* Notifications - for authenticated users */}
           {(user || admin) && (
-            <div className="flex flex-col items-center justify-center">
-              <NotificationCenter />
-            </div>
+            <MobileNotificationButton />
           )}
 
           {/* Admin Dashboard - for admins only */}
