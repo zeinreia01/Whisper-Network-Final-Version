@@ -244,7 +244,7 @@ export function ZEKE001PasswordViewer() {
                           <div className="col-span-2">
                             <span className="font-medium">Hashed Password:</span>
                             <code className="text-xs bg-gray-100 dark:bg-gray-800 p-1 rounded mt-1 block break-all">
-                              {user.hashedPassword}
+                              {user.hashedPassword || "No password found"}
                             </code>
                           </div>
                           <div className="col-span-2 text-xs text-gray-500">

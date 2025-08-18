@@ -1760,14 +1760,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
-          hashedPassword: user.password,
+          hashedPassword: user.password || user.hashedPassword,
           createdAt: user.createdAt
         })),
         admins: admins.map(admin => ({
           id: admin.id,
           username: admin.username,
           displayName: admin.displayName,
-          hashedPassword: admin.password,
+          hashedPassword: admin.password || admin.hashedPassword,
           createdAt: admin.createdAt
         }))
       };

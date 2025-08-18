@@ -1,9 +1,9 @@
-import { 
+import {
   messages, replies, admins, users, reactions, notifications, follows, likedMessages, honorableMentions, anonymousMessages,
-  type Message, type Reply, type Admin, type User, type Reaction, type Notification, 
-  type Follow, type LikedMessage, type HonorableMention, type AnonymousMessage, type InsertMessage, type InsertReply, type InsertAdmin, 
-  type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow, 
-  type InsertLikedMessage, type InsertHonorableMention, type InsertAnonymousMessage, type MessageWithReplies, type UserProfile, 
+  type Message, type Reply, type Admin, type User, type Reaction, type Notification,
+  type Follow, type LikedMessage, type HonorableMention, type AnonymousMessage, type InsertMessage, type InsertReply, type InsertAdmin,
+  type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow,
+  type InsertLikedMessage, type InsertHonorableMention, type InsertAnonymousMessage, type MessageWithReplies, type UserProfile,
   type NotificationWithDetails, type UpdateUserProfile, type ReplyWithUser
 } from "@shared/schema";
 import { db } from "./db";
@@ -1135,11 +1135,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsersWithPasswords(): Promise<User[]> {
-    return await db.select().from(users);
+    const result = await db.select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      password: users.password,
+      hashedPassword: users.password,
+      createdAt: users.createdAt,
+      isActive: users.isActive,
+      isVerified: users.isVerified
+    }).from(users);
+    return result;
   }
 
   async getAllAdminsWithPasswords(): Promise<Admin[]> {
-    return await db.select().from(admins);
+    const result = await db.select({
+      id: admins.id,
+      username: admins.username,
+      displayName: admins.displayName,
+      password: admins.password,
+      hashedPassword: admins.password,
+      createdAt: admins.createdAt,
+      isActive: admins.isActive,
+      role: admins.role
+    }).from(admins);
+    return result;
   }
 
   async followUser(followerId: number, followingId: number): Promise<Follow> {
@@ -1640,17 +1660,31 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
   }
 
   async getAllUsersWithPasswords(): Promise<User[]> {
-    return await db
-      .select()
-      .from(users)
-      .orderBy(asc(users.createdAt));
+    const result = await db.select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      password: users.password,
+      hashedPassword: users.password,
+      createdAt: users.createdAt,
+      isActive: users.isActive,
+      isVerified: users.isVerified
+    }).from(users);
+    return result;
   }
 
   async getAllAdminsWithPasswords(): Promise<Admin[]> {
-    return await db
-      .select()
-      .from(admins)
-      .orderBy(asc(admins.createdAt));
+    const result = await db.select({
+      id: admins.id,
+      username: admins.username,
+      displayName: admins.displayName,
+      password: admins.password,
+      hashedPassword: admins.password,
+      createdAt: admins.createdAt,
+      isActive: admins.isActive,
+      role: admins.role
+    }).from(admins);
+    return result;
   }
 
   // Update user profile (missing implementation)
