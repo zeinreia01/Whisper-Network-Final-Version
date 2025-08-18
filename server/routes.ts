@@ -514,47 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { username, password } = req.body;
-      const user = await storage.getUserByUsername(username);
-
-      if (!user || !user.isActive) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
-      }
-
-      const isValidPassword = await comparePasswords(password, user.password);
-      if (!isValidPassword) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
-      }
-
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Error during login:", error);
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  app.post("/api/auth/admin-login", async (req, res) => {
-    try {
-      const { username, password } = req.body;
-      const admin = await storage.getAdminByUsername(username);
-
-      if (!admin || admin.password !== password || !admin.isActive) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
-      }
-
-      const { password: _, ...adminWithoutPassword } = admin;
-      res.json(adminWithoutPassword);
-    } catch (error) {
-      console.error("Error during admin login:", error);
-      res.status(500).json({ message: "Admin login failed" });
-    }
-  });
+  
 
   // User management routes
   app.get("/api/user/messages/:userId", async (req, res) => {
