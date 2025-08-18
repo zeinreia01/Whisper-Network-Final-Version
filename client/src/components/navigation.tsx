@@ -9,7 +9,7 @@ import { GlobalSearch } from "@/components/global-search";
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X, Lock } from "lucide-react";
 
 // Mobile notification button component for bottom navigation
 function MobileNotificationButton() {
@@ -31,16 +31,16 @@ function MobileNotificationButton() {
   return (
     <button
       onClick={() => setIsOpen(true)}
-      className="flex flex-col items-center justify-center p-3 rounded-xl min-w-[64px] transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 relative"
+      className="flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 relative"
       data-testid="tab-notifications"
     >
-      <Bell className="h-6 w-6 transition-transform" />
+      <Bell className="h-5 w-5 transition-transform" />
       {unreadCount > 0 && (
-        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
           {unreadCount > 9 ? '9+' : unreadCount}
         </div>
       )}
-      <span className="text-xs mt-1 font-medium">Notifications</span>
+      <span className="text-xs mt-0.5 font-medium">Notifications</span>
       
       {/* Full notification center as modal */}
       {isOpen && (
@@ -79,10 +79,10 @@ export function Navigation() {
 
   return (
     <>
-      {/* Top Navigation Bar - Minimal and Clean */}
+      {/* Top Navigation Bar */}
       <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12">
+          <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
               <button
@@ -90,7 +90,7 @@ export function Navigation() {
                   localStorage.removeItem('hasVisitedWhisperingNetwork');
                   window.location.reload();
                 }}
-                className="text-xl font-bold text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight hover:text-purple-600 transition-colors lowercase"
+                className="text-2xl font-bold text-gray-900 dark:text-gray-100 cursor-pointer tracking-tight hover:text-purple-600 transition-colors lowercase"
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
               >
                 whisper network
@@ -98,17 +98,17 @@ export function Navigation() {
             </div>
 
             {/* Right side - Search and User Menu */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               {/* Global search for authenticated users - Desktop only */}
               {(user || admin) && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex h-8 px-2 rounded-full text-sm"
+                  className="hidden sm:flex"
                   onClick={() => setShowGlobalSearch(true)}
                 >
-                  <Search className="h-3 w-3" />
-                  <span className="ml-1 text-xs">Search</span>
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
                 </Button>
               )}
 
@@ -123,9 +123,9 @@ export function Navigation() {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 px-2 rounded-full text-sm">
-                      <User className="h-3 w-3" />
-                      <span className="hidden sm:inline ml-1 text-xs">{user.username}</span>
+                    <Button variant="ghost" size="sm" className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">{user.username}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2">
@@ -139,6 +139,12 @@ export function Navigation() {
                       <DropdownMenuItem>
                         <Settings className="h-4 w-4 mr-2" />
                         Personal Settings
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/password-management">
+                      <DropdownMenuItem>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Password & Security
                       </DropdownMenuItem>
                     </Link>
                     <Link href="/personal-archive">
@@ -156,10 +162,10 @@ export function Navigation() {
               ) : admin ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 px-2 rounded-full text-sm">
-                      <Shield className="h-3 w-3" />
-                      <span className="hidden sm:inline ml-1 text-xs">{admin.displayName}</span>
-                      <Badge variant="outline" className="hidden sm:inline-flex ml-1 text-xs">
+                    <Button variant="ghost" size="sm" className="flex items-center">
+                      <Shield className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">{admin.displayName}</span>
+                      <Badge variant="outline" className="hidden sm:inline-flex ml-2">
                         Listener
                       </Badge>
                     </Button>
@@ -169,6 +175,12 @@ export function Navigation() {
                       <DropdownMenuItem className="cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />
                         Profile Settings
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/password-management">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Lock className="h-4 w-4 mr-2" />
+                        Password & Security
                       </DropdownMenuItem>
                     </Link>
                     <DropdownMenuItem onClick={logout}>
@@ -182,27 +194,27 @@ export function Navigation() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 px-2 rounded-full hidden sm:flex text-sm" 
+                    className="hidden sm:flex" 
                     onClick={() => setShowAuthModal(true)}
                   >
-                    <User className="h-3 w-3" />
-                    <span className="ml-1 text-xs">Silent Messenger</span>
+                    <User className="h-4 w-4 mr-2" />
+                    Silent Messenger
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 px-2 rounded-full hidden sm:flex text-sm" 
+                    className="hidden sm:flex" 
                     onClick={() => setShowAdminAuthModal(true)}
                   >
-                    <Shield className="h-3 w-3" />
-                    <span className="ml-1 text-xs">Whisper Listener</span>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Whisper Listener
                   </Button>
                   
                   {/* Mobile login menu */}
                   <div className="sm:hidden">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0">
+                        <Button variant="ghost" size="sm">
                           <Menu className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -225,50 +237,40 @@ export function Navigation() {
         </div>
       </nav>
 
-      {/* Bottom Navigation Bar - Mobile Only */}
+      {/* Bottom Navigation Bar - Mobile Only - Thinner with smaller buttons */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-50 sm:hidden">
-        <div className="flex items-center justify-around px-2 py-2">
+        <div className="flex items-center justify-around px-1 py-1">
           {/* Home */}
           <Link href="/">
             <button
-              className={`flex flex-col items-center justify-center p-3 rounded-xl min-w-[64px] transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 ${
                 location === "/"
                   ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
               data-testid="tab-home"
             >
-              <Home className={`h-6 w-6 ${location === "/" ? "scale-110" : ""} transition-transform`} />
-              <span className="text-xs mt-1 font-medium">Home</span>
+              <Home className={`h-5 w-5 ${location === "/" ? "scale-110" : ""} transition-transform`} />
+              <span className="text-xs mt-0.5 font-medium">Home</span>
             </button>
           </Link>
 
           {/* Dashboard */}
           <Link href="/dashboard">
             <button
-              className={`flex flex-col items-center justify-center p-3 rounded-xl min-w-[64px] transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 ${
                 location === "/dashboard"
                   ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
               data-testid="tab-dashboard"
             >
-              <BarChart3 className={`h-6 w-6 ${location === "/dashboard" ? "scale-110" : ""} transition-transform`} />
-              <span className="text-xs mt-1 font-medium">Dashboard</span>
+              <BarChart3 className={`h-5 w-5 ${location === "/dashboard" ? "scale-110" : ""} transition-transform`} />
+              <span className="text-xs mt-0.5 font-medium">Dashboard</span>
             </button>
           </Link>
 
-          {/* Search - for authenticated users */}
-          {(user || admin) && (
-            <button
-              onClick={() => setShowGlobalSearch(true)}
-              className="flex flex-col items-center justify-center p-3 rounded-xl min-w-[64px] transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-              data-testid="tab-search"
-            >
-              <Search className="h-6 w-6 transition-transform" />
-              <span className="text-xs mt-1 font-medium">Search</span>
-            </button>
-          )}
+
 
           {/* Notifications - for authenticated users */}
           {(user || admin) && (
@@ -279,15 +281,15 @@ export function Navigation() {
           {admin && (
             <Link href="/admin">
               <button
-                className={`flex flex-col items-center justify-center p-3 rounded-xl min-w-[64px] transition-all duration-200 ${
+                className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 ${
                   location === "/admin"
                     ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
                 data-testid="tab-admin"
               >
-                <Shield className={`h-6 w-6 ${location === "/admin" ? "scale-110" : ""} transition-transform`} />
-                <span className="text-xs mt-1 font-medium">Admin</span>
+                <Shield className={`h-5 w-5 ${location === "/admin" ? "scale-110" : ""} transition-transform`} />
+                <span className="text-xs mt-0.5 font-medium">Admin</span>
               </button>
             </Link>
           )}

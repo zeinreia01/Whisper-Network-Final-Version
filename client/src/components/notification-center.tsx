@@ -21,9 +21,9 @@ export function NotificationCenter() {
   const queryClient = useQueryClient();
 
   const { data: notifications, isLoading } = useQuery({
-    queryKey: user 
+    queryKey: user
       ? [`/api/notifications/user/${user.id}`]
-      : admin 
+      : admin
       ? [`/api/notifications/admin/${admin.id}`]
       : [],
     enabled: !!(user || admin),
@@ -36,8 +36,8 @@ export function NotificationCenter() {
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: user 
+      queryClient.invalidateQueries({
+        queryKey: user
           ? [`/api/notifications/user/${user.id}`]
           : [`/api/notifications/admin/${admin?.id}`]
       });
@@ -51,8 +51,8 @@ export function NotificationCenter() {
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: user 
+      queryClient.invalidateQueries({
+        queryKey: user
           ? [`/api/notifications/user/${user.id}`]
           : [`/api/notifications/admin/${admin?.id}`]
       });
@@ -96,8 +96,8 @@ export function NotificationCenter() {
         <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0">
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
+            <Badge
+              variant="destructive"
               className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center text-xs p-0"
             >
               {unreadCount > 99 ? "9+" : unreadCount}
@@ -125,10 +125,14 @@ export function NotificationCenter() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsOpen(false)}
-                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsOpen(false);
+                  }}
+                  className="h-8 w-8 p-0"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -161,7 +165,7 @@ export function NotificationCenter() {
                           {getNotificationIcon(notification.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <Link 
+                          <Link
                             href={getNotificationLink(notification)}
                             onClick={() => {
                               if (!notification.isRead) {

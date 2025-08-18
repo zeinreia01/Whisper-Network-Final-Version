@@ -1119,6 +1119,29 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Password management implementations
+  async updateUserPassword(userId: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ hashedPassword })
+      .where(eq(users.id, userId));
+  }
+
+  async updateAdminPassword(adminId: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(admins)
+      .set({ hashedPassword })
+      .where(eq(admins.id, adminId));
+  }
+
+  async getAllUsersWithPasswords(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getAllAdminsWithPasswords(): Promise<Admin[]> {
+    return await db.select().from(admins);
+  }
+
   async followUser(followerId: number, followingId: number): Promise<Follow> {
     const [follow] = await db
       .insert(follows)

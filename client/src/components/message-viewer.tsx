@@ -41,109 +41,88 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const originalElement = messageRef.current;
       const clonedElement = originalElement.cloneNode(true) as HTMLElement;
       
-      // Create container for the cloned element with calm umamin-inspired styling
+      // Create container with Instagram-style padding and styling
       const downloadContainer = document.createElement('div');
       downloadContainer.style.position = 'absolute';
       downloadContainer.style.left = '-9999px';
       downloadContainer.style.top = '-9999px';
-      downloadContainer.style.width = '700px';
-      downloadContainer.style.background = 'transparent';
+      downloadContainer.style.width = '800px';
+      downloadContainer.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
       downloadContainer.style.fontFamily = '"Times New Roman", serif';
-      downloadContainer.style.padding = '0';
+      downloadContainer.style.padding = '60px';
+      downloadContainer.style.borderRadius = '20px';
+      downloadContainer.style.boxShadow = '0 20px 40px rgba(0,0,0,0.1)';
 
-      // Apply exact same styling as the modal with enhanced contrast for image
+      // Create inner card with proper spacing
+      const cardWrapper = document.createElement('div');
+      cardWrapper.style.background = 'white';
+      cardWrapper.style.borderRadius = '16px';
+      cardWrapper.style.padding = '40px';
+      cardWrapper.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+      cardWrapper.style.position = 'relative';
+
+      // Apply styling to cloned element with better spacing
       clonedElement.style.margin = '0';
       clonedElement.style.transform = 'none';
-      clonedElement.style.maxWidth = '700px';
-      clonedElement.style.width = '700px';
-      clonedElement.style.minHeight = '500px';
+      clonedElement.style.maxWidth = '100%';
+      clonedElement.style.width = '100%';
+      clonedElement.style.minHeight = 'auto';
       clonedElement.style.position = 'relative';
+      clonedElement.style.background = 'transparent';
 
-      // Enhance text contrast for better readability in saved image
-      const isPinkTheme = document.documentElement.classList.contains('pink');
-      const isDarkTheme = document.documentElement.classList.contains('dark');
-      
-      // Fix text visibility issues in the saved image
+      // Enhance text contrast and styling for Instagram-ready image
       const allTextElements = clonedElement.querySelectorAll('*');
       allTextElements.forEach((element: any) => {
-        const computedStyle = window.getComputedStyle(element);
-        
-        // Ensure all text is properly visible
-        if (element.tagName === 'H1' && element.style.background) {
-          // Keep gradient text as is for titles
-        } else if (computedStyle.color === 'rgba(0, 0, 0, 0)' || computedStyle.color === 'transparent') {
-          // Fix invisible text
-          if (isPinkTheme || isDarkTheme) {
-            element.style.color = '#ffffff';
-          } else {
-            element.style.color = '#1e293b';
-          }
-        }
-        
-        // Enhance backdrop elements for better contrast
-        if (element.classList.contains('backdrop-blur-sm')) {
-          if (isPinkTheme || isDarkTheme) {
-            element.style.background = 'rgba(255, 255, 255, 0.25)';
-            element.style.backdropFilter = 'blur(16px)';
-          } else {
-            element.style.background = 'rgba(255, 255, 255, 0.95)';
-            element.style.backdropFilter = 'blur(8px)';
-          }
-        }
-      });
-
-      // Enhance badge visibility
-      const badges = clonedElement.querySelectorAll('[class*="badge"]');
-      badges.forEach((badge: any) => {
-        if (isPinkTheme || isDarkTheme) {
-          badge.style.background = 'rgba(255, 255, 255, 0.3)';
-          badge.style.color = '#ffffff';
-          badge.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+        // Force white background and dark text for readability
+        if (element.tagName === 'H1') {
+          element.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+          element.style.webkitBackgroundClip = 'text';
+          element.style.webkitTextFillColor = 'transparent';
+          element.style.fontSize = '2.5rem';
+          element.style.fontWeight = '700';
+          element.style.marginBottom = '1.5rem';
+        } else if (element.tagName === 'P') {
+          element.style.color = '#374151';
+          element.style.fontSize = '1.125rem';
+          element.style.lineHeight = '1.6';
+          element.style.marginBottom = '1rem';
         } else {
-          badge.style.background = 'rgba(0, 0, 0, 0.1)';
-          badge.style.color = '#1e293b';
-          badge.style.border = '1px solid rgba(0, 0, 0, 0.2)';
+          element.style.color = '#374151';
         }
       });
 
-      downloadContainer.appendChild(clonedElement);
+      // Add elements to DOM structure
+      cardWrapper.appendChild(clonedElement);
+      downloadContainer.appendChild(cardWrapper);
       document.body.appendChild(downloadContainer);
 
-      // Wait for fonts and styles to load properly
-      await document.fonts.ready;
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Set proper background color instead of transparent - using solid colors for pink
-      const backgroundColor = isPinkTheme 
-        ? '#f4e6ec' // Pink theme background (solid color matching CSS)
-        : isDarkTheme 
-        ? '#1a1a2e' // Dark theme background  
-        : '#f8fafc'; // Light theme background
-
-      const canvas = await html2canvas(clonedElement, {
-        backgroundColor: backgroundColor, // Use solid background instead of null
-        scale: 3, // High quality for sharing
-        useCORS: true,
+      // Generate high-quality Instagram-ready image
+      const canvas = await html2canvas(downloadContainer, {
         allowTaint: true,
-        logging: false,
-        width: 700,
-        height: clonedElement.scrollHeight,
-        foreignObjectRendering: false,
-        imageTimeout: 0,
-        removeContainer: false,
+        useCORS: true,
+        scale: 3, // Ultra high DPI for Instagram quality
+        backgroundColor: '#f0f2f5',
+        width: 800,
+        height: downloadContainer.scrollHeight,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
         onclone: (clonedDoc) => {
-          // Ensure proper font loading in cloned document
-          const fontLink = clonedDoc.createElement('link');
-          fontLink.rel = 'preconnect';
-          fontLink.href = 'https://fonts.googleapis.com';
-          clonedDoc.head.appendChild(fontLink);
+          // Ensure all fonts load properly
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important; }
+          `;
+          clonedDoc.head.appendChild(style);
         }
       });
 
       // Clean up
       document.body.removeChild(downloadContainer);
 
-      // Download with better quality and naming
+      // Download with Instagram-ready format
       const link = document.createElement('a');
       link.download = `whisper-${message.id}-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);

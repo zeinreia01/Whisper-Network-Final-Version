@@ -492,6 +492,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Password management routes
+  app.post("/api/users/:id/change-password", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = changePasswordSchema.parse(req.body);
+      
+      const user = await storage.getUserById(parseInt(id));
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, user.hashedPassword);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash new password and update
+      const hashedNewPassword = await hashPassword(validatedData.newPassword);
+      await storage.updateUserPassword(parseInt(id), hashedNewPassword);
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid password data", errors: error.errors });
+        return;
+      }
+      console.error("Error changing user password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  app.post("/api/admins/:id/change-password", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = adminChangePasswordSchema.parse(req.body);
+      
+      const admin = await storage.getAdminById(parseInt(id));
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // Skip current password verification for ZEKE001
+      if (admin.username !== "ZEKE001" && validatedData.currentPassword) {
+        const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, admin.hashedPassword);
+        if (!isCurrentPasswordValid) {
+          return res.status(400).json({ message: "Current password is incorrect" });
+        }
+      }
+
+      // Hash new password and update
+      const hashedNewPassword = await hashPassword(validatedData.newPassword);
+      await storage.updateAdminPassword(parseInt(id), hashedNewPassword);
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid password data", errors: error.errors });
+        return;
+      }
+      console.error("Error changing admin password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  app.post("/api/admin/view-all-passwords", async (req, res) => {
+    try {
+      const validatedData = viewAllPasswordsSchema.parse(req.body);
+      
+      if (validatedData.adminUsername !== "ZEKE001") {
+        return res.status(403).json({ message: "Only ZEKE001 can access this feature" });
+      }
+
+      const users = await storage.getAllUsersWithPasswords();
+      const admins = await storage.getAllAdminsWithPasswords();
+
+      res.json({ users, admins });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid request data", errors: error.errors });
+        return;
+      }
+      console.error("Error viewing all passwords:", error);
+      res.status(500).json({ message: "Failed to retrieve password data" });
+    }
+  });
+
   // Admin management routes
   app.post("/api/admins", async (req, res) => {
     try {
