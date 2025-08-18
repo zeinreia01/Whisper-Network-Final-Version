@@ -52,6 +52,44 @@ export function Navigation() {
               </button>
             </div>
 
+            {/* Center - Main Navigation (Desktop Only) */}
+            <div className="hidden sm:flex items-center space-x-2">
+              <Link href="/">
+                <Button
+                  variant={location === "/" ? "default" : "ghost"}
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
+              
+              <Link href="/dashboard">
+                <Button
+                  variant={location === "/dashboard" ? "default" : "ghost"}
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+
+              {admin && (
+                <Link href="/admin">
+                  <Button
+                    variant={location === "/admin" ? "default" : "ghost"}
+                    size="sm"
+                    className="flex items-center"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
+            </div>
+
             {/* Right side - Search and User Menu */}
             <div className="flex items-center space-x-4">
               {/* Global search for authenticated users */}
