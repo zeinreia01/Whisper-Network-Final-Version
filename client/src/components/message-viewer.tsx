@@ -54,16 +54,16 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const messageCard = document.createElement('div');
       const isDark = document.documentElement.classList.contains('dark');
       const isPink = document.documentElement.classList.contains('pink');
-      
+
       let cardBackground;
       if (isPink) {
-        cardBackground = 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 25%, #d8b4fe 50%, #c084fc 75%, #a855f7 100%)';
+        cardBackground = 'linear-gradient(135deg, #f472b6 0%, #ec4899 25%, #db2777 50%, #be185d 75%, #9d174d 100%)';
       } else if (isDark) {
-        cardBackground = 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)';
+        cardBackground = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)';
       } else {
-        cardBackground = 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e2e8f0 50%, #cbd5e1 75%, #94a3b8 100%)';
+        cardBackground = 'linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f1f5f9 50%, #e2e8f0 75%, #cbd5e1 100%)';
       }
-      
+
       messageCard.style.cssText = `
         background: ${cardBackground};
         border-radius: 16px;
@@ -88,13 +88,13 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const appTitle = document.createElement('h1');
       let titleGradient;
       if (isPink) {
-        titleGradient = 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)';
+        titleGradient = 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)';
       } else if (isDark) {
-        titleGradient = 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)';
+        titleGradient = 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)';
       } else {
-        titleGradient = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)';
+        titleGradient = 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)';
       }
-      
+
       appTitle.style.cssText = `
         font-size: 20px;
         font-weight: 700;
@@ -109,7 +109,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const subtitle = document.createElement('p');
       subtitle.style.cssText = `
         font-size: 12px;
-        color: ${isPink ? 'rgba(76, 29, 149, 0.7)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.7)'};
+        color: ${isPink ? 'rgba(76, 29, 149, 0.7)' : isDark ? 'rgba(255,255,255,0.7)' : 'rgba(30, 41, 59, 0.7)'};
         margin: 0 0 8px 0;
         font-weight: 400;
       `;
@@ -170,7 +170,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         messageBoxBg = 'rgba(30, 41, 59, 0.1)';
         messageBoxBorder = 'rgba(30, 41, 59, 0.15)';
       }
-      
+
       messageBox.style.cssText = `
         background: ${messageBoxBg};
         border-radius: 12px;
@@ -337,10 +337,10 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             maxWidth: '400px',
             margin: '0 auto',
             background: document.documentElement.classList.contains('pink') 
-              ? 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 25%, #d8b4fe 50%, #c084fc 75%, #a855f7 100%)'
+              ? 'linear-gradient(135deg, #f472b6 0%, #ec4899 25%, #db2777 50%, #be185d 75%, #9d174d 100%)'
               : document.documentElement.classList.contains('dark')
-              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)'
-              : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e2e8f0 50%, #cbd5e1 75%, #94a3b8 100%)',
+              ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)'
+              : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f1f5f9 50%, #e2e8f0 75%, #cbd5e1 100%)',
             border: document.documentElement.classList.contains('pink') 
               ? '1px solid rgba(168, 85, 247, 0.3)'
               : document.documentElement.classList.contains('dark')
@@ -362,10 +362,10 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           <div className="text-center mb-5">
             <h1 className="text-xl font-bold mb-1" style={{
               background: document.documentElement.classList.contains('pink') 
-                ? 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)'
+                ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)'
                 : document.documentElement.classList.contains('dark')
-                ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'
-                : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+                ? 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)'
+                : 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               color: 'transparent'
@@ -381,7 +381,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             }}>
               A place where voices unite and hearts connect
             </p>
-            
+
             {/* Category and time - exactly like reference */}
             <div className="flex items-center justify-center gap-2 mb-4">
               <div className="w-1.5 h-1.5 rounded-full" style={{

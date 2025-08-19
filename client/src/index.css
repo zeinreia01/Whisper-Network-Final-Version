@@ -14,127 +14,147 @@
 }
 
 :root {
-  --background: hsl(210, 20%, 98%);
+  --background: hsl(0, 0%, 100%);
+  --background-solid: hsl(0, 0%, 100%);
   --foreground: hsl(222, 47%, 11%);
-  --muted: hsl(210, 40%, 96%);
+  --muted: hsl(210, 15%, 97%);
+  --muted-solid: hsl(210, 15%, 97%);
   --muted-foreground: hsl(215, 16%, 47%);
   --popover: hsl(0, 0%, 100%);
+  --popover-solid: hsl(0, 0%, 100%);
   --popover-foreground: hsl(222, 47%, 11%);
   --card: hsl(0, 0%, 100%);
+  --card-solid: hsl(0, 0%, 100%);
   --card-foreground: hsl(222, 47%, 11%);
-  --border: hsl(214, 32%, 91%);
-  --input: hsl(214, 32%, 91%);
-  --primary: hsl(239, 100%, 70%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(210, 40%, 96%);
+  --border: hsl(214, 20%, 85%);
+  --input: hsl(210, 15%, 97%);
+  --input-solid: hsl(210, 15%, 97%);
+  --primary: hsl(222, 47%, 20%);
+  --primary-solid: hsl(222, 47%, 20%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 15%, 94%);
+  --secondary-solid: hsl(210, 15%, 94%);
   --secondary-foreground: hsl(222, 47%, 11%);
-  --accent: hsl(166, 73%, 42%);
-  --accent-foreground: hsl(210, 40%, 98%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(210, 40%, 98%);
-  --ring: hsl(239, 100%, 70%);
+  --accent: hsl(220, 60%, 45%);
+  --accent-solid: hsl(220, 60%, 45%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 50%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(222, 47%, 20%);
   --radius: 0.5rem;
 
-  /* Custom category colors */
-  --hope: hsl(166, 73%, 42%);
-  --reflection: hsl(239, 100%, 70%);
-  --gratitude: hsl(45, 93%, 47%);
-  --support: hsl(0, 84%, 60%);
-  --dreams: hsl(270, 95%, 75%);
+  /* Clean light mode category colors */
+  --hope: hsl(166, 70%, 35%);
+  --reflection: hsl(220, 70%, 45%);
+  --gratitude: hsl(45, 85%, 40%);
+  --support: hsl(0, 75%, 50%);
+  --dreams: hsl(270, 70%, 55%);
   --text-primary: hsl(222, 47%, 11%);
   --text-secondary: hsl(215, 16%, 47%);
   --surface: hsl(0, 0%, 100%);
-  --bg-main: hsl(210, 20%, 98%);
+  --bg-main: hsl(0, 0%, 100%);
 }
 
 .dark {
-  --background: hsl(220, 13%, 8%);
+  --background: hsl(240, 25%, 12%);
+  --background-solid: hsl(240, 25%, 12%);
   --foreground: hsl(220, 14%, 96%);
-  --muted: hsl(220, 13%, 14%);
+  --muted: hsl(245, 20%, 18%);
+  --muted-solid: hsl(245, 20%, 18%);
   --muted-foreground: hsl(220, 9%, 65%);
-  --popover: hsl(220, 13%, 11%);
+  --popover: hsl(245, 25%, 15%);
+  --popover-solid: hsl(245, 25%, 15%);
   --popover-foreground: hsl(220, 14%, 96%);
-  --card: hsl(220, 13%, 11%);
+  --card: hsl(245, 25%, 15%);
+  --card-solid: hsl(245, 25%, 15%);
   --card-foreground: hsl(220, 14%, 96%);
-  --border: hsl(220, 13%, 18%);
-  --input: hsl(220, 13%, 18%);
+  --border: hsl(250, 20%, 25%);
+  --input: hsl(245, 20%, 18%);
+  --input-solid: hsl(245, 20%, 18%);
   --primary: hsl(263, 70%, 72%);
-  --primary-foreground: hsl(220, 13%, 8%);
-  --secondary: hsl(220, 13%, 14%);
+  --primary-solid: hsl(263, 70%, 72%);
+  --primary-foreground: hsl(240, 25%, 12%);
+  --secondary: hsl(245, 20%, 18%);
+  --secondary-solid: hsl(245, 20%, 18%);
   --secondary-foreground: hsl(220, 14%, 96%);
-  --accent: hsl(166, 60%, 50%);
-  --accent-foreground: hsl(220, 13%, 8%);
+  --accent: hsl(220, 70%, 65%);
+  --accent-solid: hsl(220, 70%, 65%);
+  --accent-foreground: hsl(240, 25%, 12%);
   --destructive: hsl(0, 62%, 65%);
   --destructive-foreground: hsl(220, 14%, 96%);
   --ring: hsl(263, 70%, 72%);
   --radius: 0.5rem;
 
-  /* Dark mode category colors - softer pastels */
-  --hope: hsl(166, 60%, 50%);
+  /* Dark mode category colors - blue to purple theme */
+  --hope: hsl(220, 70%, 65%);
   --reflection: hsl(263, 70%, 72%);
   --gratitude: hsl(45, 70%, 65%);
   --support: hsl(0, 62%, 65%);
-  --dreams: hsl(270, 70%, 80%);
+  --dreams: hsl(280, 70%, 75%);
   --text-primary: hsl(220, 14%, 96%);
   --text-secondary: hsl(220, 9%, 65%);
-  --surface: hsl(220, 13%, 11%);
-  --bg-main: hsl(220, 13%, 8%);
+  --surface: hsl(245, 25%, 15%);
+  --bg-main: hsl(240, 25%, 12%);
+
+  /* Blue-to-purple gradients for dark mode */
+  --dark-gradient-main: linear-gradient(135deg, hsl(240, 30%, 15%) 0%, hsl(250, 25%, 18%) 25%, hsl(260, 20%, 20%) 50%, hsl(270, 25%, 18%) 75%, hsl(280, 30%, 15%) 100%);
+  --dark-gradient-card: linear-gradient(135deg, hsl(245, 25%, 15%) 0%, hsl(255, 20%, 18%) 50%, hsl(265, 25%, 15%) 100%);
 }
 
 .pink {
-  /* Minimalistic Pink Background - Soft and Clean */
-  --background: hsl(345, 35%, 96%);
-  --background-solid: hsl(345, 35%, 96%);
-  --foreground: hsl(340, 60%, 25%);
-  --muted: hsl(345, 22%, 91%);
-  --muted-solid: hsl(345, 22%, 91%);
-  --muted-foreground: hsl(340, 40%, 45%);
-  --popover: hsl(345, 28%, 97%);
-  --popover-solid: hsl(345, 28%, 97%);
-  --popover-foreground: hsl(340, 60%, 25%);
-  --card: hsl(345, 32%, 97%);
-  --card-solid: hsl(345, 32%, 97%);
-  --card-foreground: hsl(340, 60%, 25%);
-  --border: hsl(345, 30%, 85%);
-  --input: hsl(345, 18%, 93%);
-  --input-solid: hsl(345, 18%, 93%);
+  /* Light Pink to Reddish Background */
+  --background: hsl(350, 40%, 95%);
+  --background-solid: hsl(350, 40%, 95%);
+  --foreground: hsl(340, 70%, 25%);
+  --muted: hsl(350, 25%, 90%);
+  --muted-solid: hsl(350, 25%, 90%);
+  --muted-foreground: hsl(340, 50%, 45%);
+  --popover: hsl(350, 35%, 96%);
+  --popover-solid: hsl(350, 35%, 96%);
+  --popover-foreground: hsl(340, 70%, 25%);
+  --card: hsl(350, 35%, 96%);
+  --card-solid: hsl(350, 35%, 96%);
+  --card-foreground: hsl(340, 70%, 25%);
+  --border: hsl(345, 35%, 80%);
+  --input: hsl(350, 20%, 92%);
+  --input-solid: hsl(350, 20%, 92%);
   
-  /* Light Pink Primary - Elegant and Soft */
-  --primary: hsl(345, 60%, 88%);
-  --primary-solid: hsl(345, 60%, 88%);
-  --primary-foreground: hsl(340, 70%, 35%);
+  /* Pink to Red Primary Colors */
+  --primary: hsl(340, 70%, 65%);
+  --primary-solid: hsl(340, 70%, 65%);
+  --primary-foreground: hsl(0, 0%, 100%);
   
-  --secondary: hsl(345, 25%, 92%);
-  --secondary-solid: hsl(345, 25%, 92%);
-  --secondary-foreground: hsl(340, 50%, 30%);
+  --secondary: hsl(350, 30%, 88%);
+  --secondary-solid: hsl(350, 30%, 88%);
+  --secondary-foreground: hsl(340, 70%, 30%);
   
-  /* Soft Pink Accent */
-  --accent: hsl(350, 50%, 85%);
-  --accent-solid: hsl(350, 50%, 85%);
-  --accent-foreground: hsl(340, 60%, 30%);
+  /* Reddish Pink Accent */
+  --accent: hsl(330, 65%, 75%);
+  --accent-solid: hsl(330, 65%, 75%);
+  --accent-foreground: hsl(340, 70%, 25%);
   
-  --destructive: hsl(0, 70%, 65%);
+  --destructive: hsl(0, 75%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(345, 60%, 80%);
+  --ring: hsl(340, 70%, 65%);
   --radius: 1rem;
 
-  /* Romantic Tea Rose Pink Category Colors */
-  --hope: hsl(140, 50%, 60%);
-  --reflection: hsl(330, 75%, 68%);
-  --gratitude: hsl(45, 90%, 65%);
-  --support: hsl(10, 85%, 65%);
-  --dreams: hsl(280, 70%, 78%);
-  --text-primary: hsl(340, 35%, 12%);
-  --text-secondary: hsl(340, 25%, 40%);
-  --surface: hsl(345, 70%, 99%);
-  --bg-main: hsl(345, 55%, 97%);
+  /* Pink to Reddish Category Colors */
+  --hope: hsl(140, 60%, 55%);
+  --reflection: hsl(320, 75%, 65%);
+  --gratitude: hsl(45, 85%, 60%);
+  --support: hsl(0, 80%, 65%);
+  --dreams: hsl(280, 70%, 75%);
+  --text-primary: hsl(340, 70%, 25%);
+  --text-secondary: hsl(340, 50%, 45%);
+  --surface: hsl(350, 35%, 96%);
+  --bg-main: hsl(350, 40%, 95%);
   
-  /* Special Pink Gradients - Minimalistic and Elegant */
-  --pink-gradient-warm: linear-gradient(135deg, hsl(350, 70%, 75%) 0%, hsl(340, 65%, 78%) 100%);
-  --pink-gradient-cool: linear-gradient(135deg, hsl(345, 50%, 85%) 0%, hsl(340, 45%, 87%) 100%);
-  --pink-gradient-hover: linear-gradient(135deg, hsl(350, 75%, 70%) 0%, hsl(340, 70%, 73%) 50%, hsl(330, 65%, 75%) 100%);
-  --pink-shadow: 0 2px 12px hsla(345, 40%, 80%, 0.3);
-  --pink-glow: 0 0 15px hsla(345, 50%, 85%, 0.4);
+  /* Light Pink to Reddish Gradients */
+  --pink-gradient-warm: linear-gradient(135deg, hsl(350, 70%, 85%) 0%, hsl(340, 75%, 75%) 50%, hsl(330, 80%, 70%) 100%);
+  --pink-gradient-cool: linear-gradient(135deg, hsl(355, 60%, 88%) 0%, hsl(345, 65%, 82%) 50%, hsl(335, 70%, 78%) 100%);
+  --pink-gradient-hover: linear-gradient(135deg, hsl(350, 75%, 70%) 0%, hsl(340, 80%, 65%) 50%, hsl(330, 85%, 60%) 100%);
+  --pink-shadow: 0 4px 16px hsla(340, 60%, 70%, 0.3);
+  --pink-glow: 0 0 20px hsla(340, 70%, 75%, 0.4);
 }
 
 /* Pink Theme Enhanced Components - Clean and Minimal */
