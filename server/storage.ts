@@ -1,10 +1,12 @@
 import {
   messages, replies, admins, users, reactions, notifications, follows, likedMessages, honorableMentions, anonymousMessages,
+  userMusicList, dashboardMessages, adminAnnouncements,
   type Message, type Reply, type Admin, type User, type Reaction, type Notification,
   type Follow, type LikedMessage, type HonorableMention, type AnonymousMessage, type InsertMessage, type InsertReply, type InsertAdmin,
   type InsertUser, type InsertReaction, type InsertNotification, type InsertFollow,
   type InsertLikedMessage, type InsertHonorableMention, type InsertAnonymousMessage, type MessageWithReplies, type UserProfile,
-  type NotificationWithDetails, type UpdateUserProfile, type ReplyWithUser
+  type NotificationWithDetails, type UpdateUserProfile, type ReplyWithUser, type UserMusic, type InsertUserMusic,
+  type DashboardMessage, type InsertDashboardMessage, type AdminAnnouncement, type InsertAdminAnnouncement
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, like, isNull, sql, ilike } from "drizzle-orm";
@@ -75,6 +77,29 @@ export interface IStorage {
     spotifyArtistName?: string | null;
     spotifyAlbumCover?: string | null;
   }): Promise<Admin>;
+
+  // User music list operations
+  addToMusicList(userId: number, adminId: number | undefined, spotifyData: {
+    spotifyTrackId: string;
+    spotifyTrackName: string;
+    spotifyArtistName: string;
+    spotifyAlbumCover?: string;
+  }): Promise<UserMusic>;
+  removeFromMusicList(musicId: number): Promise<void>;
+  getUserMusicList(userId: number, adminId?: number): Promise<UserMusic[]>;
+  setFavoriteTrack(musicId: number): Promise<UserMusic>;
+  reorderMusicList(userId: number, adminId: number | undefined, musicIds: number[]): Promise<void>;
+
+  // Dashboard message operations
+  createDashboardMessage(message: InsertDashboardMessage): Promise<DashboardMessage>;
+  getUserDashboardMessages(userId: number, adminId?: number): Promise<DashboardMessage[]>;
+  deleteDashboardMessage(messageId: number): Promise<void>;
+
+  // Admin announcement operations
+  createAdminAnnouncement(announcement: InsertAdminAnnouncement): Promise<AdminAnnouncement>;
+  getAllAdminAnnouncements(): Promise<AdminAnnouncement[]>;
+  deleteAdminAnnouncement(announcementId: number): Promise<void>;
+  pinAdminAnnouncement(announcementId: number, isPinned: boolean): Promise<AdminAnnouncement>;
 
   // Reaction operations
   addReaction(reaction: InsertReaction): Promise<Reaction>;
@@ -247,13 +272,7 @@ export class DatabaseStorage implements IStorage {
 
           if (reply.userId) {
             const userData = await db
-              .select({
-                id: users.id,
-                username: users.username,
-                displayName: users.displayName,
-                profilePicture: users.profilePicture,
-                isVerified: users.isVerified,
-              })
+              .select()
               .from(users)
               .where(eq(users.id, reply.userId))
               .limit(1);
@@ -262,12 +281,7 @@ export class DatabaseStorage implements IStorage {
 
           if (reply.adminId) {
             const adminData = await db
-              .select({
-                id: admins.id,
-                displayName: admins.displayName,
-                profilePicture: admins.profilePicture,
-                isVerified: admins.isVerified,
-              })
+              .select()
               .from(admins)
               .where(eq(admins.id, reply.adminId))
               .limit(1);
@@ -276,8 +290,8 @@ export class DatabaseStorage implements IStorage {
 
           repliesWithUsers.push({
             ...reply,
-            user: replyUser,
-            admin: replyAdmin,
+            user: replyUser as any,
+            admin: replyAdmin as any,
           });
         }
 
@@ -547,8 +561,8 @@ export class DatabaseStorage implements IStorage {
 
         repliesWithUsers.push({
           ...reply,
-          user: replyUser,
-          admin: replyAdmin,
+          user: replyUser as any,
+          admin: replyAdmin as any,
         });
       }
 
@@ -563,8 +577,8 @@ export class DatabaseStorage implements IStorage {
 
       return {
         ...messageData,
-        user,
-        admin,
+        user: user as any,
+        admin: admin as any,
         replies: repliesWithUsers,
         reactions: reactionsData,
         reactionCount: reactionsData.length,
@@ -1185,8 +1199,13 @@ export class DatabaseStorage implements IStorage {
         lastDisplayNameChange: users.lastDisplayNameChange,
         isVerified: users.isVerified,
         likedMessagesPrivacy: users.likedMessagesPrivacy,
+        isAnonymousLinkPaused: users.isAnonymousLinkPaused,
         createdAt: users.createdAt,
         isActive: users.isActive,
+        spotifyTrackId: users.spotifyTrackId,
+        spotifyTrackName: users.spotifyTrackName,
+        spotifyArtistName: users.spotifyArtistName,
+        spotifyAlbumCover: users.spotifyAlbumCover,
       })
       .from(follows)
       .innerJoin(users, eq(follows.followerId, users.id))
@@ -1207,8 +1226,13 @@ export class DatabaseStorage implements IStorage {
         lastDisplayNameChange: users.lastDisplayNameChange,
         isVerified: users.isVerified,
         likedMessagesPrivacy: users.likedMessagesPrivacy,
+        isAnonymousLinkPaused: users.isAnonymousLinkPaused,
         createdAt: users.createdAt,
         isActive: users.isActive,
+        spotifyTrackId: users.spotifyTrackId,
+        spotifyTrackName: users.spotifyTrackName,
+        spotifyArtistName: users.spotifyArtistName,
+        spotifyAlbumCover: users.spotifyAlbumCover,
       })
       .from(follows)
       .innerJoin(users, eq(follows.followingId, users.id))
@@ -1658,15 +1682,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     return result;
   }
 
-  // Update user profile (missing implementation)
-  async updateUserProfile(userId: number, updates: UpdateUserProfile): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set(updates)
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
+
 
   // Spotify integration methods
   async updateUserSpotifyTrack(userId: number, spotifyData: {
@@ -1715,6 +1731,150 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     }
 
     return updatedAdmin;
+  }
+
+  // User music list methods
+  async addToMusicList(userId: number, adminId: number | undefined, spotifyData: {
+    spotifyTrackId: string;
+    spotifyTrackName: string;
+    spotifyArtistName: string;
+    spotifyAlbumCover?: string;
+  }): Promise<UserMusic> {
+    // Get the current highest order for this user
+    const maxOrderResult = await db
+      .select({ maxOrder: sql<number>`max(${userMusicList.order})` })
+      .from(userMusicList)
+      .where(userId ? eq(userMusicList.userId, userId) : eq(userMusicList.adminId, adminId!));
+    
+    const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
+
+    const [music] = await db
+      .insert(userMusicList)
+      .values({
+        userId: userId || null,
+        adminId: adminId || null,
+        ...spotifyData,
+        order: nextOrder,
+      })
+      .returning();
+    return music;
+  }
+
+  async removeFromMusicList(musicId: number): Promise<void> {
+    await db.delete(userMusicList).where(eq(userMusicList.id, musicId));
+  }
+
+  async getUserMusicList(userId: number, adminId?: number): Promise<UserMusic[]> {
+    const result = await db
+      .select()
+      .from(userMusicList)
+      .where(userId ? eq(userMusicList.userId, userId) : eq(userMusicList.adminId, adminId!))
+      .orderBy(desc(userMusicList.isFavorite), asc(userMusicList.order));
+    return result;
+  }
+
+  async setFavoriteTrack(musicId: number): Promise<UserMusic> {
+    // First, remove favorite status from all tracks for this user
+    const musicTrack = await db
+      .select()
+      .from(userMusicList)
+      .where(eq(userMusicList.id, musicId))
+      .limit(1);
+
+    if (musicTrack.length === 0) {
+      throw new Error("Music track not found");
+    }
+
+    const track = musicTrack[0];
+    
+    // Remove favorite from all tracks for this user/admin
+    if (track.userId) {
+      await db
+        .update(userMusicList)
+        .set({ isFavorite: false })
+        .where(eq(userMusicList.userId, track.userId));
+    } else if (track.adminId) {
+      await db
+        .update(userMusicList)
+        .set({ isFavorite: false })
+        .where(eq(userMusicList.adminId, track.adminId));
+    }
+
+    // Set this track as favorite
+    const [updatedTrack] = await db
+      .update(userMusicList)
+      .set({ isFavorite: true })
+      .where(eq(userMusicList.id, musicId))
+      .returning();
+    
+    return updatedTrack;
+  }
+
+  async reorderMusicList(userId: number, adminId: number | undefined, musicIds: number[]): Promise<void> {
+    // Update the order of each track
+    for (let i = 0; i < musicIds.length; i++) {
+      await db
+        .update(userMusicList)
+        .set({ order: i + 1 })
+        .where(eq(userMusicList.id, musicIds[i]));
+    }
+  }
+
+  // Dashboard message methods
+  async createDashboardMessage(message: InsertDashboardMessage): Promise<DashboardMessage> {
+    const [dashboardMessage] = await db
+      .insert(dashboardMessages)
+      .values(message)
+      .returning();
+    return dashboardMessage;
+  }
+
+  async getUserDashboardMessages(userId: number, adminId?: number): Promise<DashboardMessage[]> {
+    const result = await db
+      .select()
+      .from(dashboardMessages)
+      .where(
+        and(
+          userId ? eq(dashboardMessages.targetUserId, userId) : eq(dashboardMessages.targetAdminId, adminId!),
+          eq(dashboardMessages.isVisible, true)
+        )
+      )
+      .orderBy(desc(dashboardMessages.createdAt));
+    return result;
+  }
+
+  async deleteDashboardMessage(messageId: number): Promise<void> {
+    await db.delete(dashboardMessages).where(eq(dashboardMessages.id, messageId));
+  }
+
+  // Admin announcement methods
+  async createAdminAnnouncement(announcement: InsertAdminAnnouncement): Promise<AdminAnnouncement> {
+    const [adminAnnouncement] = await db
+      .insert(adminAnnouncements)
+      .values(announcement)
+      .returning();
+    return adminAnnouncement;
+  }
+
+  async getAllAdminAnnouncements(): Promise<AdminAnnouncement[]> {
+    const result = await db
+      .select()
+      .from(adminAnnouncements)
+      .orderBy(desc(adminAnnouncements.isPinned), desc(adminAnnouncements.createdAt));
+    return result;
+  }
+
+  async deleteAdminAnnouncement(announcementId: number): Promise<void> {
+    await db.delete(adminAnnouncements).where(eq(adminAnnouncements.id, announcementId));
+  }
+
+  async pinAdminAnnouncement(announcementId: number, isPinned: boolean): Promise<AdminAnnouncement> {
+    const [announcement] = await db
+      .update(adminAnnouncements)
+      .set({ isPinned })
+      .where(eq(adminAnnouncements.id, announcementId))
+      .returning();
+    return announcement;
   }
 }
 

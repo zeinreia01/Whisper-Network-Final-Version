@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyAPI } from "./spotify";
-import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema } from "@shared/schema";
+import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema, insertUserMusicSchema, insertDashboardMessageSchema, insertAdminAnnouncementSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -1893,6 +1893,221 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update admin Spotify track error:", error);
       res.status(500).json({ message: "Failed to update profile song" });
+    }
+  });
+
+  // User Music List Routes
+  app.post("/api/users/:id/music", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
+
+      const userId = parseInt(id);
+      
+      // Validate that the user exists
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Add to music list
+      const music = await storage.addToMusicList(userId, undefined, {
+        spotifyTrackId,
+        spotifyTrackName,
+        spotifyArtistName,
+        spotifyAlbumCover,
+      });
+
+      res.json(music);
+    } catch (error) {
+      console.error("Add music to list error:", error);
+      res.status(500).json({ message: "Failed to add music to list" });
+    }
+  });
+
+  app.post("/api/admins/:id/music", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
+
+      const adminId = parseInt(id);
+      
+      // Validate that the admin exists
+      const admin = await storage.getAdminById(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // Add to music list
+      const music = await storage.addToMusicList(0, adminId, {
+        spotifyTrackId,
+        spotifyTrackName,
+        spotifyArtistName,
+        spotifyAlbumCover,
+      });
+
+      res.json(music);
+    } catch (error) {
+      console.error("Add music to admin list error:", error);
+      res.status(500).json({ message: "Failed to add music to list" });
+    }
+  });
+
+  app.get("/api/users/:id/music", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = parseInt(id);
+      
+      const musicList = await storage.getUserMusicList(userId);
+      res.json(musicList);
+    } catch (error) {
+      console.error("Get user music list error:", error);
+      res.status(500).json({ message: "Failed to get music list" });
+    }
+  });
+
+  app.get("/api/admins/:id/music", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const adminId = parseInt(id);
+      
+      const musicList = await storage.getUserMusicList(0, adminId);
+      res.json(musicList);
+    } catch (error) {
+      console.error("Get admin music list error:", error);
+      res.status(500).json({ message: "Failed to get music list" });
+    }
+  });
+
+  app.delete("/api/music/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const musicId = parseInt(id);
+      
+      await storage.removeFromMusicList(musicId);
+      res.json({ message: "Music removed from list" });
+    } catch (error) {
+      console.error("Remove music from list error:", error);
+      res.status(500).json({ message: "Failed to remove music from list" });
+    }
+  });
+
+  app.patch("/api/music/:id/favorite", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const musicId = parseInt(id);
+      
+      const updatedMusic = await storage.setFavoriteTrack(musicId);
+      res.json(updatedMusic);
+    } catch (error) {
+      console.error("Set favorite track error:", error);
+      res.status(500).json({ message: "Failed to set favorite track" });
+    }
+  });
+
+  // Dashboard Message Routes
+  app.post("/api/dashboard/messages", async (req, res) => {
+    try {
+      const messageData = insertDashboardMessageSchema.parse(req.body);
+      const message = await storage.createDashboardMessage(messageData);
+      res.json(message);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request", errors: error.errors });
+      }
+      console.error("Create dashboard message error:", error);
+      res.status(500).json({ message: "Failed to create dashboard message" });
+    }
+  });
+
+  app.get("/api/users/:id/dashboard", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = parseInt(id);
+      
+      const messages = await storage.getUserDashboardMessages(userId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Get user dashboard messages error:", error);
+      res.status(500).json({ message: "Failed to get dashboard messages" });
+    }
+  });
+
+  app.get("/api/admins/:id/dashboard", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const adminId = parseInt(id);
+      
+      const messages = await storage.getUserDashboardMessages(0, adminId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Get admin dashboard messages error:", error);
+      res.status(500).json({ message: "Failed to get dashboard messages" });
+    }
+  });
+
+  app.delete("/api/dashboard/messages/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const messageId = parseInt(id);
+      
+      await storage.deleteDashboardMessage(messageId);
+      res.json({ message: "Dashboard message deleted" });
+    } catch (error) {
+      console.error("Delete dashboard message error:", error);
+      res.status(500).json({ message: "Failed to delete dashboard message" });
+    }
+  });
+
+  // Admin Announcements Routes
+  app.post("/api/admin/announcements", async (req, res) => {
+    try {
+      const announcementData = insertAdminAnnouncementSchema.parse(req.body);
+      const announcement = await storage.createAdminAnnouncement(announcementData);
+      res.json(announcement);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request", errors: error.errors });
+      }
+      console.error("Create admin announcement error:", error);
+      res.status(500).json({ message: "Failed to create announcement" });
+    }
+  });
+
+  app.get("/api/admin/announcements", async (req, res) => {
+    try {
+      const announcements = await storage.getAllAdminAnnouncements();
+      res.json(announcements);
+    } catch (error) {
+      console.error("Get admin announcements error:", error);
+      res.status(500).json({ message: "Failed to get announcements" });
+    }
+  });
+
+  app.delete("/api/admin/announcements/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcementId = parseInt(id);
+      
+      await storage.deleteAdminAnnouncement(announcementId);
+      res.json({ message: "Announcement deleted" });
+    } catch (error) {
+      console.error("Delete admin announcement error:", error);
+      res.status(500).json({ message: "Failed to delete announcement" });
+    }
+  });
+
+  app.patch("/api/admin/announcements/:id/pin", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isPinned } = req.body;
+      const announcementId = parseInt(id);
+      
+      const announcement = await storage.pinAdminAnnouncement(announcementId, isPinned);
+      res.json(announcement);
+    } catch (error) {
+      console.error("Pin admin announcement error:", error);
+      res.status(500).json({ message: "Failed to pin announcement" });
     }
   });
 

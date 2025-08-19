@@ -146,6 +146,47 @@ export const anonymousMessages = pgTable("anonymous_messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// User music lists for public profiles
+export const userMusicList = pgTable("user_music_list", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  adminId: integer("admin_id").references(() => admins.id),
+  spotifyTrackId: text("spotify_track_id").notNull(),
+  spotifyTrackName: text("spotify_track_name").notNull(),
+  spotifyArtistName: text("spotify_artist_name").notNull(),
+  spotifyAlbumCover: text("spotify_album_cover"),
+  isFavorite: boolean("is_favorite").default(false), // Highlighted favorite song
+  order: integer("order").default(0), // Order in the list
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Public dashboard messages for user profiles
+export const dashboardMessages = pgTable("dashboard_messages", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  category: text("category").notNull().default("Anything"),
+  spotifyLink: text("spotify_link"),
+  spotifyTrackId: text("spotify_track_id"),
+  spotifyTrackName: text("spotify_track_name"),
+  spotifyArtistName: text("spotify_artist_name"),
+  spotifyAlbumCover: text("spotify_album_cover"),
+  senderName: text("sender_name"), // Anonymous sender
+  targetUserId: integer("target_user_id").references(() => users.id), // Whose dashboard this appears on
+  targetAdminId: integer("target_admin_id").references(() => admins.id), // For admin dashboards
+  isVisible: boolean("is_visible").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Admin announcements page
+export const adminAnnouncements = pgTable("admin_announcements", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  authorAdminId: integer("author_admin_id").references(() => admins.id).notNull(),
+  title: text("title"), // Optional title for announcement
+  isPinned: boolean("is_pinned").default(false), // Pinned announcements at top
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Create insert and select schemas for honorable mentions
 export const insertHonorableMentionSchema = createInsertSchema(honorableMentions);
 export type InsertHonorableMention = z.infer<typeof insertHonorableMentionSchema>;
@@ -155,6 +196,21 @@ export type HonorableMention = typeof honorableMentions.$inferSelect;
 export const insertAnonymousMessageSchema = createInsertSchema(anonymousMessages);
 export type InsertAnonymousMessage = typeof anonymousMessages.$inferInsert;
 export type AnonymousMessage = typeof anonymousMessages.$inferSelect;
+
+// Create insert and select schemas for user music list
+export const insertUserMusicSchema = createInsertSchema(userMusicList);
+export type InsertUserMusic = typeof userMusicList.$inferInsert;
+export type UserMusic = typeof userMusicList.$inferSelect;
+
+// Create insert and select schemas for dashboard messages
+export const insertDashboardMessageSchema = createInsertSchema(dashboardMessages);
+export type InsertDashboardMessage = typeof dashboardMessages.$inferInsert;
+export type DashboardMessage = typeof dashboardMessages.$inferSelect;
+
+// Create insert and select schemas for admin announcements
+export const insertAdminAnnouncementSchema = createInsertSchema(adminAnnouncements);
+export type InsertAdminAnnouncement = typeof adminAnnouncements.$inferInsert;
+export type AdminAnnouncement = typeof adminAnnouncements.$inferSelect;
 
 export const usersRelations = relations(users, ({ many }) => ({
   messages: many(messages),
