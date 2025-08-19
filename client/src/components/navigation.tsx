@@ -134,30 +134,30 @@ export function Navigation() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2">
                     <Link href={`/user/${user.id}`}>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer">
                         <User className="h-4 w-4 mr-2" />
                         View My Profile
                       </DropdownMenuItem>
                     </Link>
                     <Link href="/personal">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />
                         Personal Settings
                       </DropdownMenuItem>
                     </Link>
                     <Link href="/password-management">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer">
                         <Lock className="h-4 w-4 mr-2" />
                         Password & Security
                       </DropdownMenuItem>
                     </Link>
                     <Link href="/personal-archive">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer">
                         <Archive className="h-4 w-4 mr-2" />
                         Personal Archive
                       </DropdownMenuItem>
                     </Link>
-                    <DropdownMenuItem onClick={logout}>
+                    <DropdownMenuItem onClick={logout} className="cursor-pointer">
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
                     </DropdownMenuItem>
@@ -187,7 +187,7 @@ export function Navigation() {
                         Password & Security
                       </DropdownMenuItem>
                     </Link>
-                    <DropdownMenuItem onClick={logout}>
+                    <DropdownMenuItem onClick={logout} className="cursor-pointer">
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
                     </DropdownMenuItem>
@@ -223,11 +223,17 @@ export function Navigation() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 mt-2">
-                        <DropdownMenuItem onClick={() => setShowAuthModal(true)}>
+                        <DropdownMenuItem 
+                          onClick={() => setShowAuthModal(true)}
+                          className="cursor-pointer"
+                        >
                           <User className="h-4 w-4 mr-2" />
                           Silent Messenger
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setShowAdminAuthModal(true)}>
+                        <DropdownMenuItem 
+                          onClick={() => setShowAdminAuthModal(true)}
+                          className="cursor-pointer"
+                        >
                           <Shield className="h-4 w-4 mr-2" />
                           Whisper Listener
                         </DropdownMenuItem>
