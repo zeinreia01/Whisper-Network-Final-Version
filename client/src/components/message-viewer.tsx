@@ -341,67 +341,61 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       // Clean up
       document.body.removeChild(downloadContainer);
 
-      // Download the image
-      const dataURL = canvas.toDataURL('image/png', 1.0);
+      // Download the image - use multiple fallback approaches
+      console.log('Canvas created successfully, starting download...');
       
-      try {
-        // Try modern approach first
-        const blob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((blob) => {
-            resolve(blob!);
-          }, 'image/png', 1.0);
-        });
-
-        // Create object URL
-        const url = URL.createObjectURL(blob);
-        
-        // Create download link
-        const link = document.createElement('a');
-        link.download = `whisper-${message.id}-${Date.now()}.png`;
-        link.href = url;
-        link.style.display = 'none';
-        
-        // Append to body and trigger download
-        document.body.appendChild(link);
-        link.click();
-        
-        // Clean up
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        }, 100);
-        
-      } catch (blobError) {
-        // Fallback to data URL approach
-        console.log('Blob approach failed, trying data URL');
-        
-        // Convert data URL to blob manually
-        const byteCharacters = atob(dataURL.split(',')[1]);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+      // First try: Use canvas.toBlob for cleaner download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          try {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `whisper-${message.id}-${Date.now()}.png`;
+            link.href = url;
+            
+            // Force download by adding to body and clicking
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            
+            // Show success message
+            toast({
+              title: "Download Started",
+              description: "Your whisper image is being downloaded.",
+            });
+            
+            console.log('Download initiated successfully');
+            return;
+          } catch (error) {
+            console.error('Blob download failed:', error);
+          }
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'image/png' });
         
-        // Create object URL and download
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `whisper-${message.id}-${Date.now()}.png`;
-        link.href = url;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }
-
-    // Show success message
-      toast({
-        title: "Download Started",
-        description: "Your whisper image is being downloaded.",
-      });
+        // Fallback: Use data URL if blob approach fails
+        try {
+          const dataURL = canvas.toDataURL('image/png', 1.0);
+          const link = document.createElement('a');
+          link.download = `whisper-${message.id}-${Date.now()}.png`;
+          link.href = dataURL;
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast({
+            title: "Download Started",
+            description: "Your whisper image is being downloaded.",
+          });
+          
+          console.log('Fallback download initiated successfully');
+        } catch (fallbackError) {
+          console.error('All download methods failed:', fallbackError);
+          throw fallbackError;
+        }
+      }, 'image/png', 1.0);
 
     } catch (error) {
       console.error('Failed to download image:', error);
