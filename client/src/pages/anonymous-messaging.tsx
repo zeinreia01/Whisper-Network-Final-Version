@@ -200,11 +200,11 @@ export default function AnonymousMessaging() {
     sendMessageMutation.mutate({
       content: message,
       category: category,
-      spotifyLink: selectedTrack ? `https://open.spotify.com/track/${selectedTrack.id}` : (spotifyLink || undefined),
-      spotifyTrackId: selectedTrack?.id || undefined,
-      spotifyTrackName: selectedTrack?.name || undefined,
-      spotifyArtistName: selectedTrack?.artists.map(a => a.name).join(", ") || undefined,
-      spotifyAlbumCover: selectedTrack?.album.images[0]?.url || undefined,
+      spotifyLink: selectedTrack ? `https://open.spotify.com/track/${selectedTrack.id}` : undefined,
+      spotifyTrackId: selectedTrack?.id,
+      spotifyTrackName: selectedTrack?.name,
+      spotifyArtistName: selectedTrack?.artists.map(a => a.name).join(", "),
+      spotifyAlbumCover: selectedTrack?.album.images[0]?.url,
       senderName: senderName || undefined,
     });
   };
@@ -492,7 +492,10 @@ export default function AnonymousMessaging() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedTrack(null)}
+                          onClick={() => {
+                            setSelectedTrack(null);
+                            setSpotifyLink("");
+                          }}
                           className="flex items-center gap-2"
                         >
                           <X className="w-3 h-3" />
@@ -509,7 +512,7 @@ export default function AnonymousMessaging() {
                         className="w-full flex items-center gap-2 justify-center h-10"
                       >
                         <Music className="w-4 h-4" />
-                        Search for a song
+                        Search for a Song
                       </Button>
                     </div>
                   )}
