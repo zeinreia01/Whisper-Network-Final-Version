@@ -106,7 +106,8 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
           const trackData = await response.json();
           if (trackData.preview_url) {
             // Update the fullTrack object with the preview URL
-            setFullTrack(prev => prev ? { ...prev, preview_url: trackData.preview_url } : null);
+            // Since we can't update fullTrack directly, we'll work with trackData
+            currentTrack = { ...currentTrack, preview_url: trackData.preview_url };
           }
         }
       } catch (error) {
@@ -116,7 +117,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
     }
 
     // Check again after potential fetch
-    const currentTrack = fullTrack;
+    let currentTrack = fullTrack;
     if (!currentTrack?.preview_url) {
       toast({
         title: "No preview available 🎵",
@@ -180,7 +181,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
         setIsPlaying(false);
         
         // Try direct Spotify URL as fallback
-        if (error.name === 'NotAllowedError') {
+        if ((error as any).name === 'NotAllowedError') {
           toast({
             title: "Playback blocked 🎵",
             description: "Click anywhere on the page first, then try playing again.",

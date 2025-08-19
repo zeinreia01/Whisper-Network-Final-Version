@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -39,6 +39,7 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
   const [isAddingTrack, setIsAddingTrack] = useState(false);
   const [playingTrack, setPlayingTrack] = useState<string | null>(null);
   const [showAllTracks, setShowAllTracks] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -134,14 +135,72 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
     addTrackMutation.mutate(track);
   };
 
-  const togglePlayPreview = (track: UserMusic) => {
+  const togglePlayPreview = async (track: UserMusic) => {
     if (playingTrack === track.spotifyTrackId) {
-      setPlayingTrack(null);
-      // Stop audio playback
-    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setPlayingTrack(null);
+      }
+      return;
+    }
+
+    try {
+      // Fetch the track details to get preview URL
+      const response = await fetch(`/api/spotify/track/${track.spotifyTrackId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const trackData = await response.json();
+
+      if (!trackData.preview_url) {
+        toast({
+          title: "No preview available 🎵",
+          description: "This track doesn't have a 30-second preview. You can still open it in Spotify!",
+        });
+        return;
+      }
+
+      // Stop current audio if playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      // Create new audio instance with proper CORS handling
+      const audio = new Audio();
+      
+      // Set up event listeners before setting src
+      audio.addEventListener('ended', () => {
+        setPlayingTrack(null);
+      });
+
+      audio.addEventListener('error', (e) => {
+        console.error("Audio error:", e);
+        toast({
+          title: "Playback error 🎵", 
+          description: "Could not load this track preview. Trying alternative method...",
+        });
+        setPlayingTrack(null);
+      });
+
+      // Use proxied URL for better compatibility
+      const proxyUrl = `/api/spotify/proxy/${encodeURIComponent(trackData.preview_url)}`;
+      audio.src = proxyUrl;
+      audio.crossOrigin = "anonymous";
+      audio.preload = "auto";
+
+      await audio.play();
+      audioRef.current = audio;
       setPlayingTrack(track.spotifyTrackId);
-      // Start audio playback if preview_url is available
-      // Note: This would require getting the full track data from Spotify API
+
+    } catch (error) {
+      console.error("Error playing track:", error);
+      toast({
+        title: "Error playing preview",
+        description: "Failed to load track preview. The song might not have a preview available.",
+        variant: "destructive",
+      });
     }
   };
 
