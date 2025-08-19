@@ -97,16 +97,18 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
   }, [fullTrack?.preview_url]);
 
   const handlePlayPause = async () => {
+    // Check if we have preview URL
+    let currentTrack = fullTrack;
+    
     // First try to get preview URL if not available
-    if (!fullTrack?.preview_url && fullTrack?.id) {
+    if (!currentTrack?.preview_url && currentTrack?.id) {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/spotify/track/${fullTrack.id}`);
+        const response = await fetch(`/api/spotify/track/${currentTrack.id}`);
         if (response.ok) {
           const trackData = await response.json();
           if (trackData.preview_url) {
-            // Update the fullTrack object with the preview URL
-            // Since we can't update fullTrack directly, we'll work with trackData
+            // Create updated track object
             currentTrack = { ...currentTrack, preview_url: trackData.preview_url };
           }
         }
@@ -115,13 +117,12 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
       }
       setIsLoading(false);
     }
-
-    // Check again after potential fetch
-    let currentTrack = fullTrack;
     if (!currentTrack?.preview_url) {
+      // Open Spotify directly as fallback
+      window.open(`https://open.spotify.com/track/${currentTrack?.id}`, '_blank');
       toast({
-        title: "No preview available 🎵",
-        description: "This track doesn't have a 30-second preview. You can still open it in Spotify!",
+        title: "Opening in Spotify 🎵", 
+        description: "This track doesn't have a preview, so we're opening it in Spotify for you!",
       });
       return;
     }

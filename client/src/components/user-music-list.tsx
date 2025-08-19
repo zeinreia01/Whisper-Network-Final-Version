@@ -154,9 +154,11 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
       const trackData = await response.json();
 
       if (!trackData.preview_url) {
+        // Open Spotify directly as fallback
+        window.open(`https://open.spotify.com/track/${track.spotifyTrackId}`, '_blank');
         toast({
-          title: "No preview available 🎵",
-          description: "This track doesn't have a 30-second preview. You can still open it in Spotify!",
+          title: "Opening in Spotify 🎵",
+          description: "This track doesn't have a preview, so we're opening it in Spotify for you!",
         });
         return;
       }

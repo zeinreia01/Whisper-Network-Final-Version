@@ -46,9 +46,14 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const canvas = await html2canvas(messageRef.current, {
         scale: 2,
         useCORS: true,
-        allowTarnish: true,
-        backgroundColor: null,
-        logging: false
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: messageRef.current.offsetWidth,
+        height: messageRef.current.offsetHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: messageRef.current.offsetWidth,
+        windowHeight: messageRef.current.offsetHeight
       });
 
       const dataURL = canvas.toDataURL('image/png');
@@ -107,11 +112,14 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         {/* Instagram-style Message Display - matching reference exactly */}
         <div 
           ref={messageRef}
-          className="p-6 rounded-xl border relative overflow-hidden bg-card"
+          className="rounded-xl border relative overflow-hidden bg-card"
           style={{
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            maxWidth: '400px',
+            width: '400px',
+            minHeight: '500px',
             margin: '0 auto',
+            padding: '24px',
+            boxSizing: 'border-box',
             background: document.documentElement.classList.contains('pink') 
               ? 'linear-gradient(135deg, #fce7f3 0%, #f8d7da 25%, #f1c0c5 50%, #ecadb0 75%, #e799a0 100%)'
               : document.documentElement.classList.contains('dark')
@@ -218,7 +226,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             {((message.userId && message.user?.profilePicture) || (message.adminId && message.admin?.profilePicture)) && (
               <div className="flex justify-center mb-2">
                 <img
-                  src={message.user?.profilePicture || message.admin?.profilePicture}
+                  src={message.user?.profilePicture || message.admin?.profilePicture || ''}
                   alt="Profile"
                   className="w-8 h-8 rounded-full border-2"
                   style={{
