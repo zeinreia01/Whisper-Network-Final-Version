@@ -313,22 +313,7 @@ export function Navigation() {
             </Link>
           )}
 
-          {/* Add Admin Announcements button to mobile nav */}
-          {admin && (
-            <Link href="/admin/announcements">
-              <button
-                className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 ${
-                  location === "/admin/announcements"
-                    ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-                data-testid="tab-admin-announcements"
-              >
-                <MessageSquare className={`h-5 w-5 ${location === "/admin/announcements" ? "scale-110" : ""} transition-transform`} />
-                <span className="text-xs mt-0.5 font-medium">Admin Updates</span>
-              </button>
-            </Link>
-          )}
+          
         </div>
       </div>
 

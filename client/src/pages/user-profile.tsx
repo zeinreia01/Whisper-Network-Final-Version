@@ -598,6 +598,6 @@ export function UserProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

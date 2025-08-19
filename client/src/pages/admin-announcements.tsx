@@ -336,17 +336,9 @@ export function AdminAnnouncementsPage() {
                         </p>
                         <div className="flex items-center justify-between mt-3 pt-2 border-t">
                           <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <Avatar className="w-5 h-5">
-                                <AvatarImage src={announcement.author?.profilePicture || ""} />
-                                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                                  {announcement.author?.displayName?.charAt(0)?.toUpperCase() || "A"}
-                                </AvatarFallback>
-                              </Avatar>
-                              <Badge variant="secondary" className="text-xs">
-                                {announcement.author?.displayName || "Admin"}
-                              </Badge>
-                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {announcement.author?.displayName || "Admin"}
+                            </Badge>
                             <span className="text-xs text-muted-foreground">
                               {formatTimeAgo(new Date(announcement.createdAt))}
                             </span>
