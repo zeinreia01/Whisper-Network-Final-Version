@@ -9,7 +9,7 @@ import { GlobalSearch } from "@/components/global-search";
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X, Lock, Sparkles } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X, Lock, Sparkles, Star, MessageSquare } from "lucide-react";
 
 // Mobile notification button component for bottom navigation
 function MobileNotificationButton() {
@@ -64,7 +64,7 @@ export function Navigation() {
                   Home
                 </Button>
               </Link>
-              
+
               <Link href="/dashboard">
                 <Button
                   variant={location === "/dashboard" ? "default" : "ghost"}
@@ -309,6 +309,23 @@ export function Navigation() {
               >
                 <Shield className={`h-5 w-5 ${location === "/admin" ? "scale-110" : ""} transition-transform`} />
                 <span className="text-xs mt-0.5 font-medium">Admin</span>
+              </button>
+            </Link>
+          )}
+
+          {/* Add Admin Announcements button to mobile nav */}
+          {admin && (
+            <Link href="/admin/announcements">
+              <button
+                className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 ${
+                  location === "/admin/announcements"
+                    ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+                data-testid="tab-admin-announcements"
+              >
+                <MessageSquare className={`h-5 w-5 ${location === "/admin/announcements" ? "scale-110" : ""} transition-transform`} />
+                <span className="text-xs mt-0.5 font-medium">Admin Updates</span>
               </button>
             </Link>
           )}

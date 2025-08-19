@@ -245,7 +245,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
           <DialogHeader>
             <DialogTitle>Post Message to {username}'s Board</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Your Name (Optional)</label>

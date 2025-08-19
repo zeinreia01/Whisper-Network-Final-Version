@@ -385,19 +385,21 @@ export function UserProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Profile Music Section */}
-            <ProfileMusicSection 
-              user={profile}
-              isOwnProfile={isOwnProfile}
-              title="Profile Song"
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Profile Music Section */}
+              <ProfileMusicSection 
+                user={profile}
+                isOwnProfile={isOwnProfile}
+                title="Profile Song"
+              />
 
-            {/* Music Collection */}
-            <UserMusicList 
-              userId={userId}
-              isOwnProfile={isOwnProfile}
-              title="Music Collection"
-            />
+              {/* Music Collection */}
+              <UserMusicList 
+                userId={userId}
+                isOwnProfile={isOwnProfile}
+                title="Music Collection"
+              />
+            </div>
 
             {/* Dashboard Posts */}
             <UserDashboardPosts 

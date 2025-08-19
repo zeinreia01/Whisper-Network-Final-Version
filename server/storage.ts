@@ -1147,8 +1147,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Removed duplicate password management methods - they're defined later
-
   async followUser(followerId: number, followingId: number): Promise<Follow> {
     const [follow] = await db
       .insert(follows)
@@ -1745,7 +1743,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .select({ maxOrder: sql<number>`max(${userMusicList.order})` })
       .from(userMusicList)
       .where(userId ? eq(userMusicList.userId, userId) : eq(userMusicList.adminId, adminId!));
-    
+
     const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
 
     const [music] = await db
@@ -1786,7 +1784,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     }
 
     const track = musicTrack[0];
-    
+
     // Remove favorite from all tracks for this user/admin
     if (track.userId) {
       await db
@@ -1806,7 +1804,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .set({ isFavorite: true })
       .where(eq(userMusicList.id, musicId))
       .returning();
-    
+
     return updatedTrack;
   }
 

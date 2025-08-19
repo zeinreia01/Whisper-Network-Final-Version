@@ -47,6 +47,10 @@ interface AnonymousMessage {
   recipientAdminId: number | null;
   isRead: boolean;
   createdAt: string;
+  spotifyTrackId?: string | null;
+  spotifyTrackName?: string | null;
+  spotifyArtistName?: string | null;
+  spotifyAlbumCover?: string | null;
 }
 
 interface UserProfile {
@@ -105,6 +109,10 @@ export default function AnonymousMessaging() {
       content: string;
       category?: string;
       spotifyLink?: string;
+      spotifyTrackId?: string | null;
+      spotifyTrackName?: string | null;
+      spotifyArtistName?: string | null;
+      spotifyAlbumCover?: string | null;
       senderName?: string;
     }) => {
       const response = await fetch("/api/anonymous-messages", {
@@ -114,6 +122,10 @@ export default function AnonymousMessaging() {
           content: messageData.content,
           category: messageData.category,
           spotifyLink: messageData.spotifyLink,
+          spotifyTrackId: messageData.spotifyTrackId,
+          spotifyTrackName: messageData.spotifyTrackName,
+          spotifyArtistName: messageData.spotifyArtistName,
+          spotifyAlbumCover: messageData.spotifyAlbumCover,
           senderName: messageData.senderName,
           recipientUserId: recipientProfile?.id,
           recipientAdminId: null, // For now, only supporting user recipients
@@ -457,47 +469,54 @@ export default function AnonymousMessaging() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Music className="h-4 w-4" />
-                    Add Music (Optional)
-                  </label>
+                  <Label className="text-gray-700 dark:text-gray-300 text-sm font-medium flex items-center gap-2">
+                    <Music className="w-4 h-4" />
+                    Add Song (Optional)
+                  </Label>
+
                   {selectedTrack ? (
-                    <div className="relative">
-                      <SpotifyTrackDisplay
-                        trackId={selectedTrack.id}
-                        trackName={selectedTrack.name}
-                        artistName={selectedTrack.artists.map(a => a.name).join(", ")}
-                        albumCover={selectedTrack.album.images[0]?.url || ""}
-                        size="sm"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedTrack(null)}
-                        className="absolute top-2 right-2 w-6 h-6 p-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                    <div className="mt-2 space-y-2">
+                      <SpotifyTrackDisplay track={selectedTrack} size="sm" />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowSpotifySearch(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Music className="w-3 h-3" />
+                          Change Song
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedTrack(null)}
+                          className="flex items-center gap-2"
+                        >
+                          <X className="w-3 h-3" />
+                          Remove
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="mt-2">
                       <Button
+                        type="button"
                         variant="outline"
                         onClick={() => setShowSpotifySearch(true)}
-                        className="w-full flex items-center gap-2"
+                        className="w-full flex items-center gap-2 justify-center h-10"
                       >
                         <Music className="w-4 h-4" />
-                        Search for a Song
+                        Search for a song
                       </Button>
-                      <div className="text-xs text-muted-foreground text-center">or</div>
-                      <Input
-                        type="url"
-                        value={spotifyLink}
-                        onChange={(e) => setSpotifyLink(e.target.value)}
-                        placeholder="Paste Spotify link..."
-                      />
                     </div>
                   )}
+
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Share a song that relates to your message
+                  </p>
                 </div>
 
                 <div className="flex justify-end">
@@ -534,17 +553,21 @@ export default function AnonymousMessaging() {
 
       {/* Spotify Search Dialog */}
       <Dialog open={showSpotifySearch} onOpenChange={setShowSpotifySearch}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
           <DialogHeader>
             <DialogTitle>Search for a Song</DialogTitle>
           </DialogHeader>
-          <SpotifySearch 
-            onTrackSelect={(track: SpotifyTrack) => {
-              setSelectedTrack(track);
-              setSpotifyLink(""); // Clear the manual link input
-              setShowSpotifySearch(false);
-            }} 
-          />
+          <div className="mt-4">
+            <SpotifySearch
+              onTrackSelect={(track) => {
+                setSelectedTrack(track);
+                setSpotifyLink(`https://open.spotify.com/track/${track.id}`);
+                setShowSpotifySearch(false);
+              }}
+              selectedTrack={selectedTrack}
+              placeholder="Search for a song to include with your message..."
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

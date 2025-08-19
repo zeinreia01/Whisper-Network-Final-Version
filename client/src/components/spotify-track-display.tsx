@@ -34,7 +34,56 @@ interface SpotifyTrackDisplayProps {
   className?: string;
 }
 
-export function SpotifyTrackDisplay({ track, showPreview = true, size = "md", className }: SpotifyTrackDisplayProps) {
+export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, className }: SpotifyTrackDisplayProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration);
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [track.preview_url]);
+
+  const togglePlayPause = () => {
+    const audio = audioRef.current;
+    if (!audio || !track.preview_url) return;
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const formatDuration = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   if (!track) return null;
 
   const getAlbumArt = (track: SpotifyTrack) => {
@@ -43,16 +92,10 @@ export function SpotifyTrackDisplay({ track, showPreview = true, size = "md", cl
       md: 640,
       lg: 640,
     };
-    
+
     const targetSize = sizeMap[size];
     const image = track.album.images.find(img => img.height && img.height <= targetSize) || track.album.images[0];
     return image?.url;
-  };
-
-  const formatDuration = (ms: number) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const sizeClasses = {
@@ -117,20 +160,28 @@ export function SpotifyTrackDisplay({ track, showPreview = true, size = "md", cl
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
             {showPreview && track.preview_url && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const audio = new Audio(track.preview_url!);
-                  audio.play();
-                }}
-                className="p-2"
-                title="Play preview"
-              >
-                <Play className={classes.icon} />
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={togglePlayPause}
+                >
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </Button>
+                {duration > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {formatTime(currentTime)}/{formatTime(duration)}
+                  </span>
+                )}
+                <audio
+                  ref={audioRef}
+                  src={track.preview_url}
+                  preload="metadata"
+                />
+              </div>
             )}
-            
+
             <Button
               variant="ghost"
               size="sm"

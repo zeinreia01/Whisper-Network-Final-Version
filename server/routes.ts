@@ -497,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const validatedData = changePasswordSchema.parse(req.body);
-      
+
       const user = await storage.getUserById(parseInt(id));
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -528,7 +528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const validatedData = adminChangePasswordSchema.parse(req.body);
-      
+
       const admin = await storage.getAdminById(parseInt(id));
       if (!admin) {
         return res.status(404).json({ message: "Admin not found" });
@@ -560,7 +560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/view-all-passwords", async (req, res) => {
     try {
       const validatedData = viewAllPasswordsSchema.parse(req.body);
-      
+
       if (validatedData.adminUsername !== "ZEKE001") {
         return res.status(403).json({ message: "Only ZEKE001 can access this feature" });
       }
@@ -1809,7 +1809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/spotify/search", async (req, res) => {
     try {
       const { q, limit = "20" } = req.query;
-      
+
       if (!q || typeof q !== "string") {
         return res.status(400).json({ message: "Query parameter is required" });
       }
@@ -1826,7 +1826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const track = await spotifyAPI.getTrack(id);
-      
+
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
       }
@@ -1845,7 +1845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
 
       const userId = parseInt(id);
-      
+
       // Validate that the user exists
       const user = await storage.getUserById(userId);
       if (!user) {
@@ -1874,7 +1874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
 
       const adminId = parseInt(id);
-      
+
       // Validate that the admin exists
       const admin = await storage.getAdminById(adminId);
       if (!admin) {
@@ -1903,7 +1903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
 
       const userId = parseInt(id);
-      
+
       // Validate that the user exists
       const user = await storage.getUserById(userId);
       if (!user) {
@@ -1931,7 +1931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
 
       const adminId = parseInt(id);
-      
+
       // Validate that the admin exists
       const admin = await storage.getAdminById(adminId);
       if (!admin) {
@@ -1957,7 +1957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const userId = parseInt(id);
-      
+
       const musicList = await storage.getUserMusicList(userId);
       res.json(musicList);
     } catch (error) {
@@ -1970,7 +1970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const adminId = parseInt(id);
-      
+
       const musicList = await storage.getUserMusicList(0, adminId);
       res.json(musicList);
     } catch (error) {
@@ -1983,7 +1983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const musicId = parseInt(id);
-      
+
       await storage.removeFromMusicList(musicId);
       res.json({ message: "Music removed from list" });
     } catch (error) {
@@ -1996,7 +1996,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const musicId = parseInt(id);
-      
+
       const updatedMusic = await storage.setFavoriteTrack(musicId);
       res.json(updatedMusic);
     } catch (error) {
@@ -2024,7 +2024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const userId = parseInt(id);
-      
+
       const messages = await storage.getUserDashboardMessages(userId);
       res.json(messages);
     } catch (error) {
@@ -2037,7 +2037,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const adminId = parseInt(id);
-      
+
       const messages = await storage.getUserDashboardMessages(0, adminId);
       res.json(messages);
     } catch (error) {
@@ -2050,7 +2050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const messageId = parseInt(id);
-      
+
       await storage.deleteDashboardMessage(messageId);
       res.json({ message: "Dashboard message deleted" });
     } catch (error) {
@@ -2088,7 +2088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const announcementId = parseInt(id);
-      
+
       await storage.deleteAdminAnnouncement(announcementId);
       res.json({ message: "Announcement deleted" });
     } catch (error) {
@@ -2102,7 +2102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { isPinned } = req.body;
       const announcementId = parseInt(id);
-      
+
       const announcement = await storage.pinAdminAnnouncement(announcementId, isPinned);
       res.json(announcement);
     } catch (error) {
