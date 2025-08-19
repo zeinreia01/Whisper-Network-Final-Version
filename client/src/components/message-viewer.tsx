@@ -211,6 +211,36 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         attribution.textContent = '— Anonymous Whisper';
       }
 
+      // Add profile picture if available
+      if ((message.userId && message.user?.profilePicture) || (message.adminId && message.admin?.profilePicture)) {
+        const profileSection = document.createElement('div');
+        profileSection.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 8px 0;
+        `;
+
+        const profileImg = document.createElement('img');
+        const profileUrl = message.user?.profilePicture || message.admin?.profilePicture;
+        profileImg.src = profileUrl!;
+        profileImg.style.cssText = `
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 2px solid ${isPink ? 'rgba(76, 29, 149, 0.3)' : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30, 41, 59, 0.3)'};
+          object-fit: cover;
+        `;
+
+        // Add error handling for profile image
+        profileImg.onerror = () => {
+          profileSection.removeChild(profileImg);
+        };
+
+        profileSection.appendChild(profileImg);
+        messageCard.insertBefore(profileSection, stats);
+      }
+
       // Stats section - exactly like reference
       const stats = document.createElement('div');
       stats.style.cssText = `
@@ -274,12 +304,28 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         backgroundColor: null, // Transparent background
         width: 440, // Add padding space
         height: downloadContainer.scrollHeight + 40,
+        foreignObjectRendering: true,
+        logging: false,
         onclone: (clonedDoc) => {
           const style = clonedDoc.createElement('style');
           style.textContent = `
-            * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif !important; }
+            * { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif !important; 
+            }
+            img {
+              max-width: 100% !important;
+              height: auto !important;
+            }
           `;
           clonedDoc.head.appendChild(style);
+
+          // Convert all data URLs to proper images for better rendering
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach((img) => {
+            if (img.src.startsWith('data:')) {
+              img.setAttribute('crossorigin', 'anonymous');
+            }
+          });
         }
       });
 
@@ -436,8 +482,26 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             </p>
           </div>
 
-          {/* Attribution - exactly like reference */}
+          {/* Attribution with profile picture - exactly like reference */}
           <div className="text-center mb-4">
+            {/* Profile picture if available */}
+            {((message.userId && message.user?.profilePicture) || (message.adminId && message.admin?.profilePicture)) && (
+              <div className="flex justify-center mb-2">
+                <img
+                  src={message.user?.profilePicture || message.admin?.profilePicture}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full border-2"
+                  style={{
+                    borderColor: document.documentElement.classList.contains('pink') 
+                      ? 'rgba(76, 29, 149, 0.3)'
+                      : document.documentElement.classList.contains('dark')
+                      ? 'rgba(255, 255, 255, 0.3)'
+                      : 'rgba(30, 41, 59, 0.3)',
+                    objectFit: 'cover'
+                  }}
+                />
+              </div>
+            )}
             <p className="text-xs italic" style={{
               color: document.documentElement.classList.contains('pink') 
                 ? 'rgba(76, 29, 149, 0.6)'
