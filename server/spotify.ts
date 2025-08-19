@@ -38,21 +38,34 @@ export type SpotifyTrackType = z.infer<typeof SpotifyTrack>;
 export type SpotifySearchResponseType = z.infer<typeof SpotifySearchResponse>;
 
 class SpotifyAPI {
-  private clientId: string;
-  private clientSecret: string;
+  private clientId: string | null;
+  private clientSecret: string | null;
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
+  private isEnabled: boolean = false;
 
   constructor() {
-    this.clientId = process.env.SPOTIFY_CLIENT_ID!;
-    this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
+    this.clientId = process.env.SPOTIFY_CLIENT_ID || null;
+    this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET || null;
     
-    if (!this.clientId || !this.clientSecret) {
-      throw new Error("Spotify credentials not found in environment variables");
+    if (this.clientId && this.clientSecret) {
+      this.isEnabled = true;
+      console.log('Spotify integration enabled');
+    } else {
+      this.isEnabled = false;
+      console.log('Spotify integration disabled - credentials not provided');
     }
   }
 
+  public get enabled(): boolean {
+    return this.isEnabled;
+  }
+
   private async getAccessToken(): Promise<string> {
+    if (!this.isEnabled || !this.clientId || !this.clientSecret) {
+      throw new Error("Spotify integration is not enabled");
+    }
+
     // Check if we have a valid token
     if (this.accessToken && Date.now() < this.tokenExpiry) {
       return this.accessToken;
@@ -83,6 +96,9 @@ class SpotifyAPI {
   }
 
   async searchTracks(query: string, limit: number = 20): Promise<SpotifyTrackType[]> {
+    if (!this.isEnabled) {
+      return [];
+    }
     if (!query.trim()) {
       return [];
     }
@@ -114,6 +130,10 @@ class SpotifyAPI {
   }
 
   async getTrack(trackId: string): Promise<SpotifyTrackType | null> {
+    if (!this.isEnabled) {
+      return null;
+    }
+    
     try {
       const accessToken = await this.getAccessToken();
       
