@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { spotifyAPI } from "./spotify";
 import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -1801,6 +1802,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error retrieving password data:", error);
       res.status(500).json({ message: "Failed to retrieve password data" });
+    }
+  });
+
+  // Spotify API routes
+  app.get("/api/spotify/search", async (req, res) => {
+    try {
+      const { q, limit = "20" } = req.query;
+      
+      if (!q || typeof q !== "string") {
+        return res.status(400).json({ message: "Query parameter is required" });
+      }
+
+      const tracks = await spotifyAPI.searchTracks(q, parseInt(limit as string));
+      res.json({ tracks });
+    } catch (error) {
+      console.error("Spotify search error:", error);
+      res.status(500).json({ message: "Failed to search Spotify tracks" });
+    }
+  });
+
+  app.get("/api/spotify/track/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const track = await spotifyAPI.getTrack(id);
+      
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+
+      res.json(track);
+    } catch (error) {
+      console.error("Get Spotify track error:", error);
+      res.status(500).json({ message: "Failed to get track details" });
+    }
+  });
+
+  // Update user profile song
+  app.patch("/api/users/:id/spotify", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
+
+      const userId = parseInt(id);
+      
+      // Validate that the user exists
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update user's Spotify track info
+      const updatedUser = await storage.updateUserSpotifyTrack(userId, {
+        spotifyTrackId,
+        spotifyTrackName,
+        spotifyArtistName,
+        spotifyAlbumCover,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Update user Spotify track error:", error);
+      res.status(500).json({ message: "Failed to update profile song" });
+    }
+  });
+
+  // Update admin profile song
+  app.patch("/api/admins/:id/spotify", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover } = req.body;
+
+      const adminId = parseInt(id);
+      
+      // Validate that the admin exists
+      const admin = await storage.getAdminById(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // Update admin's Spotify track info
+      const updatedAdmin = await storage.updateAdminSpotifyTrack(adminId, {
+        spotifyTrackId,
+        spotifyTrackName,
+        spotifyArtistName,
+        spotifyAlbumCover,
+      });
+
+      res.json(updatedAdmin);
+    } catch (error) {
+      console.error("Update admin Spotify track error:", error);
+      res.status(500).json({ message: "Failed to update profile song" });
     }
   });
 

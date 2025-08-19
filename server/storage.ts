@@ -62,6 +62,20 @@ export interface IStorage {
   getAllUsersWithPasswords(): Promise<User[]>;
   getAllAdminsWithPasswords(): Promise<Admin[]>;
 
+  // Spotify integration operations
+  updateUserSpotifyTrack(userId: number, spotifyData: {
+    spotifyTrackId?: string | null;
+    spotifyTrackName?: string | null;
+    spotifyArtistName?: string | null;
+    spotifyAlbumCover?: string | null;
+  }): Promise<User>;
+  updateAdminSpotifyTrack(adminId: number, spotifyData: {
+    spotifyTrackId?: string | null;
+    spotifyTrackName?: string | null;
+    spotifyArtistName?: string | null;
+    spotifyAlbumCover?: string | null;
+  }): Promise<Admin>;
+
   // Reaction operations
   addReaction(reaction: InsertReaction): Promise<Reaction>;
   removeReaction(messageId: number, userId?: number, adminId?: number): Promise<void>;
@@ -1631,30 +1645,16 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
   }
 
   async getAllUsersWithPasswords(): Promise<User[]> {
-    const result = await db.select({
-      id: users.id,
-      username: users.username,
-      displayName: users.displayName,
-      password: users.password,
-      hashedPassword: users.password,
-      createdAt: users.createdAt,
-      isActive: users.isActive,
-      isVerified: users.isVerified
-    }).from(users);
+    const result = await db
+      .select()
+      .from(users);
     return result;
   }
 
   async getAllAdminsWithPasswords(): Promise<Admin[]> {
-    const result = await db.select({
-      id: admins.id,
-      username: admins.username,
-      displayName: admins.displayName,
-      password: admins.password,
-      hashedPassword: admins.password,
-      createdAt: admins.createdAt,
-      isActive: admins.isActive,
-      role: admins.role
-    }).from(admins);
+    const result = await db
+      .select()
+      .from(admins);
     return result;
   }
 
@@ -1666,6 +1666,55 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+
+  // Spotify integration methods
+  async updateUserSpotifyTrack(userId: number, spotifyData: {
+    spotifyTrackId?: string | null;
+    spotifyTrackName?: string | null;
+    spotifyArtistName?: string | null;
+    spotifyAlbumCover?: string | null;
+  }): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        spotifyTrackId: spotifyData.spotifyTrackId,
+        spotifyTrackName: spotifyData.spotifyTrackName,
+        spotifyArtistName: spotifyData.spotifyArtistName,
+        spotifyAlbumCover: spotifyData.spotifyAlbumCover,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+
+    return updatedUser;
+  }
+
+  async updateAdminSpotifyTrack(adminId: number, spotifyData: {
+    spotifyTrackId?: string | null;
+    spotifyTrackName?: string | null;
+    spotifyArtistName?: string | null;
+    spotifyAlbumCover?: string | null;
+  }): Promise<Admin> {
+    const [updatedAdmin] = await db
+      .update(admins)
+      .set({
+        spotifyTrackId: spotifyData.spotifyTrackId,
+        spotifyTrackName: spotifyData.spotifyTrackName,
+        spotifyArtistName: spotifyData.spotifyArtistName,
+        spotifyAlbumCover: spotifyData.spotifyAlbumCover,
+      })
+      .where(eq(admins.id, adminId))
+      .returning();
+
+    if (!updatedAdmin) {
+      throw new Error('Admin not found');
+    }
+
+    return updatedAdmin;
   }
 }
 

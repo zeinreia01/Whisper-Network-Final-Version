@@ -18,6 +18,11 @@ export const users = pgTable("users", {
   isAnonymousLinkPaused: boolean("is_anonymous_link_paused").default(false), // Whether user has paused anonymous messaging
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
+  // Spotify music integration for profile songs
+  spotifyTrackId: text("spotify_track_id"), // User's profile song ID
+  spotifyTrackName: text("spotify_track_name"), // Track name for display
+  spotifyArtistName: text("spotify_artist_name"), // Artist name for display
+  spotifyAlbumCover: text("spotify_album_cover"), // Album cover URL for display
 });
 
 export const messages = pgTable("messages", {
@@ -34,6 +39,11 @@ export const messages = pgTable("messages", {
   isOwnerPrivate: boolean("is_owner_private").default(false), // Whether owner set this as private
   isPinned: boolean("is_pinned").default(false), // Whether message is pinned by admin
   createdAt: timestamp("created_at").defaultNow(),
+  // Spotify integration for rich music display in messages
+  spotifyTrackId: text("spotify_track_id"), // Extracted from spotifyLink
+  spotifyTrackName: text("spotify_track_name"), // Track name for display
+  spotifyArtistName: text("spotify_artist_name"), // Artist name for display
+  spotifyAlbumCover: text("spotify_album_cover"), // Album cover URL for display
 });
 
 export const replies = pgTable("replies", {
@@ -63,6 +73,11 @@ export const admins = pgTable("admins", {
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
+  // Spotify music integration for admin profiles
+  spotifyTrackId: text("spotify_track_id"), // Admin's profile song ID
+  spotifyTrackName: text("spotify_track_name"), // Track name for display
+  spotifyArtistName: text("spotify_artist_name"), // Artist name for display
+  spotifyAlbumCover: text("spotify_album_cover"), // Album cover URL for display
 });
 
 // Heart reactions table

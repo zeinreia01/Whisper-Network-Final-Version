@@ -14,6 +14,7 @@ import { Link } from "wouter";
 import { ArrowLeft, User, Upload, Calendar, Clock, Save, Archive, Camera, Edit3, X } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { updateUserProfileSchema } from "@shared/schema";
+import { ProfileMusicSection } from "@/components/profile-music-section";
 import { z } from "zod";
 import { compressImage } from "@/lib/image-utils";
 
@@ -616,6 +617,13 @@ export function PersonalPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Profile Music Section */}
+              <ProfileMusicSection 
+                user={user} 
+                isOwnProfile={true}
+                title="My Profile Song"
+              />
 
               <Card className="bg-white dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 shadow-lg">
                 <CardHeader>
