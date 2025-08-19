@@ -57,24 +57,24 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       
       let cardBackground;
       if (isPink) {
-        cardBackground = 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 25%, #c084fc 50%, #e879f9 75%, #f0abfc 100%)';
+        cardBackground = 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 25%, #d8b4fe 50%, #c084fc 75%, #a855f7 100%)';
       } else if (isDark) {
-        cardBackground = 'linear-gradient(135deg, #1e293b 0%, #334155 25%, #475569 50%, #64748b 75%, #94a3b8 100%)';
+        cardBackground = 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)';
       } else {
-        cardBackground = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)';
+        cardBackground = 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e2e8f0 50%, #cbd5e1 75%, #94a3b8 100%)';
       }
       
       messageCard.style.cssText = `
         background: ${cardBackground};
         border-radius: 16px;
         padding: 24px;
-        color: ${isPink || isDark ? 'white' : '#1e293b'};
+        color: ${isPink ? '#4c1d95' : isDark ? 'white' : '#1e293b'};
         position: relative;
         width: 400px;
         display: flex;
         flex-direction: column;
-        border: 1px solid ${isPink || isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid ${isPink ? 'rgba(168, 85, 247, 0.3)' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
+        box-shadow: ${isPink ? '0 8px 32px rgba(168, 85, 247, 0.15)' : '0 8px 32px rgba(0, 0, 0, 0.2)'};
         backdrop-filter: blur(10px);
       `;
 
@@ -88,11 +88,11 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const appTitle = document.createElement('h1');
       let titleGradient;
       if (isPink) {
-        titleGradient = 'linear-gradient(135deg, #f0abfc 0%, #e879f9 50%, #c084fc 100%)';
+        titleGradient = 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)';
       } else if (isDark) {
         titleGradient = 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)';
       } else {
-        titleGradient = 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)';
+        titleGradient = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)';
       }
       
       appTitle.style.cssText = `
@@ -109,7 +109,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const subtitle = document.createElement('p');
       subtitle.style.cssText = `
         font-size: 12px;
-        color: ${isPink || isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)'};
+        color: ${isPink ? 'rgba(76, 29, 149, 0.7)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.7)'};
         margin: 0 0 8px 0;
         font-weight: 400;
       `;
@@ -129,14 +129,14 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       categoryDot.style.cssText = `
         width: 6px;
         height: 6px;
-        background: rgba(255,255,255,0.8);
+        background: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
         border-radius: 50%;
       `;
 
       const categoryText = document.createElement('span');
       categoryText.style.cssText = `
         font-size: 12px;
-        color: ${isPink || isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'};
+        color: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
         font-weight: 500;
       `;
       categoryText.textContent = category?.name || message.category;
@@ -144,7 +144,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const timeText = document.createElement('span');
       timeText.style.cssText = `
         font-size: 12px;
-        color: ${isPink || isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'};
+        color: ${isPink ? 'rgba(76, 29, 149, 0.6)' : isDark ? 'rgba(255,255,255,0.6)' : 'rgba(30, 41, 59, 0.6)'};
         margin-left: 8px;
       `;
       timeText.textContent = formatTimeAgo(message.createdAt!);
@@ -161,14 +161,14 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const messageBox = document.createElement('div');
       let messageBoxBg, messageBoxBorder;
       if (isPink) {
-        messageBoxBg = 'rgba(255,255,255,0.15)';
-        messageBoxBorder = 'rgba(255,255,255,0.25)';
+        messageBoxBg = 'rgba(76, 29, 149, 0.15)';
+        messageBoxBorder = 'rgba(76, 29, 149, 0.25)';
       } else if (isDark) {
         messageBoxBg = 'rgba(255,255,255,0.1)';
         messageBoxBorder = 'rgba(255,255,255,0.15)';
       } else {
-        messageBoxBg = 'rgba(0,0,0,0.1)';
-        messageBoxBorder = 'rgba(0,0,0,0.15)';
+        messageBoxBg = 'rgba(30, 41, 59, 0.1)';
+        messageBoxBorder = 'rgba(30, 41, 59, 0.15)';
       }
       
       messageBox.style.cssText = `
@@ -183,7 +183,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       messageContent.style.cssText = `
         font-size: 16px;
         line-height: 1.4;
-        color: ${isPink || isDark ? 'white' : '#1e293b'};
+        color: ${isPink ? '#4c1d95' : isDark ? 'white' : '#1e293b'};
         text-align: center;
         font-weight: 400;
       `;
@@ -196,7 +196,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       attribution.style.cssText = `
         text-align: center;
         font-size: 12px;
-        color: ${isPink || isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'};
+        color: ${isPink ? 'rgba(76, 29, 149, 0.6)' : isDark ? 'rgba(255,255,255,0.6)' : 'rgba(30, 41, 59, 0.6)'};
         font-style: italic;
         margin: 12px 0;
       `;
@@ -226,7 +226,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         display: flex;
         align-items: center;
         gap: 6px;
-        color: rgba(255,255,255,0.8);
+        color: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
         font-size: 12px;
       `;
       heartsCount.innerHTML = `♥ ${message.reactionCount || 0} hearts`;
@@ -236,7 +236,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         display: flex;
         align-items: center;
         gap: 6px;
-        color: rgba(255,255,255,0.8);
+        color: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
         font-size: 12px;
       `;
       const totalReplies = message.replies ? message.replies.length : 0;
@@ -249,11 +249,11 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const footer = document.createElement('div');
       footer.style.cssText = `
         text-align: center;
-        color: rgba(255,255,255,0.5);
+        color: ${isPink ? 'rgba(76, 29, 149, 0.5)' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(30, 41, 59, 0.5)'};
         font-size: 10px;
         margin-top: 12px;
         padding-top: 12px;
-        border-top: 1px solid rgba(255,255,255,0.1);
+        border-top: 1px solid ${isPink ? 'rgba(76, 29, 149, 0.1)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(30, 41, 59, 0.1)'};
       `;
       footer.textContent = `This whisper was shared on Whisper Network • ${new Date(message.createdAt!).toLocaleDateString()}`;
 
@@ -337,53 +337,114 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             maxWidth: '400px',
             margin: '0 auto',
             background: document.documentElement.classList.contains('pink') 
-              ? 'linear-gradient(135deg, #4c1d95 0%, #581c87 30%, #6b21a8 70%, #7c3aed 100%)'
+              ? 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 25%, #d8b4fe 50%, #c084fc 75%, #a855f7 100%)'
               : document.documentElement.classList.contains('dark')
-              ? 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)'
-              : 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            color: '#ffffff'
+              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)'
+              : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e2e8f0 50%, #cbd5e1 75%, #94a3b8 100%)',
+            border: document.documentElement.classList.contains('pink') 
+              ? '1px solid rgba(168, 85, 247, 0.3)'
+              : document.documentElement.classList.contains('dark')
+              ? '1px solid rgba(255,255,255,0.1)'
+              : '1px solid rgba(0,0,0,0.1)',
+            boxShadow: document.documentElement.classList.contains('pink')
+              ? '0 8px 32px rgba(168, 85, 247, 0.15)'
+              : document.documentElement.classList.contains('dark')
+              ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+              : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            color: document.documentElement.classList.contains('pink') 
+              ? '#4c1d95'
+              : document.documentElement.classList.contains('dark')
+              ? '#ffffff'
+              : '#1e293b'
           }}
         >
           {/* Header with branding - exactly like reference */}
           <div className="text-center mb-5">
             <h1 className="text-xl font-bold mb-1" style={{
               background: document.documentElement.classList.contains('pink') 
-                ? 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)'
-                : 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)',
+                ? 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)'
+                : document.documentElement.classList.contains('dark')
+                ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'
+                : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               color: 'transparent'
             }}>
               Whisper Network
             </h1>
-            <p className="text-xs text-white opacity-70 mb-2">
+            <p className="text-xs mb-2" style={{
+              color: document.documentElement.classList.contains('pink') 
+                ? 'rgba(76, 29, 149, 0.7)'
+                : document.documentElement.classList.contains('dark')
+                ? 'rgba(255, 255, 255, 0.7)'
+                : 'rgba(30, 41, 59, 0.7)'
+            }}>
               A place where voices unite and hearts connect
             </p>
             
             {/* Category and time - exactly like reference */}
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-1.5 h-1.5 bg-white opacity-80 rounded-full"></div>
-              <span className="text-xs text-white opacity-80 font-medium">
+              <div className="w-1.5 h-1.5 rounded-full" style={{
+                background: document.documentElement.classList.contains('pink') 
+                  ? 'rgba(76, 29, 149, 0.8)'
+                  : document.documentElement.classList.contains('dark')
+                  ? 'rgba(255, 255, 255, 0.8)'
+                  : 'rgba(30, 41, 59, 0.8)'
+              }}></div>
+              <span className="text-xs font-medium" style={{
+                color: document.documentElement.classList.contains('pink') 
+                  ? 'rgba(76, 29, 149, 0.8)'
+                  : document.documentElement.classList.contains('dark')
+                  ? 'rgba(255, 255, 255, 0.8)'
+                  : 'rgba(30, 41, 59, 0.8)'
+              }}>
                 {category?.name || message.category}
               </span>
-              <span className="text-xs text-white opacity-60 ml-2">
+              <span className="text-xs ml-2" style={{
+                color: document.documentElement.classList.contains('pink') 
+                  ? 'rgba(76, 29, 149, 0.6)'
+                  : document.documentElement.classList.contains('dark')
+                  ? 'rgba(255, 255, 255, 0.6)'
+                  : 'rgba(30, 41, 59, 0.6)'
+              }}>
                 {formatTimeAgo(message.createdAt!)}
               </span>
             </div>
           </div>
 
           {/* Message content in box - exactly like reference */}
-          <div className="bg-white bg-opacity-10 rounded-xl p-4 mb-3 border border-white border-opacity-15">
-            <p className="text-white text-center text-base leading-relaxed">
+          <div className="rounded-xl p-4 mb-3 border" style={{
+            background: document.documentElement.classList.contains('pink') 
+              ? 'rgba(76, 29, 149, 0.15)'
+              : document.documentElement.classList.contains('dark')
+              ? 'rgba(255, 255, 255, 0.1)'
+              : 'rgba(30, 41, 59, 0.1)',
+            borderColor: document.documentElement.classList.contains('pink') 
+              ? 'rgba(76, 29, 149, 0.25)'
+              : document.documentElement.classList.contains('dark')
+              ? 'rgba(255, 255, 255, 0.15)'
+              : 'rgba(30, 41, 59, 0.15)'
+          }}>
+            <p className="text-center text-base leading-relaxed" style={{
+              color: document.documentElement.classList.contains('pink') 
+                ? '#4c1d95'
+                : document.documentElement.classList.contains('dark')
+                ? '#ffffff'
+                : '#1e293b'
+            }}>
               "{message.content}"
             </p>
           </div>
 
           {/* Attribution - exactly like reference */}
           <div className="text-center mb-4">
-            <p className="text-xs text-white opacity-60 italic">
+            <p className="text-xs italic" style={{
+              color: document.documentElement.classList.contains('pink') 
+                ? 'rgba(76, 29, 149, 0.6)'
+                : document.documentElement.classList.contains('dark')
+                ? 'rgba(255, 255, 255, 0.6)'
+                : 'rgba(30, 41, 59, 0.6)'
+            }}>
               {/* Show registered user info if available */}
               {message.userId && message.user ? (
                 `— ${message.user.displayName || message.user.username} (Registered User)`
@@ -400,16 +461,40 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           {/* Stats - exactly like reference */}
           <div className="flex items-center justify-center gap-5 mb-4">
             <div className="flex items-center gap-1.5">
-              <span className="text-white opacity-80 text-xs">♥ {message.reactionCount || 0} hearts</span>
+              <span className="text-xs" style={{
+                color: document.documentElement.classList.contains('pink') 
+                  ? 'rgba(76, 29, 149, 0.8)'
+                  : document.documentElement.classList.contains('dark')
+                  ? 'rgba(255, 255, 255, 0.8)'
+                  : 'rgba(30, 41, 59, 0.8)'
+              }}>♥ {message.reactionCount || 0} hearts</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-white opacity-80 text-xs">💬 {message.replies?.length || 0} replies</span>
+              <span className="text-xs" style={{
+                color: document.documentElement.classList.contains('pink') 
+                  ? 'rgba(76, 29, 149, 0.8)'
+                  : document.documentElement.classList.contains('dark')
+                  ? 'rgba(255, 255, 255, 0.8)'
+                  : 'rgba(30, 41, 59, 0.8)'
+              }}>💬 {message.replies?.length || 0} replies</span>
             </div>
           </div>
 
           {/* Footer - exactly like reference */}
-          <div className="text-center pt-3 border-t border-white border-opacity-10">
-            <p className="text-white opacity-50 text-xs">
+          <div className="text-center pt-3 border-t" style={{
+            borderColor: document.documentElement.classList.contains('pink') 
+              ? 'rgba(76, 29, 149, 0.1)'
+              : document.documentElement.classList.contains('dark')
+              ? 'rgba(255, 255, 255, 0.1)'
+              : 'rgba(30, 41, 59, 0.1)'
+          }}>
+            <p className="text-xs" style={{
+              color: document.documentElement.classList.contains('pink') 
+                ? 'rgba(76, 29, 149, 0.5)'
+                : document.documentElement.classList.contains('dark')
+                ? 'rgba(255, 255, 255, 0.5)'
+                : 'rgba(30, 41, 59, 0.5)'
+            }}>
               This whisper was shared on Whisper Network • {new Date(message.createdAt!).toLocaleDateString()}
             </p>
           </div>
