@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MessageCard } from "@/components/message-card";
@@ -17,7 +18,7 @@ import { ProfileMusicSection } from "@/components/profile-music-section";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, User, MessageSquare, Heart, Calendar, UserPlus, UserMinus, Users, Edit, Settings, Bookmark } from "lucide-react";
+import { ArrowLeft, User, MessageSquare, Heart, Calendar, UserPlus, UserMinus, Users, Edit, Settings, Shield, Flag, MoreVertical } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import type { UserProfile, MessageWithReplies } from "@shared/schema";
 
@@ -27,11 +28,16 @@ export function UserProfilePage() {
   const userId = parseInt(id || "0");
   const [showEditBio, setShowEditBio] = useState(false);
   const [bioText, setBioText] = useState("");
-
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const currentUserId = user?.id || admin?.id;
   const isOwnProfile = currentUserId === userId;
+  const targetUserId = userId; // Explicitly define targetUserId for clarity in mutations
 
   const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: [`/api/users/${userId}/profile`, currentUserId],
@@ -41,6 +47,10 @@ export function UserProfilePage() {
       return await response.json();
     },
     enabled: !!userId && userId > 0 && (!!user || !!admin),
+    onSuccess: (data) => {
+      // Set initial following state based on profile data
+      setIsFollowing(data.isFollowing || false);
+    }
   });
 
   const { data: userMessages, isLoading: messagesLoading } = useQuery<MessageWithReplies[]>({
@@ -114,6 +124,51 @@ export function UserProfilePage() {
     },
   });
 
+  const unfollowMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/users/${targetUserId}/unfollow`, {
+        followerId: user?.id || admin?.id,
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      setIsFollowing(false);
+      toast({
+        title: "Unfollowed",
+        description: `You are no longer following ${profile?.displayName || profile?.username}`,
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${targetUserId}/profile`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to unfollow user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reportUserMutation = useMutation({
+    mutationFn: async (data: { targetUserId: number; reason: string; reporterId: number; reporterType: string }) => {
+      const response = await apiRequest("POST", "/api/reports/user", data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      setReportReason("");
+      setShowReportDialog(false);
+      toast({
+        title: "Report submitted",
+        description: "Your report has been sent to the administrators for review.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit report.",
+        variant: "destructive",
+      });
+    },
+  });
 
 
   const handleBioUpdate = () => {
@@ -136,6 +191,41 @@ export function UserProfilePage() {
       return;
     }
     updateBioMutation.mutate(bioText);
+  };
+
+  const handleFollow = () => {
+    if (isFollowing) {
+      unfollowMutation.mutate();
+    } else {
+      followMutation.mutate({ targetId: targetUserId, action: 'follow' });
+    }
+  };
+
+  const handleReportUser = () => {
+    if (!reportReason.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide a reason for reporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user && !admin) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to report users.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    reportUserMutation.mutate({
+      targetUserId: targetUserId,
+      reason: reportReason,
+      reporterId: user?.id || admin?.id || 0,
+      reporterType: user ? "user" : "admin",
+    });
   };
 
   // Initialize bio text when profile loads
@@ -262,55 +352,38 @@ export function UserProfilePage() {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex space-x-2">
-                    {isOwnProfile ? (
-                      <>
-                        <Link href={`/u/${profile.username}`}>
-                          <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            Anonymous Messages
-                          </Button>
-                        </Link>
-                        <Link href="/personal">
-                          <Button variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                            <Settings className="w-4 h-4 mr-2" />
-                            Edit Profile
-                          </Button>
-                        </Link>
-                      </>
-                    ) : (user || admin) ? (
+                  <div className="flex items-center gap-3">
+                    {/* Follow/Unfollow button */}
+                    {(user || admin) && targetUserId !== (user?.id || admin?.id) && (
                       <Button
-                        onClick={() => {
-                          if ((!user && !admin) || !userId) return;
-                          const action = profile?.isFollowing ? 'unfollow' : 'follow';
-                          followMutation.mutate({ targetId: userId, action });
-                        }}
-                        disabled={followMutation.isPending}
-                        variant={profile?.isFollowing ? "outline" : "default"}
-                        className={
-                          profile?.isFollowing
-                            ? "border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-400 dark:hover:border-red-600"
-                            : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                        }
+                        onClick={handleFollow}
+                        disabled={followMutation.isPending || unfollowMutation.isPending}
+                        variant={isFollowing ? "outline" : "default"}
+                        className="flex items-center gap-2"
                       >
-                        {followMutation.isPending ? (
-                          <>
-                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            {profile.isFollowing ? "Unfollowing..." : "Following..."}
-                          </>
-                        ) : profile.isFollowing ? (
-                          <>
-                            <UserMinus className="w-4 h-4 mr-2" />
-                            Unfollow
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus className="w-4 h-4 mr-2" />
-                            Follow
-                          </>
-                        )}
+                        {isFollowing ? "Unfollow" : "Follow"}
                       </Button>
-                    ) : null}
+                    )}
+
+                    {/* Report user option */}
+                    {(user || admin) && targetUserId !== (user?.id || admin?.id) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => setShowReportDialog(true)}
+                            className="text-orange-600"
+                          >
+                            <Flag className="h-4 w-4 mr-2" />
+                            Report User
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </div>
 
@@ -493,6 +566,38 @@ export function UserProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+
+      {/* Report User Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Report User</DialogTitle>
+            <DialogDescription>
+              Help us maintain a safe community by reporting users who violate our guidelines.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Please describe why you're reporting this user..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowReportDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleReportUser}
+              disabled={!reportReason.trim() || reportUserMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {reportUserMutation.isPending ? "Submitting..." : "Submit Report"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

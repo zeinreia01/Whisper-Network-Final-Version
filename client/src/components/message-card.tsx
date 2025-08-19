@@ -17,7 +17,7 @@ import { MessageViewer } from "@/components/message-viewer";
 import { MessageSpotifyIntegration } from "@/components/message-spotify-integration";
 import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark, MessageSquare } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark, MessageSquare, Flag } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { getSpotifyDisplayName } from "@/lib/spotify";
@@ -40,6 +40,8 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
   const [hasLiked, setHasLiked] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { admin, user } = useAuth();
@@ -225,6 +227,10 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
       // Include authentication data
       if (user) {
         body.userId = user.id.toString();
+        // Check if user is the recipient (board owner) of anonymous message
+        if (message.recipient === user.username) {
+          body.boardOwnerId = user.id.toString();
+        }
       }
       if (admin) {
         body.adminUsername = admin.username;
@@ -306,6 +312,28 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
     },
   });
 
+  const reportMessageMutation = useMutation({
+    mutationFn: async (data: { messageId: number; reason: string; reporterId: number; reporterType: string }) => {
+      const response = await apiRequest("POST", "/api/reports/message", data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      setReportReason("");
+      setShowReportDialog(false);
+      toast({
+        title: "Report submitted",
+        description: "Your report has been sent to the administrators for review.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit report.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleReply = () => {
     if (!replyText.trim() || !nickname.trim()) {
       toast({
@@ -342,6 +370,29 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
   const handleWarning = (replyId: any) => {
     setSelectedReplyId(replyId);
     setShowWarningDialog(true);
+  };
+
+  const handleReport = () => {
+    if (!reportReason.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide a reason for reporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user && !admin) {
+      setShowAuthPrompt(true);
+      return;
+    }
+
+    reportMessageMutation.mutate({
+      messageId: message.id,
+      reason: reportReason,
+      reporterId: user?.id || admin?.id || 0,
+      reporterType: user ? "user" : "admin",
+    });
   };
 
   if (!message) {
@@ -546,8 +597,8 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
             </Link>
           </div>
 
-          {/* Admin Controls */}
-          {admin && (
+          {/* Admin Controls or User Board Control */}
+          {(admin || (user && message.recipient === user.username) || (user || admin)) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
@@ -555,44 +606,92 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setSelectedReplyId(null);
-                    setShowWarningDialog(true);
-                  }}
-                  className="text-amber-600"
-                >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Send Warning
-                </DropdownMenuItem>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem 
-                      onSelect={(e) => e.preventDefault()}
-                      className="text-red-600"
+                {/* Report option for all authenticated users */}
+                {(user || admin) && (
+                  <DropdownMenuItem
+                    onClick={() => setShowReportDialog(true)}
+                    className="text-orange-600"
+                  >
+                    <Flag className="h-4 w-4 mr-2" />
+                    Report Message
+                  </DropdownMenuItem>
+                )}
+                
+                {/* Admin-only options */}
+                {admin && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedReplyId(null);
+                        setShowWarningDialog(true);
+                      }}
+                      className="text-amber-600"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Message
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Send Warning
                     </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Message</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete the message and all its replies. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteMessageMutation.mutate(message.id)}
-                        className="bg-red-600 hover:bg-red-700"
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem 
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Message
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the message and all its replies. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMessageMutation.mutate(message.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
+
+                {/* Board owner deletion option */}
+                {user && message.recipient === user.username && !admin && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem 
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-red-600"
                       >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete from Board
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Message from Your Board</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently remove this message from your board. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteMessageMutation.mutate(message.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete from Board
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -774,6 +873,38 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
               setShowAuthModal(true);
                           }}>
               Login / Sign Up
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Message Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Report Message</DialogTitle>
+            <DialogDescription>
+              Help us maintain a safe community by reporting inappropriate content.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Please describe why you're reporting this message..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowReportDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleReport}
+              disabled={!reportReason.trim() || reportMessageMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {reportMessageMutation.isPending ? "Submitting..." : "Submit Report"}
             </Button>
           </DialogFooter>
         </DialogContent>

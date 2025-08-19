@@ -45,8 +45,9 @@ export function SearchBar({ onSearch, placeholder = "Search messages...", classN
           </Button>
         )}
       </div>
-      <Button type="submit" size="sm" className="px-4">
-        Search
+      <Button type="submit" size="sm" className="px-3 sm:px-4">
+        <Search className="h-4 w-4 sm:mr-2" />
+        <span className="hidden sm:inline">Search</span>
       </Button>
     </form>
   );

@@ -11,7 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageCard } from "@/components/message-card";
 import { UserBadge } from "@/components/user-badge";
-import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar } from "lucide-react";
+import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar, Flag, MoreVertical } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
 import type { Admin, MessageWithReplies } from "@shared/schema";
 
 interface AdminProfile extends Admin {
@@ -86,11 +89,92 @@ export default function AdminProfile() {
     },
   });
 
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
+  const unfollowMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/admins/${targetAdminId}/unfollow`, {
+        followerId: user?.id,
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      setIsFollowing(false);
+      toast({
+        title: "Unfollowed",
+        description: `You are no longer following ${profile?.displayName}`,
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/admins/${targetAdminId}/profile`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to unfollow admin",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reportAdminMutation = useMutation({
+    mutationFn: async (data: { targetAdminId: number; reason: string; reporterId: number; reporterType: string }) => {
+      const response = await apiRequest("POST", "/api/reports/user", data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      setReportReason("");
+      setShowReportDialog(false);
+      toast({
+        title: "Report submitted",
+        description: "Your report has been sent to the administrators for review.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit report.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFollow = () => {
-    if (!currentUserId) return;
-    const action = profile?.isFollowing ? 'unfollow' : 'follow';
-    followMutation.mutate({ targetId: adminId, action });
+    if (isFollowing) {
+      unfollowMutation.mutate();
+    } else {
+      followMutation.mutate();
+    }
   };
+
+  const handleReportAdmin = () => {
+    if (!reportReason.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide a reason for reporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user && !admin) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to report admins.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    reportAdminMutation.mutate({
+      targetAdminId: targetAdminId,
+      reason: reportReason,
+      reporterId: user?.id || admin?.id || 0,
+      reporterType: user ? "user" : "admin",
+    });
+  };
+
 
   if (profileLoading || messagesLoading) {
     return (
@@ -147,7 +231,7 @@ export default function AdminProfile() {
                   <div className="absolute inset-0 bg-black/30"></div>
                 </div>
               )}
-              
+
               <CardHeader className={profile.backgroundPhoto ? "-mt-16 relative z-10" : ""}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                   <div className="flex items-center space-x-4">
@@ -181,46 +265,41 @@ export default function AdminProfile() {
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Action buttons */}
-                  <div className="flex space-x-2">
-                    {isOwnProfile ? (
-                      <Link href="/admin-personal">
-                        <Button variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      </Link>
-                    ) : user ? (
-                      <Button
-                        onClick={handleFollow}
-                        disabled={followMutation.isPending}
-                        variant={profile.isFollowing ? "outline" : "default"}
-                        className={
-                          profile.isFollowing
-                            ? "border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-400 dark:hover:border-red-600"
-                            : "bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
-                        }
-                      >
-                        {followMutation.isPending ? (
-                          <>
-                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            {profile.isFollowing ? "Unfollowing..." : "Following..."}
-                          </>
-                        ) : profile.isFollowing ? (
-                          <>
-                            <UserMinus className="w-4 h-4 mr-2" />
-                            Unfollow
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus className="w-4 h-4 mr-2" />
-                            Follow
-                          </>
-                        )}
-                      </Button>
-                    ) : null}
-                  </div>
+                  <div className="flex items-center gap-3">
+              {/* Follow button for logged-in users only */}
+              {user && targetAdminId !== admin?.id && (
+                <Button
+                  onClick={handleFollow}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                  variant={isFollowing ? "outline" : "default"}
+                  className="flex items-center gap-2"
+                >
+                  {isFollowing ? "Unfollow" : "Follow"}
+                </Button>
+              )}
+
+              {/* Report admin option */}
+              {(user || admin) && targetAdminId !== admin?.id && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => setShowReportDialog(true)}
+                      className="text-orange-600"
+                    >
+                      <Flag className="h-4 w-4 mr-2" />
+                      Report Admin
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+</div>
                 </div>
 
                 {/* Bio */}
@@ -287,6 +366,38 @@ export default function AdminProfile() {
           </div>
         </div>
       </div>
-    </>
+
+      {/* Report Admin Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Report Admin</DialogTitle>
+            <DialogDescription>
+              Help us maintain a safe community by reporting admins who violate our guidelines.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Please describe why you're reporting this admin..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowReportDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleReportAdmin}
+              disabled={!reportReason.trim() || reportAdminMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {reportAdminMutation.isPending ? "Submitting..." : "Submit Report"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

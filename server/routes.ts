@@ -422,11 +422,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete message (admin/owner only)
+  // Delete message (admin/owner/board owner only)
   app.delete("/api/messages/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const { adminUsername, userId } = req.body;
+      const { adminUsername, userId, boardOwnerId } = req.body;
 
       // Get the message first to check ownership
       const message = await storage.getMessageById(parseInt(id));
@@ -438,6 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 1. User is ZEKE001 (main admin - can delete any message)
       // 2. Message belongs to the requesting admin
       // 3. Message belongs to the requesting user
+      // 4. Message is on the user's board (anonymous messages to user)
       let canDelete = false;
 
       if (adminUsername === "ZEKE001") {
@@ -447,10 +448,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canDelete = admin && message.adminId === admin.id || false;
       } else if (message.userId && userId) {
         canDelete = message.userId === parseInt(userId);
+      } else if (boardOwnerId && message.recipient) {
+        // Check if this is an anonymous message to the board owner
+        const boardOwner = await storage.getUserById(parseInt(boardOwnerId));
+        canDelete = boardOwner && message.recipient === boardOwner.username;
       }
 
       if (!canDelete) {
-        return res.status(403).json({ message: "You can only delete your own messages or have admin privileges" });
+        return res.status(403).json({ message: "You can only delete your own messages, messages on your board, or have admin privileges" });
       }
 
       await storage.deleteMessage(parseInt(id));
@@ -458,6 +463,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting message:", error);
       res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
+  // Report message endpoint
+  app.post("/api/reports/message", async (req, res) => {
+    try {
+      const { messageId, reason, reporterId, reporterType } = req.body;
+
+      if (!messageId || !reason || !reporterId || !reporterType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Get the message being reported
+      const message = await storage.getMessageById(messageId);
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+
+      // Get reporter info
+      let reporterName = "Anonymous";
+      if (reporterType === "user") {
+        const reporter = await storage.getUserById(reporterId);
+        reporterName = reporter?.displayName || reporter?.username || "Unknown User";
+      } else if (reporterType === "admin") {
+        const reporter = await storage.getAdminById(reporterId);
+        reporterName = reporter?.displayName || "Unknown Admin";
+      }
+
+      // Create notifications for all admins
+      const admins = await storage.getAllAdmins();
+      for (const admin of admins) {
+        if (admin.isActive) {
+          await storage.createNotification({
+            adminId: admin.id,
+            type: "report",
+            messageId: messageId,
+            content: `${reporterName} reported a message: "${reason}" - Message: "${message.content.substring(0, 50)}${message.content.length > 50 ? '...' : ''}"`,
+            isRead: false,
+          });
+        }
+      }
+
+      res.json({ message: "Report submitted successfully" });
+    } catch (error) {
+      console.error("Error submitting message report:", error);
+      res.status(500).json({ message: "Failed to submit report" });
+    }
+  });
+
+  // Report user account endpoint
+  app.post("/api/reports/user", async (req, res) => {
+    try {
+      const { targetUserId, targetAdminId, reason, reporterId, reporterType } = req.body;
+
+      if ((!targetUserId && !targetAdminId) || !reason || !reporterId || !reporterType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Get the user/admin being reported
+      let targetName = "Unknown";
+      if (targetUserId) {
+        const targetUser = await storage.getUserById(targetUserId);
+        targetName = targetUser?.displayName || targetUser?.username || "Unknown User";
+      } else if (targetAdminId) {
+        const targetAdmin = await storage.getAdminById(targetAdminId);
+        targetName = targetAdmin?.displayName || "Unknown Admin";
+      }
+
+      // Get reporter info
+      let reporterName = "Anonymous";
+      if (reporterType === "user") {
+        const reporter = await storage.getUserById(reporterId);
+        reporterName = reporter?.displayName || reporter?.username || "Unknown User";
+      } else if (reporterType === "admin") {
+        const reporter = await storage.getAdminById(reporterId);
+        reporterName = reporter?.displayName || "Unknown Admin";
+      }
+
+      // Create notifications for all admins
+      const admins = await storage.getAllAdmins();
+      for (const admin of admins) {
+        if (admin.isActive) {
+          await storage.createNotification({
+            adminId: admin.id,
+            type: "report",
+            content: `${reporterName} reported ${targetUserId ? 'user' : 'admin'} "${targetName}": "${reason}"`,
+            isRead: false,
+          });
+        }
+      }
+
+      res.json({ message: "Report submitted successfully" });
+    } catch (error) {
+      console.error("Error submitting user report:", error);
+      res.status(500).json({ message: "Failed to submit report" });
     }
   });
 
