@@ -344,35 +344,72 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       // Download the image
       const dataURL = canvas.toDataURL('image/png', 1.0);
       
-      // Create download link
-      const link = document.createElement('a');
-      link.download = `whisper-${message.id}-${Date.now()}.png`;
-      link.href = dataURL;
-      link.style.display = 'none';
-      
-      // Append to body, click, and remove
-      document.body.appendChild(link);
-      
-      // Small delay to ensure the link is properly attached
-      setTimeout(() => {
+      try {
+        // Try modern approach first
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((blob) => {
+            resolve(blob!);
+          }, 'image/png', 1.0);
+        });
+
+        // Create object URL
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `whisper-${message.id}-${Date.now()}.png`;
+        link.href = url;
+        link.style.display = 'none';
+        
+        // Append to body and trigger download
+        document.body.appendChild(link);
         link.click();
+        
+        // Clean up
         setTimeout(() => {
-          if (document.body.contains(link)) {
-            document.body.removeChild(link);
-          }
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
         }, 100);
-      }, 100);
+        
+      } catch (blobError) {
+        // Fallback to data URL approach
+        console.log('Blob approach failed, trying data URL');
+        
+        // Convert data URL to blob manually
+        const byteCharacters = atob(dataURL.split(',')[1]);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/png' });
+        
+        // Create object URL and download
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `whisper-${message.id}-${Date.now()}.png`;
+        link.href = url;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+    // Show success message
+      toast({
+        title: "Download Started",
+        description: "Your whisper image is being downloaded.",
+      });
 
     } catch (error) {
       console.error('Failed to download image:', error);
-      // Show error toast if available
-      if (typeof toast !== 'undefined') {
-        toast({
-          title: "Download Failed",
-          description: "There was an error downloading the image. Please try again.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Download Failed",
+        description: "There was an error downloading the image. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsDownloading(false);
     }
