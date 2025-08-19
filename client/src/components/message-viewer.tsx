@@ -37,66 +37,314 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (!messageRef.current) return;
 
     try {
-      // Use the existing messageRef directly instead of creating a new DOM structure
-      const element = messageRef.current;
-      
-      // Temporarily adjust styles for better image capture
-      const originalStyle = element.style.cssText;
-      element.style.cssText = `
-        ${originalStyle};
-        position: relative;
-        transform: none;
-        max-width: 400px;
-        margin: 0;
-        background: white;
+      // Create a clean container for download image with proper sizing
+      const downloadContainer = document.createElement('div');
+      downloadContainer.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 400px;
+        background: transparent;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        box-sizing: border-box;
       `;
 
-      // Generate image with optimized settings
-      const canvas = await html2canvas(element, {
-        useCORS: true,
+      // Create the message card with proper theme colors and gradients
+      const messageCard = document.createElement('div');
+      const isDark = document.documentElement.classList.contains('dark');
+      const isPink = document.documentElement.classList.contains('pink');
+
+      let cardBackground;
+      if (isPink) {
+        cardBackground = 'linear-gradient(135deg, #fce7f3 0%, #f8d7da 25%, #f1c0c5 50%, #ecadb0 75%, #e799a0 100%)';
+      } else if (isDark) {
+        cardBackground = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)';
+      } else {
+        cardBackground = 'linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f1f5f9 50%, #e2e8f0 75%, #cbd5e1 100%)';
+      }
+
+      messageCard.style.cssText = `
+        background: ${cardBackground};
+        border-radius: 16px;
+        padding: 24px;
+        color: ${isPink ? '#4c1d95' : isDark ? 'white' : '#1e293b'};
+        position: relative;
+        width: 400px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid ${isPink ? 'rgba(168, 85, 247, 0.3)' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
+        box-shadow: ${isPink ? '0 8px 32px rgba(168, 85, 247, 0.15)' : '0 8px 32px rgba(0, 0, 0, 0.2)'};
+        backdrop-filter: blur(10px);
+      `;
+
+      // Header with branding - exactly like reference
+      const header = document.createElement('div');
+      header.style.cssText = `
+        text-align: center;
+        margin-bottom: 20px;
+      `;
+
+      const appTitle = document.createElement('h1');
+      let titleGradient;
+      if (isPink) {
+        titleGradient = 'linear-gradient(135deg, #f4a261 0%, #e76f51 50%, #e9c46a 100%)';
+      } else if (isDark) {
+        titleGradient = 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)';
+      } else {
+        titleGradient = 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)';
+      }
+
+      appTitle.style.cssText = `
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        background: ${titleGradient};
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      `;
+      appTitle.textContent = 'Whisper Network';
+
+      const subtitle = document.createElement('p');
+      subtitle.style.cssText = `
+        font-size: 12px;
+        color: ${isPink ? 'rgba(76, 29, 149, 0.7)' : isDark ? 'rgba(255,255,255,0.7)' : 'rgba(30, 41, 59, 0.7)'};
+        margin: 0 0 8px 0;
+        font-weight: 400;
+      `;
+      subtitle.textContent = 'A place where voices unite and hearts connect';
+
+      // Category and time - exactly like reference
+      const categoryTime = document.createElement('div');
+      categoryTime.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 16px;
+      `;
+
+      const categoryDot = document.createElement('div');
+      categoryDot.style.cssText = `
+        width: 6px;
+        height: 6px;
+        background: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
+        border-radius: 50%;
+      `;
+
+      const categoryText = document.createElement('span');
+      categoryText.style.cssText = `
+        font-size: 12px;
+        color: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
+        font-weight: 500;
+      `;
+      categoryText.textContent = category?.name || message.category;
+
+      const timeText = document.createElement('span');
+      timeText.style.cssText = `
+        font-size: 12px;
+        color: ${isPink ? 'rgba(76, 29, 149, 0.6)' : isDark ? 'rgba(255,255,255,0.6)' : 'rgba(30, 41, 59, 0.6)'};
+        margin-left: 8px;
+      `;
+      timeText.textContent = formatTimeAgo(message.createdAt!);
+
+      categoryTime.appendChild(categoryDot);
+      categoryTime.appendChild(categoryText);
+      categoryTime.appendChild(timeText);
+
+      header.appendChild(appTitle);
+      header.appendChild(subtitle);
+      header.appendChild(categoryTime);
+
+      // Main message content in box with proper theme colors
+      const messageBox = document.createElement('div');
+      let messageBoxBg, messageBoxBorder;
+      if (isPink) {
+        messageBoxBg = 'rgba(76, 29, 149, 0.15)';
+        messageBoxBorder = 'rgba(76, 29, 149, 0.25)';
+      } else if (isDark) {
+        messageBoxBg = 'rgba(255,255,255,0.1)';
+        messageBoxBorder = 'rgba(255,255,255,0.15)';
+      } else {
+        messageBoxBg = 'rgba(30, 41, 59, 0.1)';
+        messageBoxBorder = 'rgba(30, 41, 59, 0.15)';
+      }
+
+      messageBox.style.cssText = `
+        background: ${messageBoxBg};
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px 0;
+        border: 1px solid ${messageBoxBorder};
+      `;
+
+      const messageContent = document.createElement('div');
+      messageContent.style.cssText = `
+        font-size: 16px;
+        line-height: 1.4;
+        color: ${isPink ? '#4c1d95' : isDark ? 'white' : '#1e293b'};
+        text-align: center;
+        font-weight: 400;
+      `;
+      messageContent.textContent = `"${message.content}"`;
+
+      messageBox.appendChild(messageContent);
+
+      // Attribution with proper theme colors
+      const attribution = document.createElement('div');
+      attribution.style.cssText = `
+        text-align: center;
+        font-size: 12px;
+        color: ${isPink ? 'rgba(76, 29, 149, 0.6)' : isDark ? 'rgba(255,255,255,0.6)' : 'rgba(30, 41, 59, 0.6)'};
+        font-style: italic;
+        margin: 12px 0;
+      `;
+      // Show registered user info if available
+      if (message.userId && message.user) {
+        attribution.textContent = `— ${message.user.displayName || message.user.username} (Registered User)`;
+      } else if (message.adminId && message.admin) {
+        attribution.textContent = `— ${message.admin.displayName} (Admin)`;
+      } else if (message.senderName) {
+        attribution.textContent = `— ${message.senderName}`;
+      } else {
+        attribution.textContent = '— Anonymous Whisper';
+      }
+
+      // Add profile picture if available
+      if ((message.userId && message.user?.profilePicture) || (message.adminId && message.admin?.profilePicture)) {
+        const profileSection = document.createElement('div');
+        profileSection.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 8px 0;
+        `;
+
+        const profileImg = document.createElement('img');
+        const profileUrl = message.user?.profilePicture || message.admin?.profilePicture;
+        profileImg.crossOrigin = 'anonymous';
+        profileImg.src = profileUrl!;
+        profileImg.style.cssText = `
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 2px solid ${isPink ? 'rgba(221, 114, 133, 0.4)' : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30, 41, 59, 0.3)'};
+          object-fit: cover;
+        `;
+
+        // Add error handling for profile image
+        profileImg.onerror = () => {
+          if (profileSection.parentNode) {
+            profileSection.parentNode.removeChild(profileSection);
+          }
+        };
+
+        profileSection.appendChild(profileImg);
+        messageCard.insertBefore(profileSection, attribution);
+      }
+
+      // Stats section - exactly like reference
+      const stats = document.createElement('div');
+      stats.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin: 16px 0;
+      `;
+
+      const heartsCount = document.createElement('div');
+      heartsCount.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
+        font-size: 12px;
+      `;
+      heartsCount.innerHTML = `♥ ${message.reactionCount || 0} hearts`;
+
+      const repliesCount = document.createElement('div');
+      repliesCount.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: ${isPink ? 'rgba(76, 29, 149, 0.8)' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(30, 41, 59, 0.8)'};
+        font-size: 12px;
+      `;
+      const totalReplies = message.replies ? message.replies.length : 0;
+      repliesCount.innerHTML = `💬 ${totalReplies} replies`;
+
+      stats.appendChild(heartsCount);
+      stats.appendChild(repliesCount);
+
+      // Footer - exactly like reference
+      const footer = document.createElement('div');
+      footer.style.cssText = `
+        text-align: center;
+        color: ${isPink ? 'rgba(76, 29, 149, 0.5)' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(30, 41, 59, 0.5)'};
+        font-size: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid ${isPink ? 'rgba(76, 29, 149, 0.1)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(30, 41, 59, 0.1)'};
+      `;
+      footer.textContent = `This whisper was shared on Whisper Network • ${new Date(message.createdAt!).toLocaleDateString()}`;
+
+      // Assemble the card
+      messageCard.appendChild(header);
+      messageCard.appendChild(messageBox);
+      messageCard.appendChild(attribution);
+      messageCard.appendChild(stats);
+      messageCard.appendChild(footer);
+      downloadContainer.appendChild(messageCard);
+      document.body.appendChild(downloadContainer);
+
+      // Generate image with proper sizing and background
+      const canvas = await html2canvas(downloadContainer, {
         allowTarnish: true,
-        scale: 1,
-        backgroundColor: '#ffffff',
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null, // Transparent background
+        width: 440, // Add padding space
+        height: downloadContainer.scrollHeight + 40,
+        foreignObjectRendering: true,
         logging: false,
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-        foreignObjectRendering: false,
-        removeContainer: true
+        onclone: (clonedDoc) => {
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            * { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif !important; 
+            }
+            img {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+
+          // Convert all data URLs to proper images for better rendering
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach((img) => {
+            if (img.src.startsWith('data:')) {
+              img.setAttribute('crossorigin', 'anonymous');
+            }
+          });
+        }
       });
 
-      // Restore original styles
-      element.style.cssText = originalStyle;
+      // Clean up
+      document.body.removeChild(downloadContainer);
 
       // Download the image
       const link = document.createElement('a');
       link.download = `whisper-${message.id}-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png', 0.9);
+      link.href = canvas.toDataURL('image/png');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
     } catch (error) {
       console.error('Failed to download image:', error);
-      // Fallback: try simple screenshot of the element
-      try {
-        if (messageRef.current) {
-          const canvas = await html2canvas(messageRef.current, {
-            scale: 1,
-            backgroundColor: '#ffffff',
-            logging: false
-          });
-          
-          const link = document.createElement('a');
-          link.download = `whisper-${message.id}-simple.png`;
-          link.href = canvas.toDataURL('image/png');
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      } catch (fallbackError) {
-        console.error('Fallback download also failed:', fallbackError);
-        alert('Download failed. Please try again.');
-      }
     }
   };
 
