@@ -34,7 +34,40 @@ interface SpotifyTrackDisplayProps {
   className?: string;
 }
 
+// Hook to fetch full track details when we only have basic info
+function useTrackDetails(track: SpotifyTrack | null) {
+  const [fullTrack, setFullTrack] = React.useState<SpotifyTrack | null>(track);
+
+  React.useEffect(() => {
+    if (!track || track.preview_url !== null) {
+      setFullTrack(track);
+      return;
+    }
+
+    // If we don't have preview_url, fetch full track details
+    const fetchTrackDetails = async () => {
+      try {
+        const response = await fetch(`/api/spotify/track/${track.id}`);
+        if (response.ok) {
+          const fullTrackData = await response.json();
+          setFullTrack(fullTrackData);
+        } else {
+          setFullTrack(track);
+        }
+      } catch (error) {
+        console.error('Failed to fetch track details:', error);
+        setFullTrack(track);
+      }
+    };
+
+    fetchTrackDetails();
+  }, [track]);
+
+  return fullTrack;
+}
+
 export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, className }: SpotifyTrackDisplayProps) {
+  const fullTrack = useTrackDetails(track);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -42,7 +75,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !track?.preview_url) return;
+    if (!audio || !fullTrack?.preview_url) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
@@ -57,11 +90,11 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [track?.preview_url]);
+  }, [fullTrack?.preview_url]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
-    if (!audio || !track?.preview_url) return;
+    if (!audio || !fullTrack?.preview_url) return;
 
     if (isPlaying) {
       audio.pause();
@@ -84,7 +117,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!track) return null;
+  if (!fullTrack) return null;
 
   const getAlbumArt = (track: SpotifyTrack) => {
     const sizeMap = {
@@ -123,7 +156,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
   };
 
   const classes = sizeClasses[size];
-  const albumArt = getAlbumArt(track);
+  const albumArt = getAlbumArt(fullTrack);
 
   return (
     <Card className={`bg-gradient-to-r from-green-500/10 to-green-600/10 border-green-200 dark:border-green-800 ${className}`}>
@@ -133,7 +166,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
           {albumArt ? (
             <img
               src={albumArt}
-              alt={`${track.album.name} album art`}
+              alt={`${fullTrack.album.name} album art`}
               className={`${classes.image} rounded object-cover`}
             />
           ) : (
@@ -145,21 +178,21 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
           {/* Track Info */}
           <div className="flex-1 min-w-0">
             <p className={`font-medium truncate ${classes.title}`}>
-              {track.name}
+              {fullTrack.name}
             </p>
             <p className={`text-muted-foreground truncate ${classes.artist}`}>
-              {track.artists.map(artist => artist.name).join(", ")}
+              {fullTrack.artists.map(artist => artist.name).join(", ")}
             </p>
             {size !== "sm" && (
               <p className="text-xs text-muted-foreground truncate">
-                {track.album.name} • {formatDuration(track.duration_ms)}
+                {fullTrack.album.name} • {formatDuration(fullTrack.duration_ms)}
               </p>
             )}
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
-            {showPreview && track.preview_url && (
+            {showPreview && fullTrack.preview_url && (
               <div className="flex items-center gap-2 shrink-0">
                 <Button
                   variant="ghost"
@@ -181,7 +214,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
                 )}
                 <audio
                   ref={audioRef}
-                  src={track.preview_url}
+                  src={fullTrack.preview_url}
                   preload="metadata"
                 />
               </div>
@@ -190,7 +223,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(track.external_urls.spotify, '_blank')}
+              onClick={() => window.open(fullTrack.external_urls.spotify, '_blank')}
               className="p-2"
               title="Open in Spotify"
             >
@@ -207,7 +240,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
           </div>
           {size === "lg" && (
             <div className="text-xs text-muted-foreground">
-              Popularity: {track.popularity}%
+              Popularity: {fullTrack.popularity}%
             </div>
           )}
         </div>

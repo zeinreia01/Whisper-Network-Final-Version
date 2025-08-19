@@ -7,11 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { SpotifySearch } from "@/components/spotify-search";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Plus, Music, X } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { MessageSquare, Plus, Music, X, Download, Eye } from "lucide-react";
+import html2canvas from "html2canvas";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import type { DashboardMessage } from "@shared/schema";
@@ -47,8 +50,11 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
   const [selectedCategory, setSelectedCategory] = useState("Anything");
   const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [showAllMessages, setShowAllMessages] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, admin } = useAuth();
 
   const profileId = userId || adminId;
   const profileType = userId ? "users" : "admins";
@@ -65,7 +71,9 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
       const messageData = {
         content: messageContent,
         category: selectedCategory,
-        senderName: senderName || "Anonymous",
+        senderName: isAnonymous ? (senderName || "Anonymous") : (user?.displayName || user?.username || admin?.displayName || "User"),
+        senderUserId: !isAnonymous ? user?.id : null,
+        senderAdminId: !isAnonymous ? admin?.id : null,
         targetUserId: userId || null,
         targetAdminId: adminId || null,
         spotifyTrackId: selectedTrack?.id || null,
@@ -98,6 +106,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
       setSenderName("");
       setSelectedCategory("Anything");
       setSelectedTrack(null);
+      setIsAnonymous(true);
     },
     onError: () => {
       toast({
@@ -128,6 +137,34 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
     }
 
     postMessageMutation.mutate();
+  };
+
+  const downloadMessageAsImage = async (messageElement: HTMLElement, messageId: number) => {
+    try {
+      const canvas = await html2canvas(messageElement, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      const link = document.createElement('a');
+      link.download = `board-message-${messageId}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      toast({
+        title: "Success",
+        description: "Message downloaded as image!",
+      });
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to download image",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -192,10 +229,11 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
             </div>
           ) : (
             <div className="space-y-4">
-              {dashboardMessages.map((message) => (
+              {(showAllMessages ? dashboardMessages : dashboardMessages.slice(0, 3)).map((message) => (
                 <div
                   key={message.id}
-                  className="p-4 rounded-lg border bg-background"
+                  id={`board-message-${message.id}`}
+                  className="p-4 rounded-lg border bg-background relative group"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -212,9 +250,25 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                         by {message.senderName}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {formatTimeAgo(new Date(message.createdAt))}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {formatTimeAgo(new Date(message.createdAt))}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const messageElement = document.getElementById(`board-message-${message.id}`);
+                          if (messageElement) {
+                            downloadMessageAsImage(messageElement, message.id);
+                          }
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8"
+                        title="Download as image"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   <p className="text-sm leading-relaxed mb-3">
@@ -224,16 +278,42 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                   {message.spotifyTrackId && (
                     <div className="mt-3">
                       <SpotifyTrackDisplay
-                        trackId={message.spotifyTrackId}
-                        trackName={message.spotifyTrackName || ""}
-                        artistName={message.spotifyArtistName || ""}
-                        albumCover={message.spotifyAlbumCover || ""}
+                        track={{
+                          id: message.spotifyTrackId,
+                          name: message.spotifyTrackName || "",
+                          artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
+                          album: {
+                            id: "stored",
+                            name: "Unknown Album",
+                            images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
+                          },
+                          external_urls: {
+                            spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
+                          },
+                          preview_url: null,
+                          duration_ms: 0,
+                          popularity: 0,
+                        }}
                         size="sm"
+                        showPreview={true}
                       />
                     </div>
                   )}
                 </div>
               ))}
+              
+              {dashboardMessages.length > 3 && (
+                <div className="text-center pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAllMessages(!showAllMessages)}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {showAllMessages ? `Show Less` : `View All ${dashboardMessages.length} Messages`}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -248,13 +328,33 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Your Name (Optional)</label>
-              <Input
-                placeholder="Leave empty to post anonymously"
-                value={senderName}
-                onChange={(e) => setSenderName(e.target.value)}
-                maxLength={50}
-              />
+              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                Post Type
+                <Switch
+                  checked={!isAnonymous}
+                  onCheckedChange={(checked) => setIsAnonymous(!checked)}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {isAnonymous ? "Anonymous" : "Show Profile"}
+                </span>
+              </label>
+              {isAnonymous ? (
+                <Input
+                  placeholder="Enter a name or leave empty for 'Anonymous'"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  maxLength={50}
+                />
+              ) : (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm">
+                    Posting as: <strong>{user?.displayName || user?.username || admin?.displayName || "User"}</strong>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Your profile and username will be visible
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>

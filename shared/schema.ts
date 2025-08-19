@@ -164,17 +164,18 @@ export const userMusicList = pgTable("user_music_list", {
 export const dashboardMessages = pgTable("dashboard_messages", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
-  category: text("category").notNull().default("Anything"),
-  spotifyLink: text("spotify_link"),
+  category: text("category").default("Anything"),
+  senderName: text("sender_name").notNull(),
+  senderUserId: integer("sender_user_id").references(() => users.id),
+  senderAdminId: integer("sender_admin_id").references(() => admins.id),
+  targetUserId: integer("target_user_id").references(() => users.id),
+  targetAdminId: integer("target_admin_id").references(() => admins.id),
   spotifyTrackId: text("spotify_track_id"),
   spotifyTrackName: text("spotify_track_name"),
   spotifyArtistName: text("spotify_artist_name"),
   spotifyAlbumCover: text("spotify_album_cover"),
-  senderName: text("sender_name"), // Anonymous sender
-  targetUserId: integer("target_user_id").references(() => users.id), // Whose dashboard this appears on
-  targetAdminId: integer("target_admin_id").references(() => admins.id), // For admin dashboards
-  isVisible: boolean("is_visible").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  spotifyLink: text("spotify_link"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Admin announcements page
