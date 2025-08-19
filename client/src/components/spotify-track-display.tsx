@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, ExternalLink, Play, Pause } from "lucide-react";
-import { toast } from "@/components/ui/use-toast"; // Assuming toast is imported from here
+import { useToast } from "@/hooks/use-toast";
 
 interface SpotifyTrack {
   id: string;
@@ -74,6 +74,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
 
   useEffect(() => {
