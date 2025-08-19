@@ -161,6 +161,7 @@ export function PasswordManager() {
 // ZEKE001 Special Component - View All Passwords
 export function ZEKE001PasswordViewer() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
   const { admin } = useAuth();
   const { toast } = useToast();
 
@@ -239,8 +240,33 @@ export function ZEKE001PasswordViewer() {
         <div className="space-y-4">
           <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
             <p className="text-sm text-red-700 dark:text-red-300 font-medium">
-              ⚠️ CRITICAL ADMIN FEATURE - This shows all user passwords (hashed). Handle with extreme care.
+              ⚠️ CRITICAL ADMIN FEATURE - This shows all user passwords. Handle with extreme care.
             </p>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+            <div className="flex items-center space-x-2">
+              <EyeOff className="h-4 w-4 text-gray-600" />
+              <span className="text-sm font-medium">Show Unhashed Passwords</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPasswords(!showPasswords)}
+              className={showPasswords ? "bg-red-100 border-red-300 text-red-700" : ""}
+            >
+              {showPasswords ? (
+                <>
+                  <EyeOff className="h-4 w-4 mr-1" />
+                  Hide
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-1" />
+                  Show
+                </>
+              )}
+            </Button>
           </div>
 
           {userPasswords ? (
@@ -261,9 +287,12 @@ export function ZEKE001PasswordViewer() {
                             <span className="font-medium">Display Name:</span> {user.displayName || "None"}
                           </div>
                           <div className="col-span-2">
-                            <span className="font-medium">Hashed Password:</span>
+                            <span className="font-medium">{showPasswords ? 'Password:' : 'Hashed Password:'}</span>
                             <code className="text-xs bg-gray-100 dark:bg-gray-800 p-1 rounded mt-1 block break-all">
-                              {user.hashedPassword || "No password found"}
+                              {showPasswords 
+                                ? (user.unhashed || "Password unavailable") 
+                                : (user.hashedPassword || "No password found")
+                              }
                             </code>
                           </div>
                           <div className="col-span-2 text-xs text-gray-500">
@@ -292,9 +321,12 @@ export function ZEKE001PasswordViewer() {
                             <span className="font-medium">Display Name:</span> {admin.displayName || "None"}
                           </div>
                           <div className="col-span-2">
-                            <span className="font-medium">Hashed Password:</span>
+                            <span className="font-medium">{showPasswords ? 'Password:' : 'Hashed Password:'}</span>
                             <code className="text-xs bg-gray-100 dark:bg-gray-800 p-1 rounded mt-1 block break-all">
-                              {admin.hashedPassword || "No password set"}
+                              {showPasswords 
+                                ? (admin.unhashed || "Password unavailable") 
+                                : (admin.hashedPassword || "No password set")
+                              }
                             </code>
                           </div>
                           <div className="col-span-2 text-xs text-gray-500">

