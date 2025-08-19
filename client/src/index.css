@@ -102,59 +102,63 @@
 }
 
 .pink {
-  /* Light Pink to Reddish Background */
-  --background: hsl(350, 40%, 95%);
-  --background-solid: hsl(350, 40%, 95%);
-  --foreground: hsl(340, 70%, 25%);
-  --muted: hsl(350, 25%, 90%);
-  --muted-solid: hsl(350, 25%, 90%);
-  --muted-foreground: hsl(340, 50%, 45%);
-  --popover: hsl(350, 35%, 96%);
-  --popover-solid: hsl(350, 35%, 96%);
-  --popover-foreground: hsl(340, 70%, 25%);
-  --card: hsl(350, 35%, 96%);
-  --card-solid: hsl(350, 35%, 96%);
-  --card-foreground: hsl(340, 70%, 25%);
-  --border: hsl(345, 35%, 80%);
-  --input: hsl(350, 20%, 92%);
-  --input-solid: hsl(350, 20%, 92%);
+  /* Soft Pink to Pastel Background */
+  --background: hsl(345, 25%, 97%);
+  --background-solid: hsl(345, 25%, 97%);
+  --foreground: hsl(340, 40%, 35%);
+  --muted: hsl(345, 20%, 93%);
+  --muted-solid: hsl(345, 20%, 93%);
+  --muted-foreground: hsl(340, 30%, 55%);
+  --popover: hsl(345, 20%, 98%);
+  --popover-solid: hsl(345, 20%, 98%);
+  --popover-foreground: hsl(340, 40%, 35%);
+  --card: hsl(345, 20%, 98%);
+  --card-solid: hsl(345, 20%, 98%);
+  --card-foreground: hsl(340, 40%, 35%);
+  --border: hsl(345, 25%, 85%);
+  --input: hsl(345, 15%, 95%);
+  --input-solid: hsl(345, 15%, 95%);
   
-  /* Pink to Red Primary Colors */
-  --primary: hsl(340, 70%, 65%);
-  --primary-solid: hsl(340, 70%, 65%);
+  /* Soft Pink Primary Colors */
+  --primary: hsl(340, 50%, 75%);
+  --primary-solid: hsl(340, 50%, 75%);
   --primary-foreground: hsl(0, 0%, 100%);
   
-  --secondary: hsl(350, 30%, 88%);
-  --secondary-solid: hsl(350, 30%, 88%);
-  --secondary-foreground: hsl(340, 70%, 30%);
+  --secondary: hsl(345, 25%, 90%);
+  --secondary-solid: hsl(345, 25%, 90%);
+  --secondary-foreground: hsl(340, 40%, 35%);
   
-  /* Reddish Pink Accent */
-  --accent: hsl(330, 65%, 75%);
-  --accent-solid: hsl(330, 65%, 75%);
-  --accent-foreground: hsl(340, 70%, 25%);
+  /* Soft Pink Accent */
+  --accent: hsl(335, 45%, 80%);
+  --accent-solid: hsl(335, 45%, 80%);
+  --accent-foreground: hsl(340, 40%, 35%);
   
-  --destructive: hsl(0, 75%, 60%);
+  --destructive: hsl(0, 60%, 70%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(340, 70%, 65%);
+  --ring: hsl(340, 50%, 75%);
   --radius: 1rem;
 
-  /* Pink to Reddish Category Colors */
-  --hope: hsl(140, 60%, 55%);
-  --reflection: hsl(320, 75%, 65%);
-  --gratitude: hsl(45, 85%, 60%);
-  --support: hsl(0, 80%, 65%);
-  --dreams: hsl(280, 70%, 75%);
-  --text-primary: hsl(340, 70%, 25%);
-  --text-secondary: hsl(340, 50%, 45%);
-  --surface: hsl(350, 35%, 96%);
-  --bg-main: hsl(350, 40%, 95%);
+  /* Soft Pastel Category Colors */
+  --hope: hsl(140, 50%, 65%);
+  --reflection: hsl(320, 60%, 75%);
+  --gratitude: hsl(35, 70%, 75%);
+  --support: hsl(0, 60%, 75%);
+  --dreams: hsl(280, 60%, 80%);
+  --text-primary: hsl(340, 40%, 35%);
+  --text-secondary: hsl(340, 30%, 55%);
+  --surface: hsl(345, 20%, 98%);
+  --bg-main: hsl(345, 25%, 97%);
   
-  /* Light Pink to Reddish Gradients */
-  --pink-gradient-warm: linear-gradient(135deg, hsl(350, 70%, 85%) 0%, hsl(340, 75%, 75%) 50%, hsl(330, 80%, 70%) 100%);
-  --pink-gradient-cool: linear-gradient(135deg, hsl(355, 60%, 88%) 0%, hsl(345, 65%, 82%) 50%, hsl(335, 70%, 78%) 100%);
-  --pink-gradient-hover: linear-gradient(135deg, hsl(350, 75%, 70%) 0%, hsl(340, 80%, 65%) 50%, hsl(330, 85%, 60%) 100%);
-  --pink-shadow: 0 4px 16px hsla(340, 60%, 70%, 0.3);
-  --pink-glow: 0 0 20px hsla(340, 70%, 75%, 0.4);
+  /* Soft Pink Gradients */
+  --pink-gradient-warm: linear-gradient(135deg, hsl(345, 60%, 90%) 0%, hsl(340, 55%, 85%) 50%, hsl(335, 50%, 80%) 100%);
+  --pink-gradient-cool: linear-gradient(135deg, hsl(350, 50%, 92%) 0%, hsl(345, 45%, 88%) 50%, hsl(340, 40%, 85%) 100%);
+  --pink-gradient-hover: linear-gradient(135deg, hsl(340, 55%, 78%) 0%, hsl(335, 60%, 75%) 50%, hsl(330, 65%, 72%) 100%);
+  --pink-gradient-button: linear-gradient(135deg, hsl(340, 50%, 75%) 0%, hsl(335, 55%, 70%) 100%);
+  --pink-shadow: 0 4px 16px hsla(340, 40%, 80%, 0.25);
+  --pink-glow: 0 0 20px hsla(340, 50%, 85%, 0.3);
+  
+  /* Pastel Peach Yellow Replacement */
+  --peach-gradient: linear-gradient(135deg, hsl(35, 70%, 85%) 0%, hsl(30, 75%, 80%) 50%, hsl(25, 80%, 75%) 100%);
 }
 
 /* Pink Theme Enhanced Components - Clean and Minimal */
@@ -215,13 +219,13 @@
   border: none !important;
 }
 
-/* Soft Pink Button Styling with Outlined Style */
+/* Soft Pink Button Styling with Filled Style */
 .pink button {
-  background: transparent !important;
-  color: var(--primary-solid) !important;
-  border: 2px solid var(--primary-solid) !important;
+  background: var(--pink-gradient-button) !important;
+  color: white !important;
+  border: none !important;
   border-radius: 1rem !important;
-  box-shadow: none !important;
+  box-shadow: var(--pink-shadow) !important;
   transition: all 0.3s ease !important;
   font-weight: 500 !important;
 }
@@ -229,43 +233,45 @@
 .pink button:hover {
   background: var(--pink-gradient-hover) !important;
   color: white !important;
-  border-color: transparent !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 4px 20px hsla(345, 50%, 70%, 0.4) !important;
+  box-shadow: 0 6px 25px hsla(340, 45%, 75%, 0.35) !important;
 }
 
 .pink button:active {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%) !important;
+  background: var(--peach-gradient) !important;
   color: white !important;
-  border-color: transparent !important;
   transform: translateY(0px) !important;
   box-shadow: var(--pink-shadow) !important;
 }
 
 /* Category buttons specific styling */
 .pink .bg-secondary {
-  background: transparent !important;
+  background: var(--secondary-solid) !important;
   color: var(--secondary-foreground) !important;
-  border: 2px solid var(--border) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 1rem !important;
+  box-shadow: 0 2px 8px hsla(345, 25%, 85%, 0.3) !important;
 }
 
 .pink .bg-secondary:hover {
-  background: var(--secondary-solid) !important;
-  border-color: var(--primary-solid) !important;
+  background: var(--pink-gradient-cool) !important;
+  color: var(--primary-foreground) !important;
+  border-color: transparent !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Primary buttons in pink mode - special styling */
 .pink .bg-primary {
-  background: transparent !important;
-  color: var(--primary-solid) !important;
-  border: 2px solid var(--primary-solid) !important;
+  background: var(--pink-gradient-button) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: var(--pink-shadow) !important;
 }
 
 .pink .bg-primary:hover {
   background: var(--pink-gradient-hover) !important;
   color: white !important;
-  border-color: transparent !important;
+  transform: translateY(-2px) !important;
 }
 
 /* Input fields with soft pink styling and rounded corners */

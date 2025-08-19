@@ -57,7 +57,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
       let cardBackground;
       if (isPink) {
-        cardBackground = 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #f9a8d4 70%, #ec4899 100%)';
+        cardBackground = 'linear-gradient(135deg, #fce7f3 0%, #f8d7da 25%, #f1c0c5 50%, #ecadb0 75%, #e799a0 100%)';
       } else if (isDark) {
         cardBackground = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)';
       } else {
@@ -88,7 +88,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const appTitle = document.createElement('h1');
       let titleGradient;
       if (isPink) {
-        titleGradient = 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)';
+        titleGradient = 'linear-gradient(135deg, #f4a261 0%, #e76f51 50%, #e9c46a 100%)';
       } else if (isDark) {
         titleGradient = 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)';
       } else {
@@ -223,22 +223,25 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
         const profileImg = document.createElement('img');
         const profileUrl = message.user?.profilePicture || message.admin?.profilePicture;
+        profileImg.crossOrigin = 'anonymous';
         profileImg.src = profileUrl!;
         profileImg.style.cssText = `
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          border: 2px solid ${isPink ? 'rgba(76, 29, 149, 0.3)' : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30, 41, 59, 0.3)'};
+          border: 2px solid ${isPink ? 'rgba(221, 114, 133, 0.4)' : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30, 41, 59, 0.3)'};
           object-fit: cover;
         `;
 
         // Add error handling for profile image
         profileImg.onerror = () => {
-          profileSection.removeChild(profileImg);
+          if (profileSection.parentNode) {
+            profileSection.parentNode.removeChild(profileSection);
+          }
         };
 
         profileSection.appendChild(profileImg);
-        messageCard.insertBefore(profileSection, stats);
+        messageCard.insertBefore(profileSection, attribution);
       }
 
       // Stats section - exactly like reference
@@ -383,22 +386,22 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             maxWidth: '400px',
             margin: '0 auto',
             background: document.documentElement.classList.contains('pink') 
-              ? 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #f9a8d4 70%, #ec4899 100%)'
+              ? 'linear-gradient(135deg, #fce7f3 0%, #f8d7da 25%, #f1c0c5 50%, #ecadb0 75%, #e799a0 100%)'
               : document.documentElement.classList.contains('dark')
               ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)'
               : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f1f5f9 50%, #e2e8f0 75%, #cbd5e1 100%)',
             border: document.documentElement.classList.contains('pink') 
-              ? '1px solid rgba(168, 85, 247, 0.3)'
+              ? '1px solid rgba(221, 114, 133, 0.3)'
               : document.documentElement.classList.contains('dark')
               ? '1px solid rgba(255,255,255,0.1)'
               : '1px solid rgba(0,0,0,0.1)',
             boxShadow: document.documentElement.classList.contains('pink')
-              ? '0 8px 32px rgba(168, 85, 247, 0.15)'
+              ? '0 8px 32px rgba(221, 114, 133, 0.2)'
               : document.documentElement.classList.contains('dark')
               ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
               : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
             color: document.documentElement.classList.contains('pink') 
-              ? '#4c1d95'
+              ? '#7c2d12'
               : document.documentElement.classList.contains('dark')
               ? '#ffffff'
               : '#1e293b'
@@ -408,7 +411,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           <div className="text-center mb-5">
             <h1 className="text-xl font-bold mb-1" style={{
               background: document.documentElement.classList.contains('pink') 
-                ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)'
+                ? 'linear-gradient(135deg, #f4a261 0%, #e76f51 50%, #e9c46a 100%)'
                 : document.documentElement.classList.contains('dark')
                 ? 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)'
                 : 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
