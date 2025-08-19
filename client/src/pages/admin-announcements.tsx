@@ -28,6 +28,7 @@ export function AdminAnnouncementsPage() {
   const [isCreatingAnnouncement, setIsCreatingAnnouncement] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [photoAttachment, setPhotoAttachment] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { admin } = useAuth();
@@ -44,6 +45,7 @@ export function AdminAnnouncementsPage() {
         authorAdminId: admin?.id,
         title: title.trim() || null,
         content: content.trim(),
+        photoAttachment: photoAttachment.trim() || null,
         isPinned: false,
       };
 
@@ -68,6 +70,7 @@ export function AdminAnnouncementsPage() {
       setIsCreatingAnnouncement(false);
       setTitle("");
       setContent("");
+      setPhotoAttachment("");
     },
     onError: () => {
       toast({
@@ -233,13 +236,22 @@ export function AdminAnnouncementsPage() {
                           <p className="text-sm leading-relaxed whitespace-pre-wrap">
                             {announcement.content}
                           </p>
+                          {announcement.photoAttachment && (
+                            <div className="mt-3">
+                              <img 
+                                src={announcement.photoAttachment} 
+                                alt="Announcement photo" 
+                                className="max-w-full h-auto rounded-lg border"
+                              />
+                            </div>
+                          )}
                           <div className="flex items-center justify-between mt-3 pt-2 border-t">
                             <div className="flex items-center gap-2">
                               <Badge variant="secondary" className="text-xs">
                                 {announcement.author?.displayName || "Admin"}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
-                                {formatTimeAgo(new Date(announcement.createdAt))}
+                                {formatTimeAgo(announcement.createdAt ? new Date(announcement.createdAt) : new Date())}
                               </span>
                             </div>
                             {admin && (
@@ -334,13 +346,22 @@ export function AdminAnnouncementsPage() {
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">
                           {announcement.content}
                         </p>
+                        {announcement.photoAttachment && (
+                          <div className="mt-3">
+                            <img 
+                              src={announcement.photoAttachment} 
+                              alt="Announcement photo" 
+                              className="max-w-full h-auto rounded-lg border"
+                            />
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mt-3 pt-2 border-t">
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary" className="text-xs">
                               {announcement.author?.displayName || "Admin"}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              {formatTimeAgo(new Date(announcement.createdAt))}
+                              {formatTimeAgo(announcement.createdAt ? new Date(announcement.createdAt) : new Date())}
                             </span>
                           </div>
                           {admin && (
@@ -440,6 +461,19 @@ export function AdminAnnouncementsPage() {
               />
               <div className="text-right text-xs text-muted-foreground mt-1">
                 {content.length}/1000
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Photo Attachment (Optional) 🎀</label>
+              <Input
+                placeholder="Paste image URL here..."
+                value={photoAttachment}
+                onChange={(e) => setPhotoAttachment(e.target.value)}
+                type="url"
+              />
+              <div className="text-xs text-muted-foreground mt-1">
+                Add a photo to show below your announcement
               </div>
             </div>
           </div>

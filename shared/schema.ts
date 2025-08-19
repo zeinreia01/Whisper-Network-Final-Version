@@ -184,6 +184,7 @@ export const adminAnnouncements = pgTable("admin_announcements", {
   authorAdminId: integer("author_admin_id").references(() => admins.id).notNull(),
   title: text("title"), // Optional title for announcement
   isPinned: boolean("is_pinned").default(false), // Pinned announcements at top
+  photoAttachment: text("photo_attachment"), // URL or path to attached photo
   createdAt: timestamp("created_at").defaultNow(),
 });
 

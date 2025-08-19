@@ -38,6 +38,7 @@ interface UserMusicListProps {
 export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "Music Collection" }: UserMusicListProps) {
   const [isAddingTrack, setIsAddingTrack] = useState(false);
   const [playingTrack, setPlayingTrack] = useState<string | null>(null);
+  const [showAllTracks, setShowAllTracks] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -206,7 +207,8 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
             </div>
           ) : (
             <div className="space-y-3">
-              {musicList.map((track) => (
+              {/* Show limited tracks or all tracks based on state */}
+              {(showAllTracks ? musicList : musicList.slice(0, 5)).map((track) => (
                 <div
                   key={track.id}
                   className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
@@ -281,6 +283,20 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
                   </div>
                 </div>
               ))}
+              
+              {/* View More/Less Button */}
+              {musicList.length > 5 && (
+                <div className="flex justify-center pt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllTracks(!showAllTracks)}
+                    className="text-sm"
+                  >
+                    {showAllTracks ? 'Show Less' : `View More (${musicList.length - 5} more)`}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -294,7 +310,6 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
           </DialogHeader>
           <SpotifySearch
             onTrackSelect={handleSelectTrack}
-            disabled={addTrackMutation.isPending}
           />
         </DialogContent>
       </Dialog>

@@ -42,7 +42,7 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !track?.preview_url) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
@@ -57,11 +57,11 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [track.preview_url]);
+  }, [track?.preview_url]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
-    if (!audio || !track.preview_url) return;
+    if (!audio || !track?.preview_url) return;
 
     if (isPlaying) {
       audio.pause();

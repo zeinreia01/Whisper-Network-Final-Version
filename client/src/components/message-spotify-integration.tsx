@@ -95,7 +95,7 @@ export function MessageSpotifyIntegration({
       <SpotifyTrackDisplay 
         track={track} 
         size={size} 
-        showPreview={false} // Disable preview in messages for better UX
+        showPreview={true} // Enable preview playback for better UX
       />
     </div>
   );
