@@ -37,147 +37,172 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (!messageRef.current) return;
 
     try {
-      // Create a clean container for download image
+      // Create a clean container for download image - exactly matching reference
       const downloadContainer = document.createElement('div');
       downloadContainer.style.cssText = `
         position: fixed;
         top: -9999px;
         left: -9999px;
-        width: 600px;
-        min-height: 400px;
+        width: 400px;
         background: transparent;
         padding: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
         box-sizing: border-box;
       `;
 
-      // Create the message card with gradient background like the old style
+      // Create the message card with proper theme colors like reference
       const messageCard = document.createElement('div');
+      const isDark = document.documentElement.classList.contains('dark');
+      const isPink = document.documentElement.classList.contains('pink');
+      
       messageCard.style.cssText = `
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        padding: 40px;
+        background: ${isPink 
+          ? 'linear-gradient(135deg, #4c1d95 0%, #581c87 30%, #6b21a8 70%, #7c3aed 100%)'
+          : isDark
+          ? 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)'
+          : 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)'};
+        border-radius: 16px;
+        padding: 24px;
         color: white;
         position: relative;
-        box-shadow: none;
-        width: 100%;
-        min-height: 400px;
+        width: 400px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       `;
 
-      // Header section
+      // Header with branding - exactly like reference
       const header = document.createElement('div');
       header.style.cssText = `
         text-align: center;
-        margin-bottom: 30px;
-      `;
-
-      const appTitle = document.createElement('div');
-      appTitle.style.cssText = `
-        color: white;
-        font-size: 20px;
-        font-weight: 500;
         margin-bottom: 20px;
-        opacity: 0.9;
       `;
-      appTitle.textContent = 'A place where voices unite and hearts connect';
 
-      // Meta info
-      const metaInfo = document.createElement('div');
-      metaInfo.style.cssText = `
+      const appTitle = document.createElement('h1');
+      appTitle.style.cssText = `
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        background: ${isPink 
+          ? 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)'
+          : 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'};
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      `;
+      appTitle.textContent = 'Whisper Network';
+
+      const subtitle = document.createElement('p');
+      subtitle.style.cssText = `
+        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+        margin: 0 0 8px 0;
+        font-weight: 400;
+      `;
+      subtitle.textContent = 'A place where voices unite and hearts connect';
+
+      // Category and time - exactly like reference
+      const categoryTime = document.createElement('div');
+      categoryTime.style.cssText = `
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 15px;
-        margin-bottom: 10px;
+        gap: 8px;
+        margin-bottom: 16px;
       `;
 
-      const categoryDot = document.createElement('span');
+      const categoryDot = document.createElement('div');
       categoryDot.style.cssText = `
-        width: 10px;
-        height: 10px;
+        width: 6px;
+        height: 6px;
+        background: rgba(255,255,255,0.8);
         border-radius: 50%;
-        background: white;
-        display: inline-block;
       `;
 
-      const categoryName = document.createElement('span');
-      categoryName.style.cssText = `
-        color: white;
-        font-size: 16px;
+      const categoryText = document.createElement('span');
+      categoryText.style.cssText = `
+        font-size: 12px;
+        color: rgba(255,255,255,0.8);
         font-weight: 500;
       `;
-      categoryName.textContent = category?.name || message.category;
+      categoryText.textContent = category?.name || message.category;
 
-      const timeAgo = document.createElement('span');
-      timeAgo.style.cssText = `
-        color: rgba(255,255,255,0.8);
-        font-size: 16px;
+      const timeText = document.createElement('span');
+      timeText.style.cssText = `
+        font-size: 12px;
+        color: rgba(255,255,255,0.6);
+        margin-left: 8px;
       `;
-      timeAgo.textContent = `• ${formatTimeAgo(message.createdAt!)}`;
+      timeText.textContent = formatTimeAgo(message.createdAt!);
 
-      metaInfo.appendChild(categoryDot);
-      metaInfo.appendChild(categoryName);
-      metaInfo.appendChild(timeAgo);
+      categoryTime.appendChild(categoryDot);
+      categoryTime.appendChild(categoryText);
+      categoryTime.appendChild(timeText);
 
       header.appendChild(appTitle);
-      header.appendChild(metaInfo);
+      header.appendChild(subtitle);
+      header.appendChild(categoryTime);
 
-      // Main content section
-      const contentSection = document.createElement('div');
-      contentSection.style.cssText = `
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        margin: 40px 0;
+      // Main message content in box - exactly like reference
+      const messageBox = document.createElement('div');
+      messageBox.style.cssText = `
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px 0;
+        border: 1px solid rgba(255,255,255,0.15);
       `;
 
-      const content = document.createElement('div');
-      content.style.cssText = `
-        font-size: 20px;
-        line-height: 1.5;
+      const messageContent = document.createElement('div');
+      messageContent.style.cssText = `
+        font-size: 16px;
+        line-height: 1.4;
         color: white;
         text-align: center;
-        font-style: italic;
-        margin-bottom: 30px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        font-weight: 400;
       `;
-      content.textContent = `"${message.content}"`;
+      messageContent.textContent = `"${message.content}"`;
 
+      messageBox.appendChild(messageContent);
+
+      // Attribution - exactly like reference
       const attribution = document.createElement('div');
       attribution.style.cssText = `
-        color: rgba(255,255,255,0.9);
-        font-style: italic;
         text-align: center;
-        font-size: 16px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.6);
+        font-style: italic;
+        margin: 12px 0;
       `;
-      attribution.textContent = '— Anonymous Whisper';
+      // Show registered user info if available
+      if (message.userId && message.user) {
+        attribution.textContent = `— ${message.user.displayName || message.user.username} (Registered User)`;
+      } else if (message.adminId && message.admin) {
+        attribution.textContent = `— ${message.admin.displayName} (Admin)`;
+      } else if (message.senderName) {
+        attribution.textContent = `— ${message.senderName}`;
+      } else {
+        attribution.textContent = '— Anonymous Whisper';
+      }
 
-      contentSection.appendChild(content);
-      contentSection.appendChild(attribution);
-
-      // Stats section
+      // Stats section - exactly like reference
       const stats = document.createElement('div');
       stats.style.cssText = `
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 30px;
-        padding: 20px 0;
-        border-top: 1px solid rgba(255,255,255,0.3);
-        margin-top: 30px;
+        gap: 20px;
+        margin: 16px 0;
       `;
 
       const heartsCount = document.createElement('div');
       heartsCount.style.cssText = `
         display: flex;
         align-items: center;
-        gap: 8px;
-        color: white;
-        font-size: 16px;
+        gap: 6px;
+        color: rgba(255,255,255,0.8);
+        font-size: 12px;
       `;
       heartsCount.innerHTML = `♥ ${message.reactionCount || 0} hearts`;
 
@@ -185,9 +210,9 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       repliesCount.style.cssText = `
         display: flex;
         align-items: center;
-        gap: 8px;
-        color: white;
-        font-size: 16px;
+        gap: 6px;
+        color: rgba(255,255,255,0.8);
+        font-size: 12px;
       `;
       const totalReplies = message.replies ? message.replies.length : 0;
       repliesCount.innerHTML = `💬 ${totalReplies} replies`;
@@ -195,38 +220,38 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       stats.appendChild(heartsCount);
       stats.appendChild(repliesCount);
 
-      // Footer
+      // Footer - exactly like reference
       const footer = document.createElement('div');
       footer.style.cssText = `
         text-align: center;
-        color: rgba(255,255,255,0.7);
-        font-size: 14px;
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(255,255,255,0.3);
+        color: rgba(255,255,255,0.5);
+        font-size: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255,255,255,0.1);
       `;
-      footer.textContent = `This whisper was shared on Whisper Network • ${new Date().toLocaleDateString()}`;
+      footer.textContent = `This whisper was shared on Whisper Network • ${new Date(message.createdAt!).toLocaleDateString()}`;
 
       // Assemble the card
       messageCard.appendChild(header);
-      messageCard.appendChild(contentSection);
+      messageCard.appendChild(messageBox);
+      messageCard.appendChild(attribution);
       messageCard.appendChild(stats);
       messageCard.appendChild(footer);
       downloadContainer.appendChild(messageCard);
       document.body.appendChild(downloadContainer);
 
-      // Generate image with transparent background
+      // Generate image with transparent background - EXACTLY like reference
       const canvas = await html2canvas(downloadContainer, {
         allowTaint: true,
         useCORS: true,
         scale: 2,
-        backgroundColor: null, // Transparent background
-        width: 600,
+        backgroundColor: null, // Transparent background like reference
+        width: 400,
         height: downloadContainer.scrollHeight,
         onclone: (clonedDoc) => {
           const style = clonedDoc.createElement('style');
           style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
             * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif !important; }
           `;
           clonedDoc.head.appendChild(style);
@@ -278,151 +303,88 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
           </div>
         </DialogHeader>
 
-        {/* Aesthetic Message Display */}
+        {/* Instagram-style Message Display - matching reference exactly */}
         <div 
           ref={messageRef}
-          className="p-12 rounded-2xl shadow-xl border-2 relative overflow-hidden"
+          className="p-6 rounded-xl border relative overflow-hidden bg-card"
           style={{
-            fontFamily: '"Times New Roman", serif',
-            minHeight: '500px',
-            maxWidth: '700px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            maxWidth: '400px',
             margin: '0 auto',
             background: document.documentElement.classList.contains('pink') 
-              ? 'linear-gradient(135deg, #fce7f3 0%, #f9a8d4 25%, #ec4899 50%, #be185d 75%, #9d174d 100%)'
+              ? 'linear-gradient(135deg, #4c1d95 0%, #581c87 30%, #6b21a8 70%, #7c3aed 100%)'
               : document.documentElement.classList.contains('dark')
-              ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%)'
-              : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)',
-            backgroundImage: document.documentElement.classList.contains('pink')
-              ? 'radial-gradient(circle at 30% 20%, rgba(236, 72, 153, 0.2) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(190, 24, 93, 0.15) 0%, transparent 50%)'
-              : document.documentElement.classList.contains('dark')
-              ? 'radial-gradient(circle at 30% 20%, rgba(147, 51, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)'
-              : 'radial-gradient(circle at 30% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
-            borderColor: document.documentElement.classList.contains('pink') 
-              ? '#f3e8ff'
-              : document.documentElement.classList.contains('dark')
-              ? '#374151'
-              : '#e2e8f0',
-            color: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') ? '#ffffff' : '#1e293b'
+              ? 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)'
+              : 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            color: '#ffffff'
           }}
         >
-          {/* Header with branding */}
-          <div className="text-center mb-8">
-            <h1 
-              className="text-3xl font-bold mb-2"
-              style={{
-                background: document.documentElement.classList.contains('pink')
-                  ? 'linear-gradient(135deg, #ffffff 0%, #fce7f3 30%, #f9a8d4 60%, #ec4899 100%)'
-                  : document.documentElement.classList.contains('dark')
-                  ? 'linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #06b6d4 100%)'
-                  : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent'
-              }}
-            >
+          {/* Header with branding - exactly like reference */}
+          <div className="text-center mb-5">
+            <h1 className="text-xl font-bold mb-1" style={{
+              background: document.documentElement.classList.contains('pink') 
+                ? 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)'
+                : 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent'
+            }}>
               Whisper Network
             </h1>
-            <p 
-              className="text-sm font-serif"
-              style={{
-                color: document.documentElement.classList.contains('pink') 
-                  ? '#fce7f3'
-                  : document.documentElement.classList.contains('dark')
-                  ? '#cbd5e1'
-                  : '#64748b'
-              }}
-            >
+            <p className="text-xs text-white opacity-70 mb-2">
               A place where voices unite and hearts connect
+            </p>
+            
+            {/* Category and time - exactly like reference */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="w-1.5 h-1.5 bg-white opacity-80 rounded-full"></div>
+              <span className="text-xs text-white opacity-80 font-medium">
+                {category?.name || message.category}
+              </span>
+              <span className="text-xs text-white opacity-60 ml-2">
+                {formatTimeAgo(message.createdAt!)}
+              </span>
+            </div>
+          </div>
+
+          {/* Message content in box - exactly like reference */}
+          <div className="bg-white bg-opacity-10 rounded-xl p-4 mb-3 border border-white border-opacity-15">
+            <p className="text-white text-center text-base leading-relaxed">
+              "{message.content}"
             </p>
           </div>
 
-          {/* Category and timestamp */}
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${category?.color}`}></div>
-              <Badge variant="secondary" className="text-sm">
-                {category?.name || message.category}
-              </Badge>
+          {/* Attribution - exactly like reference */}
+          <div className="text-center mb-4">
+            <p className="text-xs text-white opacity-60 italic">
+              {/* Show registered user info if available */}
+              {message.userId && message.user ? (
+                `— ${message.user.displayName || message.user.username} (Registered User)`
+              ) : message.adminId && message.admin ? (
+                `— ${message.admin.displayName} (Admin)`
+              ) : message.senderName ? (
+                `— ${message.senderName}`
+              ) : (
+                '— Anonymous Whisper'
+              )}
+            </p>
+          </div>
+
+          {/* Stats - exactly like reference */}
+          <div className="flex items-center justify-center gap-5 mb-4">
+            <div className="flex items-center gap-1.5">
+              <span className="text-white opacity-80 text-xs">♥ {message.reactionCount || 0} hearts</span>
             </div>
-            <div 
-              className="text-sm font-serif"
-              style={{
-                color: document.documentElement.classList.contains('pink') 
-                  ? '#fce7f3'
-                  : document.documentElement.classList.contains('dark')
-                  ? '#cbd5e1'
-                  : '#64748b'
-              }}
-            >
-              {formatTimeAgo(message.createdAt!)}
+            <div className="flex items-center gap-1.5">
+              <span className="text-white opacity-80 text-xs">💬 {message.replies?.length || 0} replies</span>
             </div>
           </div>
 
-          {/* Main message content */}
-          <div 
-            className="backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border"
-            style={{
-              background: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
-                ? 'rgba(255,255,255,0.15)' 
-                : 'rgba(255,255,255,0.9)',
-              borderColor: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark') 
-                ? 'rgba(255,255,255,0.3)' 
-                : 'rgba(0,0,0,0.1)'
-            }}
-          >
-            <blockquote 
-              className="text-xl leading-relaxed text-center italic message-text"
-              style={{
-                color: document.documentElement.classList.contains('pink') || document.documentElement.classList.contains('dark')
-                  ? '#ffffff'
-                  : '#1e293b'
-              }}
-            >
-              "{message.content}"
-            </blockquote>
-          </div>
-
-          {/* Spotify track if available */}
-          {message.spotifyLink && (
-            <div className="bg-green-900/20 dark:bg-green-900/20 border border-green-600/30 dark:border-green-600/30 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-center space-x-3">
-                <Music className="w-5 h-5 text-green-400 dark:text-green-400" />
-                <div className="text-center">
-                  <p className="text-sm font-medium text-green-300 dark:text-green-300 font-serif">{getSpotifyDisplayName(message.spotifyLink)}</p>
-                  <p className="text-green-400 dark:text-green-400 text-sm font-serif">Listen on Spotify</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Author attribution */}
-          <div className="text-center mb-6">
-            {message.senderName ? (
-              <p className="text-gray-300 dark:text-gray-300 italic font-serif">
-                — {message.senderName}
-              </p>
-            ) : (
-              <p className="text-gray-400 dark:text-gray-400 italic text-sm font-serif">
-                — Anonymous Whisper
-              </p>
-            )}
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center justify-center space-x-6 text-sm text-gray-300 dark:text-gray-300">
-            <div className="flex items-center space-x-1">
-              <Heart className="w-4 h-4" />
-              <span className="font-serif">{message.reactionCount || 0} hearts</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <MessageCircle className="w-4 h-4" />
-              <span className="font-serif">{message.replies?.length || 0} replies</span>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center mt-8 pt-6 border-t border-gray-600 dark:border-gray-600">
-            <p className="text-xs text-gray-400 dark:text-gray-400 font-serif">
+          {/* Footer - exactly like reference */}
+          <div className="text-center pt-3 border-t border-white border-opacity-10">
+            <p className="text-white opacity-50 text-xs">
               This whisper was shared on Whisper Network • {new Date(message.createdAt!).toLocaleDateString()}
             </p>
           </div>

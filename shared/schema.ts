@@ -314,7 +314,7 @@ export const changePasswordSchema = z.object({
 });
 
 export const adminChangePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required").optional(), // Optional for ZEKE001
+  currentPassword: z.string().optional(), // Optional for ZEKE001
   newPassword: z.string().min(6, "New password must be at least 6 characters"),
 });
 

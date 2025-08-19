@@ -78,7 +78,7 @@ export function AdminDashboard() {
   // Make message public mutation
   const makePublicMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      const response = await apiRequest("PATCH", `/api/messages/${messageId}/visibility`, { isPublic: true });
+      const response = await apiRequest("PATCH", `/api/messages/${messageId}`, { isPublic: true });
       return await response.json();
     },
     onSuccess: () => {

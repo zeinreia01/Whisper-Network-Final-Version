@@ -27,7 +27,7 @@ export function PasswordManager() {
   const changePasswordForm = useForm<ChangePassword | AdminChangePassword>({
     resolver: zodResolver(isAdmin ? adminChangePasswordSchema : changePasswordSchema),
     defaultValues: {
-      currentPassword: "",
+      currentPassword: isZEKE001 ? undefined : "",
       newPassword: "",
     },
   });
