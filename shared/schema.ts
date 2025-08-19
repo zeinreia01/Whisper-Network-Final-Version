@@ -205,7 +205,18 @@ export type InsertUserMusic = typeof userMusicList.$inferInsert;
 export type UserMusic = typeof userMusicList.$inferSelect;
 
 // Create insert and select schemas for dashboard messages
-export const insertDashboardMessageSchema = createInsertSchema(dashboardMessages);
+export const insertDashboardMessageSchema = z.object({
+  content: z.string().min(1).max(500),
+  senderUserId: z.number().optional(),
+  senderAdminId: z.number().optional(),
+  targetUserId: z.number().optional(),
+  targetAdminId: z.number().optional(),
+  spotifyTrackId: z.string().optional(),
+  spotifyTrackName: z.string().optional(),
+  spotifyArtistName: z.string().optional(),
+  spotifyAlbumCover: z.string().optional(),
+  spotifyLink: z.string().optional(),
+});
 export type InsertDashboardMessage = typeof dashboardMessages.$inferInsert;
 export type DashboardMessage = typeof dashboardMessages.$inferSelect;
 

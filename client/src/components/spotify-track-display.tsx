@@ -119,9 +119,8 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
     const currentTrack = fullTrack;
     if (!currentTrack?.preview_url) {
       toast({
-        title: "Preview not available 🎵",
-        description: "Spotify doesn't provide a 30-second preview for this track. Try opening it in Spotify instead!",
-        variant: "destructive",
+        title: "No preview available 🎵",
+        description: "This track doesn't have a 30-second preview. You can still open it in Spotify!",
       });
       return;
     }

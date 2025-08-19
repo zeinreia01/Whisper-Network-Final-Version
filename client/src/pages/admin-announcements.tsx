@@ -364,8 +364,8 @@ export function AdminAnnouncementsPage() {
                               <img
                                 src={announcement.photoAttachment}
                                 alt="Announcement photo"
-                                className="w-full max-w-md h-auto rounded-lg border object-cover"
-                                style={{ maxHeight: '400px' }}
+                                className="w-full max-w-md h-auto rounded-lg border object-contain bg-gray-50 dark:bg-gray-900"
+                                style={{ maxHeight: '400px', width: '100%' }}
                               />
                             </div>
                           )}
@@ -475,7 +475,8 @@ export function AdminAnnouncementsPage() {
                             <img
                               src={announcement.photoAttachment}
                               alt="Announcement photo"
-                              className="max-w-full h-auto rounded-lg border"
+                              className="w-full max-w-md h-auto rounded-lg border object-contain bg-gray-50 dark:bg-gray-900"
+                              style={{ maxHeight: '400px' }}
                             />
                           </div>
                         )}
