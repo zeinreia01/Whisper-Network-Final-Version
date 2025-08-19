@@ -164,13 +164,18 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-8 h-8 p-0"
+                  className="w-8 h-8 p-0 hover:bg-green-100 dark:hover:bg-green-800"
                   onClick={togglePlayPause}
+                  title={isPlaying ? "Pause preview" : "Play preview"}
                 >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  {isPlaying ? (
+                    <Pause className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <Play className="w-4 h-4 text-green-600" />
+                  )}
                 </Button>
                 {duration > 0 && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground min-w-[3rem]">
                     {formatTime(currentTime)}/{formatTime(duration)}
                   </span>
                 )}

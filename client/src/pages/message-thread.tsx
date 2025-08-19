@@ -12,6 +12,7 @@ import { ArrowLeft, Info, Calendar, Music } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { MESSAGE_CATEGORIES } from "@shared/schema";
 import { ThreadedReplies } from "@/components/threaded-replies";
+import { MessageSpotifyIntegration } from "@/components/message-spotify-integration";
 import type { MessageWithReplies } from "@shared/schema";
 
 export default function MessageThread() {
@@ -128,21 +129,16 @@ export default function MessageThread() {
           </CardHeader>
           <CardContent>
             <p className="text-foreground text-lg leading-relaxed mb-4">{message.content}</p>
-            {message.spotifyLink && (
-              <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Music className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-green-800">Spotify Track</span>
-                </div>
-                <a
-                  href={message.spotifyLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-600 hover:underline break-all"
-                >
-                  {message.spotifyLink}
-                </a>
-              </div>
+            {(message.spotifyLink || message.spotifyTrackId) && (
+              <MessageSpotifyIntegration
+                spotifyTrackId={message.spotifyTrackId}
+                spotifyTrackName={message.spotifyTrackName}
+                spotifyArtistName={message.spotifyArtistName}
+                spotifyAlbumCover={message.spotifyAlbumCover}
+                spotifyLink={message.spotifyLink}
+                size="md"
+                className="mt-4"
+              />
             )}
           </CardContent>
         </Card>

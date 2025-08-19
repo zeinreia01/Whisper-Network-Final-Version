@@ -95,7 +95,8 @@ export function MessageSpotifyIntegration({
       <SpotifyTrackDisplay 
         track={track} 
         size={size} 
-        showPreview={true} // Enable preview playback for better UX
+        showPreview={true}
+        className="border border-green-200 dark:border-green-800 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20"
       />
     </div>
   );

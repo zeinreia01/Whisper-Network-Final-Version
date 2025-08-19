@@ -223,7 +223,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
       const body: any = {};
-      
+
       // Include authentication data
       if (user) {
         body.userId = user.id.toString();
@@ -235,7 +235,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
       if (admin) {
         body.adminUsername = admin.username;
       }
-      
+
       const response = await fetch(`/api/messages/${messageId}`, {
         method: "DELETE",
         headers: {
@@ -243,12 +243,12 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         },
         body: JSON.stringify(body),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to delete message");
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {
@@ -516,14 +516,17 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
       <p className="text-foreground mb-4 leading-relaxed message-text">{message.content}</p>
 
       {/* Enhanced Spotify Integration */}
-      <MessageSpotifyIntegration
-        spotifyTrackId={message.spotifyTrackId}
-        spotifyTrackName={message.spotifyTrackName}
-        spotifyArtistName={message.spotifyArtistName}
-        spotifyAlbumCover={message.spotifyAlbumCover}
-        spotifyLink={message.spotifyLink}
-        size="sm"
-      />
+      {(message.spotifyLink || message.spotifyTrackId) && (
+            <MessageSpotifyIntegration
+              spotifyTrackId={message.spotifyTrackId}
+              spotifyTrackName={message.spotifyTrackName}
+              spotifyArtistName={message.spotifyArtistName}
+              spotifyAlbumCover={message.spotifyAlbumCover}
+              spotifyLink={message.spotifyLink}
+              size="sm"
+              className="mt-3"
+            />
+          )}
 
       {/* Mobile-optimized action bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 mb-4 gap-2 sm:gap-3">
@@ -616,7 +619,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                     Report Message
                   </DropdownMenuItem>
                 )}
-                
+
                 {/* Admin-only options */}
                 {admin && (
                   <>
@@ -804,7 +807,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         </div>
       )}
 
-      {/* Reply section for authenticated users on dashboard */}
+      {/* Replies section for authenticated users on dashboard */}
       {showReplies && !showThreaded && (user || admin) && (
         <div className="border-t pt-4">
           <div className="text-center">

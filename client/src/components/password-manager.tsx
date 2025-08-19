@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -34,10 +34,10 @@ export function PasswordManager() {
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: ChangePassword | AdminChangePassword) => {
-      const endpoint = isUser 
+      const endpoint = isUser
         ? `/api/users/${user.id}/change-password`
         : `/api/admins/${admin?.id}/change-password`;
-      
+
       return await apiRequest("POST", endpoint, data);
     },
     onSuccess: () => {
@@ -78,7 +78,7 @@ export function PasswordManager() {
             Change Password
           </DialogTitle>
         </DialogHeader>
-        
+
         <Form {...changePasswordForm}>
           <form onSubmit={changePasswordForm.handleSubmit(onSubmit)} className="space-y-4">
             {/* Current Password Field - Skip for ZEKE001 */}
@@ -159,39 +159,67 @@ export function PasswordManager() {
 // ZEKE001 Special Component - View All Passwords
 export function ZEKE001PasswordViewer() {
   const [isOpen, setIsOpen] = useState(false);
-  const [passwordData, setPasswordData] = useState<any>(null);
   const { admin } = useAuth();
   const { toast } = useToast();
 
-  const viewPasswordsMutation = useMutation({
-    mutationFn: async () => {
-      console.log("Fetching all passwords for ZEKE001...");
-      const response = await apiRequest("POST", "/api/admin/view-all-passwords", {
-        adminUsername: "ZEKE001"
-      });
-      console.log("Password data response:", response);
-      return response;
+  const { data: passwords, isLoading, error } = useQuery({
+    queryKey: ["/api/admin/passwords"],
+    queryFn: async () => {
+      console.log('Fetching passwords for admin...');
+      const response = await apiRequest("GET", "/api/admin/passwords");
+      if (!response.ok) {
+        console.error('Failed to fetch passwords:', response.status, response.statusText);
+        throw new Error("Failed to fetch passwords");
+      }
+      const data = await response.json();
+      console.log('Fetched passwords:', data);
+      return data;
     },
-    onSuccess: (data) => {
-      console.log("Setting password data:", data);
-      setPasswordData(data);
-      toast({
-        title: "Password Data Retrieved",
-        description: "All user and admin password data has been loaded.",
-      });
-    },
-    onError: (error: any) => {
-      console.error("Password viewer error:", error);
-      toast({
-        title: "Access Denied",
-        description: error.message || "Only ZEKE001 can access this feature.",
-        variant: "destructive",
-      });
-    },
+    enabled: !!admin,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   // Only show for ZEKE001
   if (admin?.username !== "ZEKE001") return null;
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="w-5 h-5" />
+            User Passwords
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-2 text-muted-foreground">Loading passwords...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="w-5 h-5" />
+            User Passwords
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-2">Failed to load passwords</p>
+            <p className="text-sm text-muted-foreground">{error.message}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -208,7 +236,7 @@ export function ZEKE001PasswordViewer() {
             ZEKE001 Password Management
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
             <p className="text-sm text-red-700 dark:text-red-300 font-medium">
@@ -216,25 +244,16 @@ export function ZEKE001PasswordViewer() {
             </p>
           </div>
 
-          {!passwordData ? (
-            <Button
-              onClick={() => viewPasswordsMutation.mutate()}
-              disabled={viewPasswordsMutation.isPending}
-              className="w-full"
-              data-testid="button-load-passwords"
-            >
-              {viewPasswordsMutation.isPending ? "Loading..." : "Load All Password Data"}
-            </Button>
-          ) : (
+          {passwords ? (
             <div className="space-y-6">
               {/* Users Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Users ({passwordData.users?.length || 0})</CardTitle>
+                  <CardTitle className="text-lg">Users ({passwords.users?.length || 0})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {passwordData.users?.map((user: any) => (
+                    {passwords.users?.map((user: any) => (
                       <div key={user.id} className="p-3 border rounded-md">
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div><span className="font-medium">ID:</span> {user.id}</div>
@@ -261,11 +280,11 @@ export function ZEKE001PasswordViewer() {
               {/* Admins Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Admins ({passwordData.admins?.length || 0})</CardTitle>
+                  <CardTitle className="text-lg">Admins ({passwords.admins?.length || 0})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {passwordData.admins?.map((admin: any) => (
+                    {passwords.admins?.map((admin: any) => (
                       <div key={admin.id} className="p-3 border rounded-md">
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div><span className="font-medium">ID:</span> {admin.id}</div>
@@ -288,6 +307,10 @@ export function ZEKE001PasswordViewer() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No password data available.
             </div>
           )}
         </div>
