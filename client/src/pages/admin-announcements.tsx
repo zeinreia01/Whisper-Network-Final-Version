@@ -215,9 +215,9 @@ export function AdminAnnouncementsPage() {
                       {/* Admin Avatar - Left aligned like chat */}
                       <div className="flex-shrink-0">
                         <Avatar className="w-10 h-10">
-                          <AvatarImage src="" />
+                          <AvatarImage src={announcement.author?.profilePicture || ""} />
                           <AvatarFallback className="bg-primary text-primary-foreground">
-                            <Crown className="w-5 h-5" />
+                            {announcement.author?.displayName?.charAt(0)?.toUpperCase() || <Crown className="w-5 h-5" />}
                           </AvatarFallback>
                         </Avatar>
                       </div>
@@ -236,7 +236,7 @@ export function AdminAnnouncementsPage() {
                           <div className="flex items-center justify-between mt-3 pt-2 border-t">
                             <div className="flex items-center gap-2">
                               <Badge variant="secondary" className="text-xs">
-                                Admin
+                                {announcement.author?.displayName || "Admin"}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
                                 {formatTimeAgo(new Date(announcement.createdAt))}
@@ -316,9 +316,9 @@ export function AdminAnnouncementsPage() {
                     {/* Admin Avatar - Left aligned like chat */}
                     <div className="flex-shrink-0">
                       <Avatar className="w-10 h-10">
-                        <AvatarImage src="" />
+                        <AvatarImage src={announcement.author?.profilePicture || ""} />
                         <AvatarFallback className="bg-primary text-primary-foreground">
-                          <Crown className="w-5 h-5" />
+                          {announcement.author?.displayName?.charAt(0)?.toUpperCase() || <Crown className="w-5 h-5" />}
                         </AvatarFallback>
                       </Avatar>
                     </div>
@@ -337,7 +337,7 @@ export function AdminAnnouncementsPage() {
                         <div className="flex items-center justify-between mt-3 pt-2 border-t">
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary" className="text-xs">
-                              Admin
+                              {announcement.author?.displayName || "Admin"}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {formatTimeAgo(new Date(announcement.createdAt))}

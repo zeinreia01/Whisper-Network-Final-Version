@@ -2077,7 +2077,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/announcements", async (req, res) => {
     try {
       const announcements = await storage.getAllAdminAnnouncements();
-      res.json(announcements);
+      
+      // Enhance announcements with author information
+      const announcementsWithAuthors = await Promise.all(
+        announcements.map(async (announcement) => {
+          let author = null;
+          if (announcement.authorAdminId) {
+            author = await storage.getAdminById(announcement.authorAdminId);
+            if (author) {
+              const { password, ...authorWithoutPassword } = author;
+              author = authorWithoutPassword;
+            }
+          }
+          return {
+            ...announcement,
+            author,
+          };
+        })
+      );
+      
+      res.json(announcementsWithAuthors);
     } catch (error) {
       console.error("Get admin announcements error:", error);
       res.status(500).json({ message: "Failed to get announcements" });
