@@ -8,14 +8,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Send, Eye, EyeOff, Trash2, Music } from "lucide-react";
+import { MessageSquare, Send, Eye, EyeOff, Trash2, Music, X } from "lucide-react";
+import { SpotifySearch } from "@/components/spotify-search";
+import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { MessageViewer } from "@/components/message-viewer";
 import { categories } from "@/lib/categories";
 import { useToast } from "@/hooks/use-toast";
+
+export interface SpotifyTrack {
+  id: string;
+  name: string;
+  artists: Array<{ id: string; name: string }>;
+  album: {
+    id: string;
+    name: string;
+    images: Array<{ url: string; height: number | null; width: number | null }>;
+  };
+  external_urls: {
+    spotify: string;
+  };
+  preview_url: string | null;
+  duration_ms: number;
+  popularity: number;
+}
 
 interface AnonymousMessage {
   id: number;
@@ -45,6 +65,8 @@ export default function AnonymousMessaging() {
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Anything");
   const [spotifyLink, setSpotifyLink] = useState("");
+  const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null);
+  const [showSpotifySearch, setShowSpotifySearch] = useState(false);
   const [senderName, setSenderName] = useState("");
   const [showInbox, setShowInbox] = useState(false);
   const [isLinkPaused, setIsLinkPaused] = useState(false);
@@ -104,6 +126,7 @@ export default function AnonymousMessaging() {
       setMessage("");
       setCategory("Anything");
       setSpotifyLink("");
+      setSelectedTrack(null);
       setSenderName("");
       toast({
         title: "Message sent!",
@@ -165,7 +188,11 @@ export default function AnonymousMessaging() {
     sendMessageMutation.mutate({
       content: message,
       category: category,
-      spotifyLink: spotifyLink || undefined,
+      spotifyLink: selectedTrack ? `https://open.spotify.com/track/${selectedTrack.id}` : (spotifyLink || undefined),
+      spotifyTrackId: selectedTrack?.id || undefined,
+      spotifyTrackName: selectedTrack?.name || undefined,
+      spotifyArtistName: selectedTrack?.artists.map(a => a.name).join(", ") || undefined,
+      spotifyAlbumCover: selectedTrack?.album.images[0]?.url || undefined,
       senderName: senderName || undefined,
     });
   };
@@ -430,17 +457,47 @@ export default function AnonymousMessaging() {
                 </div>
 
                 <div>
-                  <Label htmlFor="spotify" className="flex items-center gap-2">
+                  <label className="text-sm font-medium mb-2 flex items-center gap-2">
                     <Music className="h-4 w-4" />
-                    Spotify Track (Optional)
-                  </Label>
-                  <Input
-                    id="spotify"
-                    type="url"
-                    value={spotifyLink}
-                    onChange={(e) => setSpotifyLink(e.target.value)}
-                    placeholder="https://open.spotify.com/track/..."
-                  />
+                    Add Music (Optional)
+                  </label>
+                  {selectedTrack ? (
+                    <div className="relative">
+                      <SpotifyTrackDisplay
+                        trackId={selectedTrack.id}
+                        trackName={selectedTrack.name}
+                        artistName={selectedTrack.artists.map(a => a.name).join(", ")}
+                        albumCover={selectedTrack.album.images[0]?.url || ""}
+                        size="sm"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTrack(null)}
+                        className="absolute top-2 right-2 w-6 h-6 p-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowSpotifySearch(true)}
+                        className="w-full flex items-center gap-2"
+                      >
+                        <Music className="w-4 h-4" />
+                        Search for a Song
+                      </Button>
+                      <div className="text-xs text-muted-foreground text-center">or</div>
+                      <Input
+                        type="url"
+                        value={spotifyLink}
+                        onChange={(e) => setSpotifyLink(e.target.value)}
+                        placeholder="Paste Spotify link..."
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end">
@@ -474,6 +531,22 @@ export default function AnonymousMessaging() {
           </CardContent>
         </Card>
       )}
+
+      {/* Spotify Search Dialog */}
+      <Dialog open={showSpotifySearch} onOpenChange={setShowSpotifySearch}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search for a Song</DialogTitle>
+          </DialogHeader>
+          <SpotifySearch 
+            onTrackSelect={(track: SpotifyTrack) => {
+              setSelectedTrack(track);
+              setSpotifyLink(""); // Clear the manual link input
+              setShowSpotifySearch(false);
+            }} 
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Share Your Link */}
       {isOwnProfile && (

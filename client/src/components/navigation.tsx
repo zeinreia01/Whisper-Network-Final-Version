@@ -9,7 +9,7 @@ import { GlobalSearch } from "@/components/global-search";
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X, Lock } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X, Lock, Sparkles } from "lucide-react";
 
 // Mobile notification button component for bottom navigation
 function MobileNotificationButton() {
@@ -88,6 +88,17 @@ export function Navigation() {
                   </Button>
                 </Link>
               )}
+
+              <Link href="/announcements">
+                <Button
+                  variant={location === "/announcements" ? "default" : "ghost"}
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Updates 🎀🫶
+                </Button>
+              </Link>
             </div>
 
             {/* Right side - Search and User Menu */}
@@ -269,6 +280,21 @@ export function Navigation() {
           {(user || admin) && (
             <MobileNotificationButton />
           )}
+
+          {/* Updates/Announcements */}
+          <Link href="/announcements">
+            <button
+              className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 ${
+                location === "/announcements"
+                  ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+              data-testid="tab-announcements"
+            >
+              <Sparkles className={`h-5 w-5 ${location === "/announcements" ? "scale-110" : ""} transition-transform`} />
+              <span className="text-xs mt-0.5 font-medium">Updates</span>
+            </button>
+          </Link>
 
           {/* Admin Dashboard - for admins only */}
           {admin && (

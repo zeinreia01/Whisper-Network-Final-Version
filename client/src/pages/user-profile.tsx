@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MessageCard } from "@/components/message-card";
 import { UserBadge } from "@/components/user-badge";
+import { UserMusicList } from "@/components/user-music-list";
+import { UserDashboardPosts } from "@/components/user-dashboard-posts";
+import { ProfileMusicSection } from "@/components/profile-music-section";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -381,6 +384,27 @@ export function UserProfilePage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Profile Music Section */}
+            <ProfileMusicSection 
+              user={profile}
+              isOwnProfile={isOwnProfile}
+              title="Profile Song"
+            />
+
+            {/* Music Collection */}
+            <UserMusicList 
+              userId={userId}
+              isOwnProfile={isOwnProfile}
+              title="Music Collection"
+            />
+
+            {/* Dashboard Posts */}
+            <UserDashboardPosts 
+              userId={userId}
+              username={profile?.displayName || profile?.username}
+              isOwnProfile={isOwnProfile}
+            />
 
             {/* User's messages */}
             <div>
