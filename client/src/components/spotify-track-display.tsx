@@ -105,7 +105,8 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
         if (response.ok) {
           const trackData = await response.json();
           if (trackData.preview_url) {
-            fullTrack.preview_url = trackData.preview_url;
+            // Update the fullTrack object with the preview URL
+            setFullTrack(prev => prev ? { ...prev, preview_url: trackData.preview_url } : null);
           }
         }
       } catch (error) {
@@ -114,10 +115,12 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
       setIsLoading(false);
     }
 
-    if (!fullTrack?.preview_url) {
+    // Check again after potential fetch
+    const currentTrack = fullTrack;
+    if (!currentTrack?.preview_url) {
       toast({
-        title: "Preview not available",
-        description: "This track doesn't have a preview available.",
+        title: "Preview not available 🎵",
+        description: "Spotify doesn't provide a 30-second preview for this track. Try opening it in Spotify instead!",
         variant: "destructive",
       });
       return;
@@ -127,43 +130,40 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      if (!audioRef.current) {
-        const newAudio = new Audio(fullTrack.preview_url);
+      if (!audioRef.current || audioRef.current.src !== currentTrack.preview_url) {
+        // Clean up old audio if exists
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+        
+        const newAudio = new Audio(currentTrack.preview_url);
         newAudio.addEventListener('ended', () => {
           setIsPlaying(false);
         });
-        newAudio.addEventListener('error', () => {
+        newAudio.addEventListener('error', (e) => {
+          console.error("Audio error:", e);
           setIsPlaying(false);
           toast({
-            title: "Playback error",
-            description: "Failed to play the track preview.",
+            title: "Playback error 🎵",
+            description: "Could not load this track preview. The audio file might be unavailable.",
             variant: "destructive",
           });
         });
         audioRef.current = newAudio;
-        try {
-          await newAudio.play();
-          setIsPlaying(true);
-        } catch (error) {
-          console.error("Audio play error:", error);
-          toast({
-            title: "Playback error",
-            description: "Failed to play the track preview.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        try {
-          await audioRef.current.play();
-          setIsPlaying(true);
-        } catch (error) {
-          console.error("Audio play error:", error);
-          toast({
-            title: "Playback error",
-            description: "Failed to play the track preview.",
-            variant: "destructive",
-          });
-        }
+      }
+      
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.error("Audio play error:", error);
+        setIsPlaying(false);
+        toast({
+          title: "Playback error 🎵",
+          description: "Unable to play audio. Try checking your volume or refreshing the page.",
+          variant: "destructive",
+        });
       }
     }
   };

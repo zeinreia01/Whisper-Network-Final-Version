@@ -223,21 +223,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/user-passwords", async (req, res) => {
+  app.get("/api/admin/passwords", async (req, res) => {
     try {
-      const authHeader = req.headers.authorization;
-      if (!authHeader?.startsWith('Bearer ')) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const token = authHeader.substring(7);
-      // For now, just check if it's a valid request format
-      // TODO: Implement proper token validation
-
-      // For ZEKE001, we'll just proceed with the request
-
+      // Get all users with their passwords (hashed)
       const users = await storage.getAllUsersWithPasswords();
-      res.json(users);
+      const admins = await storage.getAllAdminsWithPasswords();
+
+      console.log("Retrieved users for password view:", users.length);
+      console.log("Retrieved admins for password view:", admins.length);
+
+      const responseData = {
+        message: "Password data retrieved successfully",
+        users: users.map(user => ({
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          hashedPassword: user.password,
+          createdAt: user.createdAt
+        })),
+        admins: admins.map(admin => ({
+          id: admin.id,
+          username: admin.username,
+          displayName: admin.displayName,
+          hashedPassword: admin.password,
+          createdAt: admin.createdAt
+        }))
+      };
+
+      res.json(responseData);
     } catch (error) {
       console.error("Error fetching user passwords:", error);
       res.status(500).json({ message: "Failed to fetch user passwords" });

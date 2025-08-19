@@ -492,6 +492,18 @@ export function AdminAnnouncementsPage() {
         )}
       </div>
 
+      {/* Create Announcement Button - Only show for admins */}
+      {admin && (
+        <div className="fixed bottom-6 right-6">
+          <Button
+            onClick={() => setIsCreatingAnnouncement(true)}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg rounded-full w-14 h-14 flex items-center justify-center"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+      )}
+
       {/* Create Announcement Dialog */}
       <Dialog open={isCreatingAnnouncement} onOpenChange={setIsCreatingAnnouncement}>
         <DialogContent className="max-w-2xl">
