@@ -147,10 +147,59 @@ export function AdminAnnouncementsPage() {
     createAnnouncementMutation.mutate({ title, content, photoUrl: newAnnouncement.photoUrl });
   };
 
-  // Handler for photo upload
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handler for photo upload with auto-crop
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedPhoto(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      // Create canvas to crop image
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        const { width, height } = img;
+        let targetWidth, targetHeight;
+        
+        // Auto-crop to best ratio (16:9, 4:3, or 1:1)
+        const ratio = width / height;
+        
+        if (ratio > 1.5) {
+          // Wide image - use 16:9
+          targetWidth = Math.min(width, 800);
+          targetHeight = Math.round(targetWidth * 9 / 16);
+        } else if (ratio > 1.2) {
+          // Medium ratio - use 4:3
+          targetWidth = Math.min(width, 800);
+          targetHeight = Math.round(targetWidth * 3 / 4);
+        } else {
+          // Square or tall - use 1:1
+          const size = Math.min(width, height, 600);
+          targetWidth = size;
+          targetHeight = size;
+        }
+        
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        
+        // Calculate crop position (center crop)
+        const sourceWidth = Math.min(width, height * (targetWidth / targetHeight));
+        const sourceHeight = Math.min(height, width * (targetHeight / targetWidth));
+        const sourceX = (width - sourceWidth) / 2;
+        const sourceY = (height - sourceHeight) / 2;
+        
+        ctx?.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
+        
+        // Convert to blob
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const croppedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+            setSelectedPhoto(croppedFile);
+          }
+        }, 'image/jpeg', 0.85);
+      };
+      
+      img.src = URL.createObjectURL(file);
       // Clear the photoUrl input if a file is selected
       setNewAnnouncement({ ...newAnnouncement, photoUrl: "" });
     }
@@ -159,6 +208,15 @@ export function AdminAnnouncementsPage() {
   // Update form submission to handle file upload
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!content.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an announcement message",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       let photoUrl = "";
@@ -170,6 +228,9 @@ export function AdminAnnouncementsPage() {
 
         const uploadResponse = await fetch("/api/upload/announcement", {
           method: "POST",
+          headers: {
+            'x-admin-id': admin?.id?.toString() || ''
+          },
           body: formData,
         });
 
@@ -177,22 +238,23 @@ export function AdminAnnouncementsPage() {
           const uploadResult = await uploadResponse.json();
           photoUrl = uploadResult.url;
         } else {
+          const errorText = await uploadResponse.text();
+          console.error("Upload error:", errorText);
           toast({
             title: "Error",
-            description: "Failed to upload photo.",
+            description: "Failed to upload photo. Please try a smaller image.",
             variant: "destructive",
           });
-          return; // Stop submission if upload fails
+          return;
         }
       } else if (newAnnouncement.photoUrl) {
-        // Use existing URL if no file is selected but URL is provided
         photoUrl = newAnnouncement.photoUrl;
       }
 
       await createAnnouncementMutation.mutateAsync({
-        title: title,
+        title: title || null,
         content: content,
-        photoUrl: photoUrl,
+        photoUrl: photoUrl || null,
       });
 
       // Reset form states after successful submission
@@ -200,6 +262,7 @@ export function AdminAnnouncementsPage() {
       setContent("");
       setNewAnnouncement({ content: "", photoUrl: "" });
       setSelectedPhoto(null);
+      setIsCreatingAnnouncement(false);
     } catch (error) {
       console.error("Failed to create announcement:", error);
       toast({
@@ -301,7 +364,8 @@ export function AdminAnnouncementsPage() {
                               <img
                                 src={announcement.photoAttachment}
                                 alt="Announcement photo"
-                                className="max-w-full h-auto rounded-lg border"
+                                className="w-full max-w-md h-auto rounded-lg border object-cover"
+                                style={{ maxHeight: '400px' }}
                               />
                             </div>
                           )}

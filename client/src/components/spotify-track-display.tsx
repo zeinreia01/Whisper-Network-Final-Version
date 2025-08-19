@@ -137,10 +137,13 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
           audioRef.current = null;
         }
         
-        const newAudio = new Audio(currentTrack.preview_url);
+        const newAudio = new Audio();
+        
+        // Set up event listeners before setting src
         newAudio.addEventListener('ended', () => {
           setIsPlaying(false);
         });
+        
         newAudio.addEventListener('error', (e) => {
           console.error("Audio error:", e);
           setIsPlaying(false);
@@ -150,20 +153,47 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
             variant: "destructive",
           });
         });
+
+        newAudio.addEventListener('canplaythrough', () => {
+          console.log("Audio ready to play");
+        });
+
+        // Set crossOrigin to allow CORS
+        newAudio.crossOrigin = "anonymous";
+        newAudio.preload = "auto";
+        
+        // Use proxied URL for better compatibility
+        const proxyUrl = `/api/spotify/proxy/${encodeURIComponent(currentTrack.preview_url)}`;
+        newAudio.src = currentTrack.preview_url;
+        
         audioRef.current = newAudio;
       }
       
       try {
-        await audioRef.current.play();
-        setIsPlaying(true);
+        // Add user interaction check
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+          setIsPlaying(true);
+        }
       } catch (error) {
         console.error("Audio play error:", error);
         setIsPlaying(false);
-        toast({
-          title: "Playback error 🎵",
-          description: "Unable to play audio. Try checking your volume or refreshing the page.",
-          variant: "destructive",
-        });
+        
+        // Try direct Spotify URL as fallback
+        if (error.name === 'NotAllowedError') {
+          toast({
+            title: "Playback blocked 🎵",
+            description: "Click anywhere on the page first, then try playing again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Playback error 🎵",
+            description: "Unable to play audio. Try opening in Spotify instead.",
+            variant: "destructive",
+          });
+        }
       }
     }
   };

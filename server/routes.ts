@@ -1916,6 +1916,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Spotify audio proxy for CORS issues
+  app.get("/api/spotify/proxy/:url", async (req, res) => {
+    try {
+      const audioUrl = decodeURIComponent(req.params.url);
+      
+      // Validate it's a Spotify preview URL
+      if (!audioUrl.includes('p.scdn.co')) {
+        return res.status(400).json({ message: "Invalid audio URL" });
+      }
+
+      const response = await fetch(audioUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio: ${response.statusText}`);
+      }
+
+      // Set appropriate headers
+      res.set({
+        'Content-Type': 'audio/mpeg',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Cache-Control': 'public, max-age=86400'
+      });
+
+      // Pipe the audio stream
+      response.body?.pipe(res);
+    } catch (error) {
+      console.error("Spotify proxy error:", error);
+      res.status(500).json({ message: "Failed to proxy audio" });
+    }
+  });
+
   // User Music List Routes
   app.post("/api/users/:id/music", async (req, res) => {
     try {
@@ -2151,7 +2182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload announcement photo
-  app.post("/upload/announcement", announcementUpload.single("photo"), async (req, res) => {
+  app.post("/api/upload/announcement", announcementUpload.single("photo"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -2171,10 +2202,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!allowedTypes.includes(req.file.mimetype)) {
         return res.status(400).json({ message: "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed." });
       }
-
-      // Generate unique filename
-      const fileExtension = path.extname(req.file.originalname);
-      const fileName = `announcement-${adminId}-${Date.now()}${fileExtension}`;
 
       // Convert to base64 for storage
       const base64String = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
