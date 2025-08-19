@@ -72,7 +72,7 @@ export function MessageSpotifyIntegration({
         external_urls: {
           spotify: spotifyLink || `https://open.spotify.com/track/${spotifyTrackId}`,
         },
-        preview_url: null,
+        preview_url: null, // Will be fetched if needed
         duration_ms: 0,
         popularity: 0,
       };

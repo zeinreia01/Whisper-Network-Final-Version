@@ -298,11 +298,9 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
               {selectedTrack ? (
                 <div className="relative">
                   <SpotifyTrackDisplay
-                    trackId={selectedTrack.id}
-                    trackName={selectedTrack.name}
-                    artistName={selectedTrack.artists.map(a => a.name).join(", ")}
-                    albumCover={selectedTrack.album.images[0]?.url || ""}
+                    track={selectedTrack}
                     size="sm"
+                    showPreview={true}
                   />
                   <Button
                     variant="ghost"
