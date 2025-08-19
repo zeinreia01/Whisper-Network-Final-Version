@@ -175,6 +175,7 @@ export const dashboardMessages = pgTable("dashboard_messages", {
   spotifyArtistName: text("spotify_artist_name"),
   spotifyAlbumCover: text("spotify_album_cover"),
   spotifyLink: text("spotify_link"),
+  isVisible: boolean("is_visible").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -207,6 +208,8 @@ export type UserMusic = typeof userMusicList.$inferSelect;
 // Create insert and select schemas for dashboard messages
 export const insertDashboardMessageSchema = z.object({
   content: z.string().min(1).max(500),
+  category: z.string().default("Anything"),
+  senderName: z.string().min(1),
   senderUserId: z.number().optional(),
   senderAdminId: z.number().optional(),
   targetUserId: z.number().optional(),

@@ -1899,15 +1899,18 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
   }
 
   async getUserDashboardMessages(userId: number, adminId?: number): Promise<DashboardMessage[]> {
+    const conditions = [eq(dashboardMessages.isVisible, true)];
+    
+    if (userId) {
+      conditions.push(eq(dashboardMessages.targetUserId, userId));
+    } else if (adminId) {
+      conditions.push(eq(dashboardMessages.targetAdminId, adminId));
+    }
+
     const result = await db
       .select()
       .from(dashboardMessages)
-      .where(
-        and(
-          userId ? eq(dashboardMessages.targetUserId, userId) : eq(dashboardMessages.targetAdminId, adminId!),
-          eq(dashboardMessages.isVisible, true)
-        )
-      )
+      .where(and(...conditions))
       .orderBy(desc(dashboardMessages.createdAt));
     return result;
   }
