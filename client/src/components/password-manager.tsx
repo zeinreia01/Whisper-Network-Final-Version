@@ -165,6 +165,7 @@ export function ZEKE001PasswordViewer() {
 
   const viewPasswordsMutation = useMutation({
     mutationFn: async () => {
+      console.log("Fetching all passwords for ZEKE001...");
       const response = await apiRequest("POST", "/api/admin/view-all-passwords", {
         adminUsername: "ZEKE001"
       });

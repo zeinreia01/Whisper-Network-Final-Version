@@ -567,7 +567,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getAllUsersWithPasswords();
       const admins = await storage.getAllAdminsWithPasswords();
 
-      res.json({ users, admins });
+      console.log("Retrieved users for ZEKE001:", users.length);
+      console.log("Retrieved admins for ZEKE001:", admins.length);
+
+      const responseData = {
+        message: "Password data retrieved successfully",
+        users: users.map(user => ({
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          hashedPassword: user.password,
+          createdAt: user.createdAt
+        })),
+        admins: admins.map(admin => ({
+          id: admin.id,
+          username: admin.username,
+          displayName: admin.displayName,
+          hashedPassword: admin.password,
+          createdAt: admin.createdAt
+        }))
+      };
+
+      console.log("Sending password data response:", responseData);
+      res.json(responseData);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid request data", errors: error.errors });

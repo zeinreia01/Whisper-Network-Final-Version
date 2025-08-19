@@ -37,7 +37,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (!messageRef.current) return;
 
     try {
-      // Create a clean container for download image - exactly matching reference
+      // Create a clean container for download image with proper sizing
       const downloadContainer = document.createElement('div');
       downloadContainer.style.cssText = `
         position: fixed;
@@ -45,31 +45,37 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
         left: -9999px;
         width: 400px;
         background: transparent;
-        padding: 0;
+        padding: 20px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
         box-sizing: border-box;
       `;
 
-      // Create the message card with proper theme colors like reference
+      // Create the message card with proper theme colors and gradients
       const messageCard = document.createElement('div');
       const isDark = document.documentElement.classList.contains('dark');
       const isPink = document.documentElement.classList.contains('pink');
       
+      let cardBackground;
+      if (isPink) {
+        cardBackground = 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 25%, #c084fc 50%, #e879f9 75%, #f0abfc 100%)';
+      } else if (isDark) {
+        cardBackground = 'linear-gradient(135deg, #1e293b 0%, #334155 25%, #475569 50%, #64748b 75%, #94a3b8 100%)';
+      } else {
+        cardBackground = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)';
+      }
+      
       messageCard.style.cssText = `
-        background: ${isPink 
-          ? 'linear-gradient(135deg, #4c1d95 0%, #581c87 30%, #6b21a8 70%, #7c3aed 100%)'
-          : isDark
-          ? 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)'
-          : 'linear-gradient(135deg, #1f2937 0%, #374151 30%, #4b5563 70%, #6b7280 100%)'};
+        background: ${cardBackground};
         border-radius: 16px;
         padding: 24px;
-        color: white;
+        color: ${isPink || isDark ? 'white' : '#1e293b'};
         position: relative;
         width: 400px;
         display: flex;
         flex-direction: column;
-        border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid ${isPink || isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
       `;
 
       // Header with branding - exactly like reference
@@ -80,13 +86,20 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       `;
 
       const appTitle = document.createElement('h1');
+      let titleGradient;
+      if (isPink) {
+        titleGradient = 'linear-gradient(135deg, #f0abfc 0%, #e879f9 50%, #c084fc 100%)';
+      } else if (isDark) {
+        titleGradient = 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)';
+      } else {
+        titleGradient = 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)';
+      }
+      
       appTitle.style.cssText = `
         font-size: 20px;
         font-weight: 700;
         margin: 0 0 4px 0;
-        background: ${isPink 
-          ? 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)'
-          : 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)'};
+        background: ${titleGradient};
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -96,7 +109,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const subtitle = document.createElement('p');
       subtitle.style.cssText = `
         font-size: 12px;
-        color: rgba(255,255,255,0.7);
+        color: ${isPink || isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)'};
         margin: 0 0 8px 0;
         font-weight: 400;
       `;
@@ -123,7 +136,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const categoryText = document.createElement('span');
       categoryText.style.cssText = `
         font-size: 12px;
-        color: rgba(255,255,255,0.8);
+        color: ${isPink || isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'};
         font-weight: 500;
       `;
       categoryText.textContent = category?.name || message.category;
@@ -131,7 +144,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const timeText = document.createElement('span');
       timeText.style.cssText = `
         font-size: 12px;
-        color: rgba(255,255,255,0.6);
+        color: ${isPink || isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'};
         margin-left: 8px;
       `;
       timeText.textContent = formatTimeAgo(message.createdAt!);
@@ -144,21 +157,33 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       header.appendChild(subtitle);
       header.appendChild(categoryTime);
 
-      // Main message content in box - exactly like reference
+      // Main message content in box with proper theme colors
       const messageBox = document.createElement('div');
+      let messageBoxBg, messageBoxBorder;
+      if (isPink) {
+        messageBoxBg = 'rgba(255,255,255,0.15)';
+        messageBoxBorder = 'rgba(255,255,255,0.25)';
+      } else if (isDark) {
+        messageBoxBg = 'rgba(255,255,255,0.1)';
+        messageBoxBorder = 'rgba(255,255,255,0.15)';
+      } else {
+        messageBoxBg = 'rgba(0,0,0,0.1)';
+        messageBoxBorder = 'rgba(0,0,0,0.15)';
+      }
+      
       messageBox.style.cssText = `
-        background: rgba(255,255,255,0.1);
+        background: ${messageBoxBg};
         border-radius: 12px;
         padding: 16px;
         margin: 16px 0;
-        border: 1px solid rgba(255,255,255,0.15);
+        border: 1px solid ${messageBoxBorder};
       `;
 
       const messageContent = document.createElement('div');
       messageContent.style.cssText = `
         font-size: 16px;
         line-height: 1.4;
-        color: white;
+        color: ${isPink || isDark ? 'white' : '#1e293b'};
         text-align: center;
         font-weight: 400;
       `;
@@ -166,12 +191,12 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
       messageBox.appendChild(messageContent);
 
-      // Attribution - exactly like reference
+      // Attribution with proper theme colors
       const attribution = document.createElement('div');
       attribution.style.cssText = `
         text-align: center;
         font-size: 12px;
-        color: rgba(255,255,255,0.6);
+        color: ${isPink || isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'};
         font-style: italic;
         margin: 12px 0;
       `;
@@ -241,14 +266,14 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       downloadContainer.appendChild(messageCard);
       document.body.appendChild(downloadContainer);
 
-      // Generate image with transparent background - EXACTLY like reference
+      // Generate image with proper sizing and background
       const canvas = await html2canvas(downloadContainer, {
         allowTaint: true,
         useCORS: true,
         scale: 2,
-        backgroundColor: null, // Transparent background like reference
-        width: 400,
-        height: downloadContainer.scrollHeight,
+        backgroundColor: null, // Transparent background
+        width: 440, // Add padding space
+        height: downloadContainer.scrollHeight + 40,
         onclone: (clonedDoc) => {
           const style = clonedDoc.createElement('style');
           style.textContent = `

@@ -1119,7 +1119,48 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Removed duplicate password management methods - they're defined later
+  // Password management implementations
+  async updateUserPassword(userId: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ hashedPassword })
+      .where(eq(users.id, userId));
+  }
+
+  async updateAdminPassword(adminId: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(admins)
+      .set({ hashedPassword })
+      .where(eq(admins.id, adminId));
+  }
+
+  async getAllUsersWithPasswords(): Promise<User[]> {
+    const result = await db.select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      password: users.password,
+      hashedPassword: users.password,
+      createdAt: users.createdAt,
+      isActive: users.isActive,
+      isVerified: users.isVerified
+    }).from(users);
+    return result;
+  }
+
+  async getAllAdminsWithPasswords(): Promise<Admin[]> {
+    const result = await db.select({
+      id: admins.id,
+      username: admins.username,
+      displayName: admins.displayName,
+      password: admins.password,
+      hashedPassword: admins.password,
+      createdAt: admins.createdAt,
+      isActive: admins.isActive,
+      role: admins.role
+    }).from(admins);
+    return result;
+  }
 
   async followUser(followerId: number, followingId: number): Promise<Follow> {
     const [follow] = await db
@@ -1605,29 +1646,23 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
 
   // Password management operations  
   async updateUserPassword(userId: number, hashedPassword: string): Promise<void> {
-    console.log(`Updating password for user ID: ${userId}`);
+    console.log(`Updating password for user ID: ${userId} with hash: ${hashedPassword.substring(0, 20)}...`);
     const result = await db
       .update(users)
       .set({ password: hashedPassword })
       .where(eq(users.id, userId))
       .returning();
-    console.log(`Updated user password successfully, rows affected: ${result.length}`);
-    if (result.length === 0) {
-      throw new Error(`Failed to update password for user ${userId}`);
-    }
+    console.log(`Updated user password, affected rows:`, result.length);
   }
 
   async updateAdminPassword(adminId: number, hashedPassword: string): Promise<void> {
-    console.log(`Updating password for admin ID: ${adminId}`);
+    console.log(`Updating password for admin ID: ${adminId} with hash: ${hashedPassword.substring(0, 20)}...`);
     const result = await db
       .update(admins)
       .set({ password: hashedPassword })
       .where(eq(admins.id, adminId))
       .returning();
-    console.log(`Updated admin password successfully, rows affected: ${result.length}`);
-    if (result.length === 0) {
-      throw new Error(`Failed to update password for admin ${adminId}`);
-    }
+    console.log(`Updated admin password, affected rows:`, result.length);
   }
 
   async getAllUsersWithPasswords(): Promise<User[]> {
