@@ -215,13 +215,13 @@
   border: none !important;
 }
 
-/* Soft Pink Button Styling with Rounded Corners */
+/* Soft Pink Button Styling with Outlined Style */
 .pink button {
-  background: var(--primary-solid) !important;
-  color: var(--primary-foreground) !important;
-  border: none !important;
+  background: transparent !important;
+  color: var(--primary-solid) !important;
+  border: 2px solid var(--primary-solid) !important;
   border-radius: 1rem !important;
-  box-shadow: var(--pink-shadow) !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
   font-weight: 500 !important;
 }
@@ -229,21 +229,43 @@
 .pink button:hover {
   background: var(--pink-gradient-hover) !important;
   color: white !important;
+  border-color: transparent !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 4px 20px hsla(345, 50%, 70%, 0.4) !important;
 }
 
 .pink button:active {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%) !important;
+  color: white !important;
+  border-color: transparent !important;
   transform: translateY(0px) !important;
   box-shadow: var(--pink-shadow) !important;
 }
 
 /* Category buttons specific styling */
 .pink .bg-secondary {
-  background: var(--secondary-solid) !important;
+  background: transparent !important;
   color: var(--secondary-foreground) !important;
-  border: none !important;
+  border: 2px solid var(--border) !important;
   border-radius: 1rem !important;
+}
+
+.pink .bg-secondary:hover {
+  background: var(--secondary-solid) !important;
+  border-color: var(--primary-solid) !important;
+}
+
+/* Primary buttons in pink mode - special styling */
+.pink .bg-primary {
+  background: transparent !important;
+  color: var(--primary-solid) !important;
+  border: 2px solid var(--primary-solid) !important;
+}
+
+.pink .bg-primary:hover {
+  background: var(--pink-gradient-hover) !important;
+  color: white !important;
+  border-color: transparent !important;
 }
 
 /* Input fields with soft pink styling and rounded corners */

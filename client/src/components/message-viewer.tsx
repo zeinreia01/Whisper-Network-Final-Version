@@ -57,7 +57,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
       let cardBackground;
       if (isPink) {
-        cardBackground = 'linear-gradient(135deg, #f472b6 0%, #ec4899 25%, #db2777 50%, #be185d 75%, #9d174d 100%)';
+        cardBackground = 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #f9a8d4 70%, #ec4899 100%)';
       } else if (isDark) {
         cardBackground = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)';
       } else {
@@ -298,7 +298,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
       // Generate image with proper sizing and background
       const canvas = await html2canvas(downloadContainer, {
-        allowTaint: true,
+        allowTarnish: true,
         useCORS: true,
         scale: 2,
         backgroundColor: null, // Transparent background
@@ -383,7 +383,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             maxWidth: '400px',
             margin: '0 auto',
             background: document.documentElement.classList.contains('pink') 
-              ? 'linear-gradient(135deg, #f472b6 0%, #ec4899 25%, #db2777 50%, #be185d 75%, #9d174d 100%)'
+              ? 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #f9a8d4 70%, #ec4899 100%)'
               : document.documentElement.classList.contains('dark')
               ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)'
               : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f1f5f9 50%, #e2e8f0 75%, #cbd5e1 100%)',
