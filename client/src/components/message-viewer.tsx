@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -17,6 +18,7 @@ interface MessageViewerProps {
 export function MessageViewer({ message, trigger }: MessageViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const category = categories.find(c => c.id === message.category);
 
@@ -33,9 +35,13 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     return 'Just now';
   };
 
-  const downloadAsImage = async () => {
-    if (!messageRef.current) return;
+  const [isDownloading, setIsDownloading] = useState(false);
 
+  const downloadAsImage = async () => {
+    if (!messageRef.current || isDownloading) return;
+
+    setIsDownloading(true);
+    
     try {
       // Create a clean container for download image with proper sizing
       const downloadContainer = document.createElement('div');
@@ -336,15 +342,39 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       document.body.removeChild(downloadContainer);
 
       // Download the image
+      const dataURL = canvas.toDataURL('image/png', 1.0);
+      
+      // Create download link
       const link = document.createElement('a');
       link.download = `whisper-${message.id}-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataURL;
+      link.style.display = 'none';
+      
+      // Append to body, click, and remove
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      
+      // Small delay to ensure the link is properly attached
+      setTimeout(() => {
+        link.click();
+        setTimeout(() => {
+          if (document.body.contains(link)) {
+            document.body.removeChild(link);
+          }
+        }, 100);
+      }, 100);
 
     } catch (error) {
       console.error('Failed to download image:', error);
+      // Show error toast if available
+      if (typeof toast !== 'undefined') {
+        toast({
+          title: "Download Failed",
+          description: "There was an error downloading the image. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -369,9 +399,10 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 variant="outline" 
                 size="sm"
                 className="flex items-center gap-2"
+                disabled={isDownloading}
               >
                 <Download className="w-4 h-4" />
-                Download
+                {isDownloading ? 'Downloading...' : 'Download'}
               </Button>
             </div>
           </div>
