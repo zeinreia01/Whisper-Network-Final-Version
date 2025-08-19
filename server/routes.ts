@@ -8,6 +8,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
+import multer from "multer";
+import path from "path";
 
 const scryptAsync = promisify(scrypt);
 
@@ -25,6 +27,44 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+
+  // File upload configuration
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = /jpeg|jpg|png|gif|webp/;
+      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = allowedTypes.test(file.mimetype);
+
+      if (extname && mimetype) {
+        return cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'));
+      }
+    },
+  });
+
+  // Announcement photo upload configuration
+  const announcementUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit for announcements
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = /jpeg|jpg|png|gif|webp/;
+      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = allowedTypes.test(file.mimetype);
+
+      if (extname && mimetype) {
+        return cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'));
+      }
+    },
+  });
 
   // Authentication routes for users
   // Check username availability
@@ -804,149 +844,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user status:", error);
       res.status(500).json({ message: "Failed to update user status" });
-    }
-  });
-
-  // User profile routes - removed duplicate route
-
-  app.get("/api/users/:id/messages", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const messages = await storage.getUserMessages(parseInt(id));
-      res.json(messages);
-    } catch (error) {
-      console.error("Error fetching user messages:", error);
-      res.status(500).json({ message: "Failed to fetch user messages" });
-    }
-  });
-
-  // Reaction routes
-  app.post("/api/messages/:id/reactions", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const messageId = parseInt(id);
-      const { userId, adminId, type = "heart" } = req.body;
-
-      // Check if user already reacted
-      const existingReaction = await storage.getUserReaction(messageId, userId, adminId);
-      if (existingReaction) {
-        return res.status(400).json({ message: "You have already reacted to this message" });
-      }
-
-      // Add reaction
-      const reaction = await storage.addReaction({
-        messageId,
-        userId: userId || null,
-        adminId: adminId || null,
-        type,
-      });
-
-      // Get message to find owner for notification
-      const message = await storage.getMessageById(messageId);
-      if (message && message.userId) {
-        // Create notification for message owner
-        const fromName = userId ? (await storage.getUserById(userId))?.username : 
-                         adminId ? (await storage.getAdminByUsername("admin"))?.displayName : "Anonymous";
-
-        await storage.createNotification({
-          userId: message.userId,
-          type: "reaction",
-          messageId,
-          fromUserId: userId || null,
-          fromAdminId: adminId || null,
-          content: `${fromName} reacted with ${type} to your message`,
-          isRead: false,
-        });
-      }
-
-      res.status(201).json(reaction);
-    } catch (error) {
-      console.error("Error adding reaction:", error);
-      res.status(500).json({ message: "Failed to add reaction" });
-    }
-  });
-
-  app.delete("/api/messages/:id/reactions", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const messageId = parseInt(id);
-      const { userId, adminId } = req.body;
-
-      await storage.removeReaction(messageId, userId, adminId);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error removing reaction:", error);
-      res.status(500).json({ message: "Failed to remove reaction" });
-    }
-  });
-
-  app.get("/api/messages/:id/reactions", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const reactions = await storage.getMessageReactions(parseInt(id));
-      res.json(reactions);
-    } catch (error) {
-      console.error("Error fetching reactions:", error);
-      res.status(500).json({ message: "Failed to fetch reactions" });
-    }
-  });
-
-  // Liked messages routes (personal archive)
-  app.post("/api/messages/:id/like", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const messageId = parseInt(id);
-      const { userId, adminId } = req.body;
-
-      if (!userId && !adminId) {
-        return res.status(400).json({ message: "Authentication required" });
-      }
-
-      // Check if already liked
-      const isLiked = await storage.isMessageLiked(userId, adminId, messageId);
-      if (isLiked) {
-        return res.status(400).json({ message: "Message already liked" });
-      }
-
-      const liked = await storage.likeMessage(userId, adminId, messageId);
-      res.status(201).json(liked);
-    } catch (error) {
-      console.error("Error liking message:", error);
-      res.status(500).json({ message: "Failed to like message" });
-    }
-  });
-
-  app.delete("/api/messages/:id/like", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const messageId = parseInt(id);
-      const { userId, adminId } = req.body;
-
-      if (!userId && !adminId) {
-        return res.status(400).json({ message: "Authentication required" });
-      }
-
-      await storage.unlikeMessage(userId, adminId, messageId);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error unliking message:", error);
-      res.status(500).json({ message: "Failed to unlike message" });
-    }
-  });
-
-  app.get("/api/users/:userId/liked-messages", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { adminId } = req.query;
-
-      const likedMessages = await storage.getUserLikedMessages(
-        parseInt(userId), 
-        adminId ? parseInt(adminId as string) : undefined
-      );
-      res.json(likedMessages);
-    } catch (error) {
-      console.error("Error fetching liked messages:", error);
-      res.status(500).json({ message: "Failed to fetch liked messages" });
     }
   });
 
@@ -2177,7 +2074,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/announcements", async (req, res) => {
     try {
       const announcements = await storage.getAllAdminAnnouncements();
-      
+
       // Enhance announcements with author information
       const announcementsWithAuthors = await Promise.all(
         announcements.map(async (announcement) => {
@@ -2195,7 +2092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       res.json(announcementsWithAuthors);
     } catch (error) {
       console.error("Get admin announcements error:", error);
@@ -2227,6 +2124,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Pin admin announcement error:", error);
       res.status(500).json({ message: "Failed to pin announcement" });
+    }
+  });
+
+  // Upload announcement photo
+  app.post("/upload/announcement", announcementUpload.single("photo"), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const adminId = req.headers['x-admin-id'];
+      if (!adminId) {
+        return res.status(401).json({ message: "Admin not authenticated" });
+      }
+
+      // Check file size and type
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size too large. Maximum 5MB allowed." });
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ message: "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed." });
+      }
+
+      // Generate unique filename
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `announcement-${adminId}-${Date.now()}${fileExtension}`;
+
+      // Upload to storage
+      const fileUrl = await storage.uploadToStorage(req.file.buffer, fileName, req.file.mimetype);
+
+      res.json({ url: fileUrl });
+    } catch (error) {
+      console.error("Announcement upload error:", error);
+      res.status(500).json({ message: "Failed to upload announcement photo" });
     }
   });
 

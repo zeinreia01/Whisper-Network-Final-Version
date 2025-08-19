@@ -12,9 +12,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { MessageSquare, Plus, Pin, PinOff, MoreVertical, Trash2, Crown, Sparkles, ArrowLeft } from "lucide-react";
+import { MessageSquare, Plus, Pin, PinOff, MoreVertical, Trash2, Crown, Sparkles, ArrowLeft, Upload } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import type { AdminAnnouncement } from "@shared/schema";
+import { Label } from "@/components/ui/label";
 
 interface AdminAnnouncementWithAuthor extends AdminAnnouncement {
   author?: {
@@ -28,10 +29,17 @@ export function AdminAnnouncementsPage() {
   const [isCreatingAnnouncement, setIsCreatingAnnouncement] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [photoAttachment, setPhotoAttachment] = useState("");
+  // const [photoAttachment, setPhotoAttachment] = useState(""); // Removed as per new functionality
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null); // State for file upload
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { admin } = useAuth();
+
+  // State for the new announcement form
+  const [newAnnouncement, setNewAnnouncement] = useState({
+    content: "",
+    photoUrl: "",
+  });
 
   // Fetch announcements
   const { data: announcements = [], isLoading } = useQuery<AdminAnnouncementWithAuthor[]>({
@@ -40,12 +48,12 @@ export function AdminAnnouncementsPage() {
 
   // Create announcement mutation
   const createAnnouncementMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ title, content, photoUrl }: { title?: string | null; content: string; photoUrl: string | null }) => {
       const announcementData = {
         authorAdminId: admin?.id,
-        title: title.trim() || null,
+        title: title?.trim() || null,
         content: content.trim(),
-        photoAttachment: photoAttachment.trim() || null,
+        photoAttachment: photoUrl?.trim() || null,
         isPinned: false,
       };
 
@@ -70,7 +78,8 @@ export function AdminAnnouncementsPage() {
       setIsCreatingAnnouncement(false);
       setTitle("");
       setContent("");
-      setPhotoAttachment("");
+      setNewAnnouncement({ content: "", photoUrl: "" }); // Reset form state
+      setSelectedPhoto(null); // Reset selected photo
     },
     onError: () => {
       toast({
@@ -135,8 +144,72 @@ export function AdminAnnouncementsPage() {
       return;
     }
 
-    createAnnouncementMutation.mutate();
+    createAnnouncementMutation.mutate({ title, content, photoUrl: newAnnouncement.photoUrl });
   };
+
+  // Handler for photo upload
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedPhoto(e.target.files[0]);
+      // Clear the photoUrl input if a file is selected
+      setNewAnnouncement({ ...newAnnouncement, photoUrl: "" });
+    }
+  };
+
+  // Update form submission to handle file upload
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      let photoUrl = "";
+
+      // Upload photo if one is selected
+      if (selectedPhoto) {
+        const formData = new FormData();
+        formData.append("photo", selectedPhoto);
+
+        const uploadResponse = await fetch("/api/upload/announcement", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (uploadResponse.ok) {
+          const uploadResult = await uploadResponse.json();
+          photoUrl = uploadResult.url;
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to upload photo.",
+            variant: "destructive",
+          });
+          return; // Stop submission if upload fails
+        }
+      } else if (newAnnouncement.photoUrl) {
+        // Use existing URL if no file is selected but URL is provided
+        photoUrl = newAnnouncement.photoUrl;
+      }
+
+      await createAnnouncementMutation.mutateAsync({
+        title: title,
+        content: content,
+        photoUrl: photoUrl,
+      });
+
+      // Reset form states after successful submission
+      setTitle("");
+      setContent("");
+      setNewAnnouncement({ content: "", photoUrl: "" });
+      setSelectedPhoto(null);
+    } catch (error) {
+      console.error("Failed to create announcement:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while creating the announcement.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const pinnedAnnouncements = announcements.filter(a => a.isPinned);
   const regularAnnouncements = announcements.filter(a => !a.isPinned);
@@ -154,37 +227,24 @@ export function AdminAnnouncementsPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/dashboard">
-          <Button variant="ghost" size="sm" className="flex items-center gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <div className="relative">
-              <Sparkles className="w-8 h-8 text-primary" />
-              <div className="absolute -top-1 -right-1">
-                <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-            Updates from Admins
-            <span className="text-2xl">🎀🫶</span>
+      <div className="mb-8">
+        <div className="flex items-center mb-4 sm:mb-6">
+          <Link href="/dashboard">
+            <Button variant="ghost" className="flex items-center flex-shrink-0">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+          </Link>
+        </div>
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            ✨ Updates from Admins 🎀
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">
             Stay up to date with the latest community announcements and updates
           </p>
         </div>
-        {admin && (
-          <Button
-            onClick={() => setIsCreatingAnnouncement(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Announcement
-          </Button>
-        )}
       </div>
 
       {/* Announcements */}
@@ -238,9 +298,9 @@ export function AdminAnnouncementsPage() {
                           </p>
                           {announcement.photoAttachment && (
                             <div className="mt-3">
-                              <img 
-                                src={announcement.photoAttachment} 
-                                alt="Announcement photo" 
+                              <img
+                                src={announcement.photoAttachment}
+                                alt="Announcement photo"
                                 className="max-w-full h-auto rounded-lg border"
                               />
                             </div>
@@ -263,9 +323,9 @@ export function AdminAnnouncementsPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onClick={() => pinAnnouncementMutation.mutate({ 
-                                      id: announcement.id, 
-                                      isPinned: !announcement.isPinned 
+                                    onClick={() => pinAnnouncementMutation.mutate({
+                                      id: announcement.id,
+                                      isPinned: !announcement.isPinned
                                     })}
                                   >
                                     {announcement.isPinned ? (
@@ -282,7 +342,7 @@ export function AdminAnnouncementsPage() {
                                   </DropdownMenuItem>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <DropdownMenuItem 
+                                      <DropdownMenuItem
                                         className="text-destructive"
                                         onSelect={(e) => e.preventDefault()}
                                       >
@@ -348,9 +408,9 @@ export function AdminAnnouncementsPage() {
                         </p>
                         {announcement.photoAttachment && (
                           <div className="mt-3">
-                            <img 
-                              src={announcement.photoAttachment} 
-                              alt="Announcement photo" 
+                            <img
+                              src={announcement.photoAttachment}
+                              alt="Announcement photo"
                               className="max-w-full h-auto rounded-lg border"
                             />
                           </div>
@@ -373,9 +433,9 @@ export function AdminAnnouncementsPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
-                                  onClick={() => pinAnnouncementMutation.mutate({ 
-                                    id: announcement.id, 
-                                    isPinned: !announcement.isPinned 
+                                  onClick={() => pinAnnouncementMutation.mutate({
+                                    id: announcement.id,
+                                    isPinned: !announcement.isPinned
                                   })}
                                 >
                                   {announcement.isPinned ? (
@@ -392,7 +452,7 @@ export function AdminAnnouncementsPage() {
                                 </DropdownMenuItem>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                       className="text-destructive"
                                       onSelect={(e) => e.preventDefault()}
                                     >
@@ -439,10 +499,11 @@ export function AdminAnnouncementsPage() {
             <DialogTitle>Create New Announcement</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
+              <Label htmlFor="announcement-title">Title (Optional)</Label>
               <Input
+                id="announcement-title"
                 placeholder="Announcement title..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -451,8 +512,9 @@ export function AdminAnnouncementsPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Message</label>
+              <Label htmlFor="announcement-content">Message</Label>
               <Textarea
+                id="announcement-content"
                 placeholder="Write your announcement message..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -465,34 +527,67 @@ export function AdminAnnouncementsPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Photo Attachment (Optional) 🎀</label>
-              <Input
-                placeholder="Paste image URL here..."
-                value={photoAttachment}
-                onChange={(e) => setPhotoAttachment(e.target.value)}
-                type="url"
-              />
-              <div className="text-xs text-muted-foreground mt-1">
-                Add a photo to show below your announcement
+              <Label htmlFor="photo">Announcement Photo (Optional)</Label>
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center">
+                <input
+                  type="file"
+                  id="photo"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="photo"
+                  className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                >
+                  <Upload className="h-8 w-8 text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Click to select a photo or drag and drop
+                  </span>
+                </label>
+                {selectedPhoto && (
+                  <div className="mt-2">
+                    <p className="text-sm text-green-600">{selectedPhoto.name}</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedPhoto(null);
+                        setNewAnnouncement({ ...newAnnouncement, photoUrl: "" });
+                      }}
+                      className="mt-1"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCreatingAnnouncement(false)}
-              disabled={createAnnouncementMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateAnnouncement}
-              disabled={createAnnouncementMutation.isPending || !content.trim()}
-            >
-              {createAnnouncementMutation.isPending ? "Creating..." : "Create Announcement"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsCreatingAnnouncement(false);
+                  // Reset form states when canceling
+                  setTitle("");
+                  setContent("");
+                  setNewAnnouncement({ content: "", photoUrl: "" });
+                  setSelectedPhoto(null);
+                }}
+                disabled={createAnnouncementMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit" // Use type="submit" to trigger the form's onSubmit
+                disabled={createAnnouncementMutation.isPending || (!content.trim() && !selectedPhoto && !newAnnouncement.photoUrl)}
+              >
+                {createAnnouncementMutation.isPending ? "Creating..." : "Create Announcement"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

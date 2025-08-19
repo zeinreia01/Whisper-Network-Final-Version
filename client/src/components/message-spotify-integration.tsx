@@ -23,11 +23,11 @@ export function MessageSpotifyIntegration({
 }: MessageSpotifyIntegrationProps) {
   // If we have stored track data, use it directly
   const hasStoredTrackData = spotifyTrackId && spotifyTrackName && spotifyArtistName;
-  
+
   // If we only have a Spotify link, try to extract track ID and fetch details
   const extractedTrackId = React.useMemo(() => {
     if (hasStoredTrackData || !spotifyLink) return null;
-    
+
     const patterns = [
       /spotify:track:([a-zA-Z0-9]{22})/,
       /open\.spotify\.com\/track\/([a-zA-Z0-9]{22})/,
@@ -47,7 +47,7 @@ export function MessageSpotifyIntegration({
     queryKey: ["/api/spotify/track", extractedTrackId],
     queryFn: async () => {
       if (!extractedTrackId) return null;
-      
+
       const response = await fetch(`/api/spotify/track/${extractedTrackId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch track details");
@@ -77,11 +77,11 @@ export function MessageSpotifyIntegration({
         popularity: 0,
       };
     }
-    
+
     if (fetchedTrack) {
       return fetchedTrack;
     }
-    
+
     return null;
   }, [hasStoredTrackData, spotifyTrackId, spotifyTrackName, spotifyArtistName, spotifyAlbumCover, spotifyLink, fetchedTrack]);
 

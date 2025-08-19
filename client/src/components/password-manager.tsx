@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Key, Eye, EyeOff } from "lucide-react";
+import { Lock, Key, Eye, EyeOff, Loader2 } from "lucide-react";
 import { changePasswordSchema, adminChangePasswordSchema } from "@shared/schema";
 import type { ChangePassword, AdminChangePassword } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+
 
 export function PasswordManager() {
   const [isOpen, setIsOpen] = useState(false);
@@ -162,28 +164,25 @@ export function ZEKE001PasswordViewer() {
   const { admin } = useAuth();
   const { toast } = useToast();
 
-  const { data: passwords, isLoading, error } = useQuery({
+  const { data: userPasswords, isLoading: loadingPasswords, error: passwordError } = useQuery({
     queryKey: ["/api/admin/passwords"],
+    enabled: !!admin && (admin.role === "super_admin" || admin.username === "ZEKE001"),
     queryFn: async () => {
-      console.log('Fetching passwords for admin...');
       const response = await apiRequest("GET", "/api/admin/passwords");
       if (!response.ok) {
-        console.error('Failed to fetch passwords:', response.status, response.statusText);
-        throw new Error("Failed to fetch passwords");
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch user passwords: ${errorText}`);
       }
-      const data = await response.json();
-      console.log('Fetched passwords:', data);
-      return data;
+      return response.json();
     },
-    enabled: !!admin,
     retry: 3,
     retryDelay: 1000,
   });
 
-  // Only show for ZEKE001
-  if (admin?.username !== "ZEKE001") return null;
+  // Only show for ZEKE001 or Super Admin
+  if (admin?.username !== "ZEKE001" && admin?.role !== "super_admin") return null;
 
-  if (isLoading) {
+  if (loadingPasswords) {
     return (
       <Card>
         <CardHeader>
@@ -202,7 +201,7 @@ export function ZEKE001PasswordViewer() {
     );
   }
 
-  if (error) {
+  if (passwordError) {
     return (
       <Card>
         <CardHeader>
@@ -214,7 +213,7 @@ export function ZEKE001PasswordViewer() {
         <CardContent>
           <div className="text-center py-8">
             <p className="text-red-600 mb-2">Failed to load passwords</p>
-            <p className="text-sm text-muted-foreground">{error.message}</p>
+            <p className="text-sm text-muted-foreground">{passwordError.message}</p>
           </div>
         </CardContent>
       </Card>
@@ -226,14 +225,14 @@ export function ZEKE001PasswordViewer() {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2 text-red-600 hover:text-red-700">
           <Eye className="h-4 w-4" />
-          View All Passwords (ZEKE001)
+          View All Passwords ({admin?.username === "ZEKE001" ? "ZEKE001" : "Super Admin"})
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <Eye className="h-5 w-5" />
-            ZEKE001 Password Management
+            {admin?.username === "ZEKE001" ? "ZEKE001" : "Super Admin"} Password Management
           </DialogTitle>
         </DialogHeader>
 
@@ -244,16 +243,16 @@ export function ZEKE001PasswordViewer() {
             </p>
           </div>
 
-          {passwords ? (
+          {userPasswords ? (
             <div className="space-y-6">
               {/* Users Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Users ({passwords.users?.length || 0})</CardTitle>
+                  <CardTitle className="text-lg">Users ({userPasswords.users?.length || 0})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {passwords.users?.map((user: any) => (
+                    {userPasswords.users?.map((user: any) => (
                       <div key={user.id} className="p-3 border rounded-md">
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div><span className="font-medium">ID:</span> {user.id}</div>
@@ -280,11 +279,11 @@ export function ZEKE001PasswordViewer() {
               {/* Admins Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Admins ({passwords.admins?.length || 0})</CardTitle>
+                  <CardTitle className="text-lg">Admins ({userPasswords.admins?.length || 0})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {passwords.admins?.map((admin: any) => (
+                    {userPasswords.admins?.map((admin: any) => (
                       <div key={admin.id} className="p-3 border rounded-md">
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div><span className="font-medium">ID:</span> {admin.id}</div>

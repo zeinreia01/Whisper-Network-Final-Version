@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, ExternalLink, Play, Pause } from "lucide-react";
+import { toast } from "@/components/ui/use-toast"; // Assuming toast is imported from here
 
 interface SpotifyTrack {
   id: string;
@@ -72,6 +73,8 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -92,16 +95,75 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
     };
   }, [fullTrack?.preview_url]);
 
-  const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio || !fullTrack?.preview_url) return;
+  const handlePlayPause = async () => {
+    // First try to get preview URL if not available
+    if (!fullTrack?.preview_url && fullTrack?.id) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/spotify/track/${fullTrack.id}`);
+        if (response.ok) {
+          const trackData = await response.json();
+          if (trackData.preview_url) {
+            fullTrack.preview_url = trackData.preview_url;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch track preview:", error);
+      }
+      setIsLoading(false);
+    }
 
-    if (isPlaying) {
-      audio.pause();
+    if (!fullTrack?.preview_url) {
+      toast({
+        title: "Preview not available",
+        description: "This track doesn't have a preview available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audio.play();
-      setIsPlaying(true);
+      if (!audioRef.current) {
+        const newAudio = new Audio(fullTrack.preview_url);
+        newAudio.addEventListener('ended', () => {
+          setIsPlaying(false);
+        });
+        newAudio.addEventListener('error', () => {
+          setIsPlaying(false);
+          toast({
+            title: "Playback error",
+            description: "Failed to play the track preview.",
+            variant: "destructive",
+          });
+        });
+        audioRef.current = newAudio;
+        try {
+          await newAudio.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Audio play error:", error);
+          toast({
+            title: "Playback error",
+            description: "Failed to play the track preview.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Audio play error:", error);
+          toast({
+            title: "Playback error",
+            description: "Failed to play the track preview.",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
 
@@ -192,29 +254,31 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
-            {showPreview && fullTrack.preview_url && (
+            {showPreview && (
               <div className="flex items-center gap-2 shrink-0">
                 <Button
-                  variant="ghost"
+                  onClick={handlePlayPause}
                   size="sm"
-                  className="w-8 h-8 p-0 hover:bg-green-100 dark:hover:bg-green-800"
-                  onClick={togglePlayPause}
-                  title={isPlaying ? "Pause preview" : "Play preview"}
+                  variant="ghost"
+                  className="h-8 w-8 p-0 hover:bg-white/20"
+                  disabled={isLoading}
                 >
-                  {isPlaying ? (
-                    <Pause className="w-4 h-4 text-green-600" />
+                  {isLoading ? (
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="h-4 w-4 text-white" />
                   ) : (
-                    <Play className="w-4 h-4 text-green-600" />
+                    <Play className="h-4 w-4 text-white" />
                   )}
                 </Button>
-                {duration > 0 && (
+                {duration > 0 && !isLoading && (
                   <span className="text-xs text-muted-foreground min-w-[3rem]">
                     {formatTime(currentTime)}/{formatTime(duration)}
                   </span>
                 )}
                 <audio
                   ref={audioRef}
-                  src={fullTrack.preview_url}
+                  src={fullTrack.preview_url || ""} // Ensure src is a string, even if null initially
                   preload="metadata"
                 />
               </div>
