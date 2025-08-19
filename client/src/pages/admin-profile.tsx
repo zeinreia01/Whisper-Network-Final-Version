@@ -398,6 +398,7 @@ export default function AdminProfile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </>
     </div>
   );
 }
