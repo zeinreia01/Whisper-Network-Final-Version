@@ -508,7 +508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canDelete = true;
       } else if (message.adminId && adminUsername) {
         const admin = await storage.getAdminByUsername(adminUsername);
-        canDelete = admin && message.adminId === admin.id || false;
+        canDelete = (admin && message.adminId === admin.id) || false;
       } else if (message.userId && userId) {
         canDelete = message.userId === parseInt(userId);
       } else if (boardOwnerId && message.recipient) {
@@ -1939,8 +1939,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Cache-Control': 'public, max-age=86400'
       });
 
-      // Pipe the audio stream
-      response.body?.pipe(res);
+      // Stream the audio data
+      const buffer = await response.arrayBuffer();
+      res.send(Buffer.from(buffer));
     } catch (error) {
       console.error("Spotify proxy error:", error);
       res.status(500).json({ message: "Failed to proxy audio" });

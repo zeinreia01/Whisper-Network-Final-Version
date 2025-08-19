@@ -582,7 +582,7 @@ export class DatabaseStorage implements IStorage {
         replies: repliesWithUsers,
         reactions: reactionsData,
         reactionCount: reactionsData.length,
-        replyCount: repliesWithUsers.length,
+
       };
     } catch (error) {
       console.error('Error in getMessageById:', error);
