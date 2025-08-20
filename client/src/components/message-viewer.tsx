@@ -46,14 +46,16 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       const canvas = await html2canvas(messageRef.current, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#ffffff',
+        backgroundColor: document.documentElement.classList.contains('dark') ? '#1e1b4b' : '#ffffff',
         logging: false,
-        width: messageRef.current.offsetWidth,
-        height: messageRef.current.offsetHeight,
+        width: 400,
+        height: messageRef.current.scrollHeight,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: messageRef.current.offsetWidth,
-        windowHeight: messageRef.current.offsetHeight
+        windowWidth: 400,
+        windowHeight: messageRef.current.scrollHeight,
+        allowTaint: true,
+        foreignObjectRendering: true
       });
 
       const dataURL = canvas.toDataURL('image/png');

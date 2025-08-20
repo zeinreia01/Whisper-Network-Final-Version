@@ -664,8 +664,8 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                   </>
                 )}
 
-                {/* Board owner deletion option */}
-                {user && message.recipient === user.username && !admin && (
+                {/* Board owner deletion option - for public messages and dashboard posts */}
+                {user && (message.recipient === user.username || message.targetUserId === user.id) && !admin && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem 

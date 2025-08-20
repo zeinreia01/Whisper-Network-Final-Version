@@ -2091,6 +2091,113 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       .returning();
     return announcement;
   }
+
+  // Leaderboard methods
+  async getLeaderboardData(): Promise<{
+    messageLeaders: any[];
+    replyLeaders: any[];
+    likeLeaders: any[];
+    followerLeaders: any[];
+  }> {
+    // Get message leaders
+    const messageLeaders = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        profilePicture: users.profilePicture,
+        isVerified: users.isVerified,
+        messageCount: sql<number>`count(${messages.id})`,
+        replyCount: sql<number>`count(distinct ${replies.id})`,
+        likeCount: sql<number>`count(distinct ${reactions.id})`,
+        followerCount: sql<number>`count(distinct ${follows.followerId})`
+      })
+      .from(users)
+      .leftJoin(messages, eq(messages.userId, users.id))
+      .leftJoin(replies, eq(replies.userId, users.id))
+      .leftJoin(reactions, eq(reactions.messageId, messages.id))
+      .leftJoin(follows, eq(follows.followingId, users.id))
+      .where(eq(users.isActive, true))
+      .groupBy(users.id)
+      .orderBy(desc(sql<number>`count(${messages.id})`))
+      .limit(10);
+
+    // Get reply leaders
+    const replyLeaders = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        profilePicture: users.profilePicture,
+        isVerified: users.isVerified,
+        messageCount: sql<number>`count(distinct ${messages.id})`,
+        replyCount: sql<number>`count(${replies.id})`,
+        likeCount: sql<number>`count(distinct ${reactions.id})`,
+        followerCount: sql<number>`count(distinct ${follows.followerId})`
+      })
+      .from(users)
+      .leftJoin(messages, eq(messages.userId, users.id))
+      .leftJoin(replies, eq(replies.userId, users.id))
+      .leftJoin(reactions, eq(reactions.messageId, messages.id))
+      .leftJoin(follows, eq(follows.followingId, users.id))
+      .where(eq(users.isActive, true))
+      .groupBy(users.id)
+      .orderBy(desc(sql<number>`count(${replies.id})`))
+      .limit(10);
+
+    // Get like leaders (users whose messages received the most hearts)
+    const likeLeaders = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        profilePicture: users.profilePicture,
+        isVerified: users.isVerified,
+        messageCount: sql<number>`count(distinct ${messages.id})`,
+        replyCount: sql<number>`count(distinct ${replies.id})`,
+        likeCount: sql<number>`count(${reactions.id})`,
+        followerCount: sql<number>`count(distinct ${follows.followerId})`
+      })
+      .from(users)
+      .leftJoin(messages, eq(messages.userId, users.id))
+      .leftJoin(replies, eq(replies.userId, users.id))
+      .leftJoin(reactions, eq(reactions.messageId, messages.id))
+      .leftJoin(follows, eq(follows.followingId, users.id))
+      .where(eq(users.isActive, true))
+      .groupBy(users.id)
+      .orderBy(desc(sql<number>`count(${reactions.id})`))
+      .limit(10);
+
+    // Get follower leaders
+    const followerLeaders = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        profilePicture: users.profilePicture,
+        isVerified: users.isVerified,
+        messageCount: sql<number>`count(distinct ${messages.id})`,
+        replyCount: sql<number>`count(distinct ${replies.id})`,
+        likeCount: sql<number>`count(distinct ${reactions.id})`,
+        followerCount: sql<number>`count(${follows.followerId})`
+      })
+      .from(users)
+      .leftJoin(messages, eq(messages.userId, users.id))
+      .leftJoin(replies, eq(replies.userId, users.id))
+      .leftJoin(reactions, eq(reactions.messageId, messages.id))
+      .leftJoin(follows, eq(follows.followingId, users.id))
+      .where(eq(users.isActive, true))
+      .groupBy(users.id)
+      .orderBy(desc(sql<number>`count(${follows.followerId})`))
+      .limit(10);
+
+    return {
+      messageLeaders: messageLeaders.map((user, index) => ({ ...user, rank: index + 1 })),
+      replyLeaders: replyLeaders.map((user, index) => ({ ...user, rank: index + 1 })),
+      likeLeaders: likeLeaders.map((user, index) => ({ ...user, rank: index + 1 })),
+      followerLeaders: followerLeaders.map((user, index) => ({ ...user, rank: index + 1 }))
+    };
+  }
 }
 
 export const storage = new DatabaseStorage();

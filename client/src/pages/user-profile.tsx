@@ -47,11 +47,14 @@ export function UserProfilePage() {
       return await response.json();
     },
     enabled: !!userId && userId > 0 && (!!user || !!admin),
-    onSuccess: (data) => {
-      // Set initial following state based on profile data
-      setIsFollowing(data.isFollowing || false);
-    }
   });
+
+  // Set following state when profile data changes
+  React.useEffect(() => {
+    if (profile) {
+      setIsFollowing(profile.isFollowing || false);
+    }
+  }, [profile]);
 
   const { data: userMessages, isLoading: messagesLoading } = useQuery<MessageWithReplies[]>({
     queryKey: [`/api/users/${userId}/messages`],
@@ -85,8 +88,8 @@ export function UserProfilePage() {
       toast({
         title: action === 'unfollow' ? "Unfollowed" : "Now Following",
         description: action === 'unfollow'
-          ? `You unfollowed ${profile?.displayName || profile?.username}` 
-          : `You are now following ${profile?.displayName || profile?.username}`,
+          ? `You unfollowed ${(profile as any)?.displayName || (profile as any)?.username}` 
+          : `You are now following ${(profile as any)?.displayName || (profile as any)?.username}`,
       });
     },
     onError: (error: any) => {
@@ -135,7 +138,7 @@ export function UserProfilePage() {
       setIsFollowing(false);
       toast({
         title: "Unfollowed",
-        description: `You are no longer following ${profile?.displayName || profile?.username}`,
+        description: `You are no longer following ${(profile as any)?.displayName || (profile as any)?.username}`,
       });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${targetUserId}/profile`] });
     },
@@ -230,10 +233,10 @@ export function UserProfilePage() {
 
   // Initialize bio text when profile loads
   React.useEffect(() => {
-    if (profile?.bio) {
-      setBioText(profile.bio);
+    if ((profile as any)?.bio) {
+      setBioText((profile as any).bio);
     }
-  }, [profile?.bio]);
+  }, [(profile as any)?.bio]);
 
   // Redirect if not authenticated
   if (!user && !admin) {
@@ -308,32 +311,32 @@ export function UserProfilePage() {
             {/* Profile header with background photo */}
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6 overflow-hidden">
               {/* Background Photo */}
-              {profile.backgroundPhoto && (
+              {(profile as any).backgroundPhoto && (
                 <div 
                   className="h-48 bg-cover bg-center relative"
-                  style={{ backgroundImage: `url(${profile.backgroundPhoto})` }}
+                  style={{ backgroundImage: `url(${(profile as any).backgroundPhoto})` }}
                 >
                   <div className="absolute inset-0 bg-black/30"></div>
                 </div>
               )}
 
-              <CardHeader className={profile.backgroundPhoto ? "-mt-16 relative z-10" : ""}>
+              <CardHeader className={(profile as any).backgroundPhoto ? "-mt-16 relative z-10" : ""}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                   <div className="flex items-center space-x-4">
                     <Avatar className="w-16 h-16 border-4 border-white dark:border-gray-800 shadow-lg">
                       <AvatarImage 
-                        src={profile.profilePicture || undefined} 
-                        alt={profile.displayName || profile.username}
+                        src={(profile as any).profilePicture || undefined} 
+                        alt={(profile as any).displayName || (profile as any).username}
                       />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl font-bold">
-                        {(profile.displayName || profile.username || 'U').charAt(0).toUpperCase()}
+                        {((profile as any).displayName || (profile as any).username || 'U').charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className={`text-2xl flex items-center space-x-2 ${profile.backgroundPhoto ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                        <span>{profile.displayName || profile.username || 'Unknown User'}</span>
+                      <CardTitle className={`text-2xl flex items-center space-x-2 ${(profile as any).backgroundPhoto ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                        <span>{(profile as any).displayName || (profile as any).username || 'Unknown User'}</span>
                         <UserBadge userType="user" variant="small" />
-                        {profile.isVerified && (
+                        {(profile as any).isVerified && (
                           <div className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 rounded-full">
                             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -341,12 +344,12 @@ export function UserProfilePage() {
                           </div>
                         )}
                       </CardTitle>
-                      {profile.displayName && profile.username && (
-                        <p className={`${profile.backgroundPhoto ? 'text-gray-200' : 'text-gray-600 dark:text-gray-400'}`}>@{profile.username}</p>
+                      {(profile as any).displayName && (profile as any).username && (
+                        <p className={`${(profile as any).backgroundPhoto ? 'text-gray-200' : 'text-gray-600 dark:text-gray-400'}`}>@{(profile as any).username}</p>
                       )}
-                      <p className={`flex items-center mt-1 text-sm ${profile.backgroundPhoto ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <p className={`flex items-center mt-1 text-sm ${(profile as any).backgroundPhoto ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
                         <Calendar className="w-4 h-4 mr-1" />
-                        Joined {profile.createdAt ? formatTimeAgo(profile.createdAt) : 'Unknown'}
+                        Joined {(profile as any).createdAt ? formatTimeAgo((profile as any).createdAt) : 'Unknown'}
                       </p>
                     </div>
                   </div>
@@ -396,7 +399,7 @@ export function UserProfilePage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setBioText(profile.bio || "");
+                          setBioText((profile as any).bio || "");
                           setShowEditBio(true);
                         }}
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -405,9 +408,9 @@ export function UserProfilePage() {
                       </Button>
                     )}
                   </div>
-                  {profile.bio ? (
+                  {(profile as any).bio ? (
                     <p className="text-gray-700 dark:text-gray-300 text-sm bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                      {profile.bio}
+                      {(profile as any).bio}
                     </p>
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-sm italic">
@@ -423,35 +426,35 @@ export function UserProfilePage() {
                     <div className="flex items-center justify-center text-primary mb-2">
                       <MessageSquare className="w-6 h-6" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.messageCount || 0}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{(profile as any).messageCount || 0}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Messages</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <div className="flex items-center justify-center text-green-500 mb-2">
                       <MessageSquare className="w-6 h-6" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.replyCount || 0}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{(profile as any).replyCount || 0}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Replies</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <div className="flex items-center justify-center text-red-500 mb-2">
                       <Heart className="w-6 h-6" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.totalReactions || 0}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{(profile as any).totalReactions || 0}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Hearts Received</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <div className="flex items-center justify-center text-blue-500 mb-2">
                       <Users className="w-6 h-6" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.followersCount || 0}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{(profile as any).followersCount || 0}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Followers</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <div className="flex items-center justify-center text-purple-500 mb-2">
                       <Users className="w-6 h-6" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.followingCount || 0}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{(profile as any).followingCount || 0}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Following</div>
                   </div>
                 </div>
@@ -461,7 +464,7 @@ export function UserProfilePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Profile Music Section */}
               <ProfileMusicSection 
-                user={profile}
+                user={profile as any}
                 isOwnProfile={isOwnProfile}
                 title="Profile Song"
               />
@@ -477,7 +480,7 @@ export function UserProfilePage() {
             {/* Dashboard Posts */}
             <UserDashboardPosts 
               userId={userId}
-              username={profile?.displayName || profile?.username}
+              username={(profile as any)?.displayName || (profile as any)?.username}
               isOwnProfile={isOwnProfile}
             />
 
