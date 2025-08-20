@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff, User } from "lucide-react";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { MessageViewer } from "@/components/message-viewer";
-import type { DashboardMessage, User, Admin } from "@shared/schema";
+import type { DashboardMessage, Admin } from "@shared/schema";
 
 interface UserBoardProps {}
 
