@@ -273,7 +273,8 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                             </Badge>
                           )}
                           {/* Board Owner Tag */}
-                          {(message.senderUserId === userId || message.senderAdminId === adminId) && (
+                          {((message.senderUserId && message.senderUserId === userId) || 
+                            (message.senderAdminId && message.senderAdminId === adminId)) && (
                             <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-green-500 text-white">
                               Board Owner
                             </Badge>

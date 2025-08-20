@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff } from "lucide-react";
+import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff, User } from "lucide-react";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { MessageViewer } from "@/components/message-viewer";
 import type { DashboardMessage, User, Admin } from "@shared/schema";
@@ -31,7 +30,7 @@ export default function UserBoard() {
   const [, params] = useRoute("/board/:username");
   const { user, admin } = useAuth();
   const { toast } = useToast();
-  
+
   const [boardUser, setBoardUser] = useState<(User | Admin) | null>(null);
   const [boardMessages, setBoardMessages] = useState<DashboardMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +40,7 @@ export default function UserBoard() {
   const [selectedCategory, setSelectedCategory] = useState("Anything");
   const [senderName, setSenderName] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(true);
-  
+
   // Board customization states
   const [boardName, setBoardName] = useState("");
   const [boardBanner, setBoardBanner] = useState("");
@@ -51,12 +50,12 @@ export default function UserBoard() {
 
   useEffect(() => {
     if (!username) return;
-    
+
     const loadUserBoard = async () => {
       setIsLoading(true);
       try {
         let profile: User | Admin | null = null;
-        
+
         // Load user/admin profile
         const profileResponse = await fetch(`/api/users/profile/${username}`);
         if (profileResponse.ok) {
@@ -80,7 +79,7 @@ export default function UserBoard() {
           const endpoint = 'role' in profile 
             ? `/api/admins/${profile.id}/dashboard`
             : `/api/users/${profile.id}/dashboard`;
-          
+
           const messagesResponse = await fetch(endpoint);
           if (messagesResponse.ok) {
             const messages = await messagesResponse.json();
@@ -160,7 +159,7 @@ export default function UserBoard() {
 
     try {
       const endpoint = 'role' in boardUser ? `/api/admins/${boardUser.id}/profile` : `/api/users/${boardUser.id}/profile`;
-      
+
       const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -189,7 +188,7 @@ export default function UserBoard() {
 
   const shareBoard = async () => {
     const boardUrl = `${window.location.origin}/board/${username}`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -324,7 +323,7 @@ export default function UserBoard() {
                 style={{ backgroundImage: `url(${boardBanner})` }}
               />
             )}
-            
+
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
@@ -334,7 +333,7 @@ export default function UserBoard() {
                       {(boardUser.displayName || boardUser.username).charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div>
                     <h1 className="text-2xl font-bold">{boardName}</h1>
                     <p className="text-muted-foreground">by {boardUser.displayName || boardUser.username}</p>
@@ -346,8 +345,18 @@ export default function UserBoard() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => window.location.href = `/user/${username}`}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4" />
+                    View Profile
+                  </Button>
+
                   <Button
                     onClick={shareBoard}
                     variant="outline"
@@ -357,7 +366,7 @@ export default function UserBoard() {
                     <Share2 className="w-4 h-4" />
                     Share Board
                   </Button>
-                  
+
                   {isOwnBoard && (
                     <Dialog open={isEditingBoard} onOpenChange={setIsEditingBoard}>
                       <DialogTrigger asChild>
@@ -381,12 +390,53 @@ export default function UserBoard() {
                             />
                           </div>
                           <div>
-                            <label className="text-sm font-medium mb-2 block">Banner Image URL</label>
-                            <Input
-                              value={boardBanner}
-                              onChange={(e) => setBoardBanner(e.target.value)}
-                              placeholder="Enter banner image URL"
-                            />
+                            <label className="text-sm font-medium mb-2 block">Banner Image</label>
+                            <div className="space-y-3">
+                              {boardBanner && (
+                                <div className="relative">
+                                  <img 
+                                    src={boardBanner} 
+                                    alt="Banner preview" 
+                                    className="w-full h-24 object-cover rounded-lg border"
+                                  />
+                                  <Button
+                                    onClick={() => setBoardBanner("")}
+                                    variant="destructive"
+                                    size="sm"
+                                    className="absolute top-2 right-2"
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (file.size > 2 * 1024 * 1024) {
+                                      toast({
+                                        title: "Error",
+                                        description: "Image must be smaller than 2MB",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                      setBoardBanner(e.target?.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Upload an image (max 2MB). Recommended size: 1200x300px
+                              </p>
+                            </div>
                           </div>
                           <Button onClick={handleUpdateBoard} className="w-full">
                             Update Board
@@ -397,7 +447,7 @@ export default function UserBoard() {
                   )}
                 </div>
               </div>
-              
+
               {boardUser.bio && (
                 <p className="text-muted-foreground">{boardUser.bio}</p>
               )}
@@ -441,7 +491,7 @@ export default function UserBoard() {
                 {boardMessages.map((message) => {
                   const isBoardOwnerPost = (message.senderUserId && message.senderUserId === boardUser.id) || 
                                           (message.senderAdminId && message.senderAdminId === boardUser.id);
-                  
+
                   return (
                     <div key={message.id} className={`p-4 rounded-lg border bg-background relative group ${message.isPinned ? 'border-yellow-300 bg-yellow-50/20' : ''}`}>
                       {message.isPinned && (
@@ -450,7 +500,7 @@ export default function UserBoard() {
                           Pinned
                         </div>
                       )}
-                      
+
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
@@ -458,7 +508,7 @@ export default function UserBoard() {
                               {message.senderName.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">{message.senderName}</span>
@@ -482,7 +532,7 @@ export default function UserBoard() {
                             </Badge>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           {isOwnBoard && (
                             <Button
@@ -495,7 +545,7 @@ export default function UserBoard() {
                               {message.isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                             </Button>
                           )}
-                          
+
                           {(isOwnBoard || admin) && (
                             <Button
                               onClick={() => handleDeleteMessage(message.id)}
@@ -507,7 +557,7 @@ export default function UserBoard() {
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           )}
-                          
+
                           <MessageViewer message={{
                             ...message,
                             isPublic: false,
@@ -613,7 +663,7 @@ export default function UserBoard() {
               <Textarea
                 placeholder={isOwnBoard 
                   ? `Share an update on your board...` 
-                  : `Share your thoughts on ${boardUser.displayName || boardUser.username}'s board...`
+                  : `Post a Message to ${boardUser.displayName || boardUser.username}'s Board...`
                 }
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
