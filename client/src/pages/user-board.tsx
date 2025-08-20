@@ -520,6 +520,9 @@ export default function UserBoard() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
+                            {message.senderUserId && (
+                              <AvatarImage src={boardUser?.profilePicture || undefined} alt={message.senderName} />
+                            )}
                             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
                               {message.senderName.charAt(0).toUpperCase()}
                             </AvatarFallback>
@@ -533,19 +536,29 @@ export default function UserBoard() {
                                   Admin
                                 </Badge>
                               )}
+                              {message.senderUserId && !message.senderAdminId && (
+                                <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-green-50 border-green-200 text-green-700">
+                                  User
+                                </Badge>
+                              )}
                               {isBoardOwnerPost && (
                                 <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-50 border-blue-200 text-blue-700">
                                   Board Owner
                                 </Badge>
                               )}
                             </div>
-                            <Badge variant="outline" className="text-xs px-1.5 py-0.5 w-fit" style={{
-                              backgroundColor: `${categories.find(c => c.name === message.category)?.color}15`,
-                              borderColor: `${categories.find(c => c.name === message.category)?.color}35`,
-                              color: categories.find(c => c.name === message.category)?.color,
-                            }}>
-                              {message.category}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs px-1.5 py-0.5 w-fit" style={{
+                                backgroundColor: `${categories.find(c => c.name === message.category)?.color}15`,
+                                borderColor: `${categories.find(c => c.name === message.category)?.color}35`,
+                                color: categories.find(c => c.name === message.category)?.color,
+                              }}>
+                                {message.category}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(message.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
@@ -624,8 +637,8 @@ export default function UserBoard() {
                               spotifyAlbumCover: null,
                             } : null,
                           }} trigger={
-                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8" title="View as image">
-                              <Eye className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8" title="Download as image">
+                              <Download className="h-4 w-4" />
                             </Button>
                           } />
                         </div>
@@ -745,38 +758,45 @@ export default function UserBoard() {
               )}
             </div>
 
-            {!isOwnBoard && (
-              <>
+            {/* Post Type Selection */}
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                  Post Type
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                    className="ml-auto"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {isAnonymous ? "Anonymous" : "Show Profile"}
+                  </span>
+                </label>
                 {isAnonymous ? (
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Display Name (Optional)</label>
                     <Input
                       placeholder="Enter a name or leave empty for 'Anonymous'"
                       value={senderName}
                       onChange={(e) => setSenderName(e.target.value)}
                       maxLength={50}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your identity will remain hidden
+                    </p>
                   </div>
                 ) : (
                   <div className="p-3 bg-muted rounded-lg">
                     <p className="text-sm">
                       Posting as: <strong>{user?.displayName || user?.username || admin?.displayName || "User"}</strong>
                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      Your profile and username will be visible
+                    </p>
                   </div>
                 )}
-
-                <div className="flex justify-between">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                    />
-                    Post anonymously
-                  </label>
-                </div>
-              </>
-            )}
+              </div>
+            </div>
 
             <div className="flex justify-end">
               <Button onClick={handlePostMessage} disabled={!messageContent.trim()}>

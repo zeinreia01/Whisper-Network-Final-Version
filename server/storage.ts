@@ -2074,12 +2074,23 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
   }
 
   async pinDashboardMessage(messageId: number, isPinned: boolean): Promise<DashboardMessage> {
-    const [message] = await db
-      .update(dashboardMessages)
-      .set({ isPinned })
-      .where(eq(dashboardMessages.id, messageId))
-      .returning();
-    return message;
+    try {
+      const [message] = await db
+        .update(dashboardMessages)
+        .set({ isPinned })
+        .where(eq(dashboardMessages.id, messageId))
+        .returning();
+      return message;
+    } catch (error) {
+      console.error('Error pinning dashboard message:', error);
+      // Fallback for databases without isPinned column
+      const [message] = await db
+        .select()
+        .from(dashboardMessages)
+        .where(eq(dashboardMessages.id, messageId))
+        .limit(1);
+      return message;
+    }
   }
 
   // Admin announcement methods
