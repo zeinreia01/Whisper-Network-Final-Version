@@ -73,10 +73,16 @@ export default function UserBoard() {
         }
 
         // Load board messages
-        const messagesResponse = await fetch(`/api/dashboard-messages/${username}`);
-        if (messagesResponse.ok) {
-          const messages = await messagesResponse.json();
-          setBoardMessages(messages);
+        if (profile) {
+          const endpoint = 'role' in profile 
+            ? `/api/admins/${profile.id}/dashboard`
+            : `/api/users/${profile.id}/dashboard`;
+          
+          const messagesResponse = await fetch(endpoint);
+          if (messagesResponse.ok) {
+            const messages = await messagesResponse.json();
+            setBoardMessages(messages);
+          }
         }
       } catch (error) {
         console.error("Error loading user board:", error);
@@ -97,7 +103,7 @@ export default function UserBoard() {
     if (!messageContent.trim() || !boardUser) return;
 
     try {
-      const response = await fetch("/api/dashboard-messages", {
+      const response = await fetch("/api/dashboard/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -194,7 +200,7 @@ export default function UserBoard() {
 
   const handleDeleteMessage = async (messageId: number) => {
     try {
-      const response = await fetch(`/api/dashboard-messages/${messageId}`, {
+      const response = await fetch(`/api/dashboard/messages/${messageId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // Include session cookies
