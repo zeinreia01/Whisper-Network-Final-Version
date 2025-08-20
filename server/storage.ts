@@ -2050,12 +2050,23 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       conditions.push(eq(dashboardMessages.targetAdminId, adminId));
     }
 
-    const result = await db
-      .select()
-      .from(dashboardMessages)
-      .where(and(...conditions))
-      .orderBy(desc(dashboardMessages.createdAt));
-    return result;
+    try {
+      const result = await db
+        .select()
+        .from(dashboardMessages)
+        .where(and(...conditions))
+        .orderBy(desc(dashboardMessages.isPinned), desc(dashboardMessages.createdAt));
+      return result;
+    } catch (error) {
+      // Fallback query without isPinned column if it doesn't exist yet
+      console.log("Falling back to query without isPinned column");
+      const result = await db
+        .select()
+        .from(dashboardMessages)
+        .where(and(...conditions))
+        .orderBy(desc(dashboardMessages.createdAt));
+      return result;
+    }
   }
 
   async deleteDashboardMessage(messageId: number): Promise<void> {

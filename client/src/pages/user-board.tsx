@@ -11,8 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff, User } from "lucide-react";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
+import { SpotifySearch } from "@/components/spotify-search";
 import { MessageViewer } from "@/components/message-viewer";
 import type { DashboardMessage, Admin } from "@shared/schema";
+import type { SpotifyTrack } from "@/lib/spotify";
 
 interface UserBoardProps {}
 
@@ -40,6 +42,8 @@ export default function UserBoard() {
   const [selectedCategory, setSelectedCategory] = useState("Anything");
   const [senderName, setSenderName] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null);
+  const [showSpotifySearch, setShowSpotifySearch] = useState(false);
 
   // Board customization states
   const [boardName, setBoardName] = useState("");
@@ -111,19 +115,26 @@ export default function UserBoard() {
     if (!messageContent.trim() || !boardUser) return;
 
     try {
+      const messageData = {
+        content: messageContent,
+        category: selectedCategory,
+        targetUserId: 'id' in boardUser && !('role' in boardUser) ? boardUser.id : null,
+        targetAdminId: 'role' in boardUser ? boardUser.id : null,
+        senderUserId: !isAnonymous && user ? user.id : null,
+        senderAdminId: !isAnonymous && admin ? admin.id : null,
+        senderName: isAnonymous ? (senderName || "Anonymous") : (user?.displayName || user?.username || admin?.displayName || "User"),
+        isVisible: true,
+        spotifyTrackId: selectedTrack?.id || null,
+        spotifyTrackName: selectedTrack?.name || null,
+        spotifyArtistName: selectedTrack?.artists?.map(a => a.name).join(", ") || null,
+        spotifyAlbumCover: selectedTrack?.album?.images?.[0]?.url || null,
+        spotifyLink: selectedTrack ? `https://open.spotify.com/track/${selectedTrack.id}` : null,
+      };
+
       const response = await fetch("/api/dashboard/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: messageContent,
-          category: selectedCategory,
-          targetUserId: 'id' in boardUser ? boardUser.id : null,
-          targetAdminId: 'role' in boardUser ? boardUser.id : null,
-          senderUserId: !isAnonymous && user ? user.id : null,
-          senderAdminId: !isAnonymous && admin ? admin.id : null,
-          senderName: isAnonymous ? (senderName || "Anonymous") : null,
-          isVisible: true,
-        }),
+        body: JSON.stringify(messageData),
       });
 
       if (response.ok) {
@@ -138,11 +149,16 @@ export default function UserBoard() {
         });
         setMessageContent("");
         setSenderName("");
+        setSelectedTrack(null);
         setIsPostingMessage(false);
         toast({
           title: "Success",
           description: "Message posted to board!",
         });
+      } else {
+        const errorData = await response.json();
+        console.error("Post error:", errorData);
+        throw new Error(errorData.message || "Failed to post message");
       }
     } catch (error) {
       console.error("Error posting message:", error);
@@ -652,7 +668,7 @@ export default function UserBoard() {
 
       {/* Post Message Dialog */}
       <Dialog open={isPostingMessage} onOpenChange={setIsPostingMessage}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Post to {boardName}</DialogTitle>
           </DialogHeader>
@@ -688,6 +704,45 @@ export default function UserBoard() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Music Selection */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Add Music (Optional)</label>
+              {selectedTrack ? (
+                <div className="p-3 border rounded-lg bg-muted">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={selectedTrack.album.images[0]?.url}
+                        alt={selectedTrack.album.name}
+                        className="w-10 h-10 rounded"
+                      />
+                      <div>
+                        <p className="font-medium text-sm">{selectedTrack.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedTrack.artists.map(a => a.name).join(", ")}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTrack(null)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSpotifySearch(true)}
+                  className="w-full"
+                >
+                  🎵 Add Song from Spotify
+                </Button>
+              )}
             </div>
 
             {!isOwnBoard && (
@@ -729,6 +784,22 @@ export default function UserBoard() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Spotify Search Dialog */}
+      <Dialog open={showSpotifySearch} onOpenChange={setShowSpotifySearch}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Search for Music</DialogTitle>
+          </DialogHeader>
+          <SpotifySearch
+            onTrackSelect={(track) => {
+              setSelectedTrack(track);
+              setShowSpotifySearch(false);
+            }}
+            onClose={() => setShowSpotifySearch(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>
