@@ -231,7 +231,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
             </div>
           ) : (
             <div className="space-y-4">
-              {(showAllMessages ? dashboardMessages : dashboardMessages.slice(0, 5)).map((message) => (
+              {(showAllMessages ? dashboardMessages : dashboardMessages.slice(0, 2)).map((message) => (
                 <div
                   key={message.id}
                   id={`board-message-${message.id}`}
@@ -335,7 +335,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                 </div>
               ))}
               
-              {dashboardMessages.length > 5 && (
+              {dashboardMessages.length > 2 && (
                 <div className="text-center pt-4">
                   <Button
                     variant="outline"
@@ -343,7 +343,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                     className="flex items-center gap-2"
                   >
                     <Eye className="w-4 h-4" />
-                    {showAllMessages ? `Show Less (${Math.min(5, dashboardMessages.length)})` : `View All ${dashboardMessages.length} Messages`}
+                    {showAllMessages ? `Show Less (${Math.min(2, dashboardMessages.length)})` : `View All ${dashboardMessages.length} Messages`}
                   </Button>
                 </div>
               )}

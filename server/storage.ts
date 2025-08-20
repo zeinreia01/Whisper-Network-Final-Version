@@ -2107,19 +2107,16 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         displayName: users.displayName,
         profilePicture: users.profilePicture,
         isVerified: users.isVerified,
-        messageCount: sql<number>`count(${messages.id})`,
-        replyCount: sql<number>`count(distinct ${replies.id})`,
-        likeCount: sql<number>`count(distinct ${reactions.id})`,
-        followerCount: sql<number>`count(distinct ${follows.followerId})`
+        messageCount: sql<number>`count(distinct ${messages.id})`,
+        replyCount: sql<number>`0`,
+        likeCount: sql<number>`0`,
+        followerCount: sql<number>`0`
       })
       .from(users)
-      .leftJoin(messages, eq(messages.userId, users.id))
-      .leftJoin(replies, eq(replies.userId, users.id))
-      .leftJoin(reactions, eq(reactions.messageId, messages.id))
-      .leftJoin(follows, eq(follows.followingId, users.id))
+      .leftJoin(messages, and(eq(messages.userId, users.id), eq(messages.isPublic, true)))
       .where(eq(users.isActive, true))
-      .groupBy(users.id)
-      .orderBy(desc(sql<number>`count(${messages.id})`))
+      .groupBy(users.id, users.username, users.displayName, users.profilePicture, users.isVerified)
+      .orderBy(desc(sql<number>`count(distinct ${messages.id})`))
       .limit(10);
 
     // Get reply leaders
@@ -2130,19 +2127,16 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         displayName: users.displayName,
         profilePicture: users.profilePicture,
         isVerified: users.isVerified,
-        messageCount: sql<number>`count(distinct ${messages.id})`,
-        replyCount: sql<number>`count(${replies.id})`,
-        likeCount: sql<number>`count(distinct ${reactions.id})`,
-        followerCount: sql<number>`count(distinct ${follows.followerId})`
+        messageCount: sql<number>`0`,
+        replyCount: sql<number>`count(distinct ${replies.id})`,
+        likeCount: sql<number>`0`,
+        followerCount: sql<number>`0`
       })
       .from(users)
-      .leftJoin(messages, eq(messages.userId, users.id))
       .leftJoin(replies, eq(replies.userId, users.id))
-      .leftJoin(reactions, eq(reactions.messageId, messages.id))
-      .leftJoin(follows, eq(follows.followingId, users.id))
       .where(eq(users.isActive, true))
-      .groupBy(users.id)
-      .orderBy(desc(sql<number>`count(${replies.id})`))
+      .groupBy(users.id, users.username, users.displayName, users.profilePicture, users.isVerified)
+      .orderBy(desc(sql<number>`count(distinct ${replies.id})`))
       .limit(10);
 
     // Get like leaders (users whose messages received the most hearts)
@@ -2153,19 +2147,17 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         displayName: users.displayName,
         profilePicture: users.profilePicture,
         isVerified: users.isVerified,
-        messageCount: sql<number>`count(distinct ${messages.id})`,
-        replyCount: sql<number>`count(distinct ${replies.id})`,
-        likeCount: sql<number>`count(${reactions.id})`,
-        followerCount: sql<number>`count(distinct ${follows.followerId})`
+        messageCount: sql<number>`0`,
+        replyCount: sql<number>`0`,
+        likeCount: sql<number>`count(distinct ${reactions.id})`,
+        followerCount: sql<number>`0`
       })
       .from(users)
       .leftJoin(messages, eq(messages.userId, users.id))
-      .leftJoin(replies, eq(replies.userId, users.id))
       .leftJoin(reactions, eq(reactions.messageId, messages.id))
-      .leftJoin(follows, eq(follows.followingId, users.id))
       .where(eq(users.isActive, true))
-      .groupBy(users.id)
-      .orderBy(desc(sql<number>`count(${reactions.id})`))
+      .groupBy(users.id, users.username, users.displayName, users.profilePicture, users.isVerified)
+      .orderBy(desc(sql<number>`count(distinct ${reactions.id})`))
       .limit(10);
 
     // Get follower leaders
@@ -2176,19 +2168,16 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         displayName: users.displayName,
         profilePicture: users.profilePicture,
         isVerified: users.isVerified,
-        messageCount: sql<number>`count(distinct ${messages.id})`,
-        replyCount: sql<number>`count(distinct ${replies.id})`,
-        likeCount: sql<number>`count(distinct ${reactions.id})`,
-        followerCount: sql<number>`count(${follows.followerId})`
+        messageCount: sql<number>`0`,
+        replyCount: sql<number>`0`,
+        likeCount: sql<number>`0`,
+        followerCount: sql<number>`count(distinct ${follows.followerId})`
       })
       .from(users)
-      .leftJoin(messages, eq(messages.userId, users.id))
-      .leftJoin(replies, eq(replies.userId, users.id))
-      .leftJoin(reactions, eq(reactions.messageId, messages.id))
       .leftJoin(follows, eq(follows.followingId, users.id))
       .where(eq(users.isActive, true))
-      .groupBy(users.id)
-      .orderBy(desc(sql<number>`count(${follows.followerId})`))
+      .groupBy(users.id, users.username, users.displayName, users.profilePicture, users.isVerified)
+      .orderBy(desc(sql<number>`count(distinct ${follows.followerId})`))
       .limit(10);
 
     return {

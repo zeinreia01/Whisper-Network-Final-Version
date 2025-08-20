@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   profilePicture: text("profile_picture"), // URL or path to profile picture
   backgroundPhoto: text("background_photo"), // URL or path to background profile photo
   bio: text("bio"), // User's bio/description (200 character limit)
+  boardName: text("board_name"), // Custom name for user's message board
+  boardBanner: text("board_banner"), // URL or path to board banner image
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
   likedMessagesPrivacy: text("liked_messages_privacy").default("private"), // "public" or "private"

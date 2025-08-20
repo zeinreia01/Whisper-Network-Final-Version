@@ -17,7 +17,7 @@ import { MessageViewer } from "@/components/message-viewer";
 import { MessageSpotifyIntegration } from "@/components/message-spotify-integration";
 import { AuthModal } from "@/components/auth-modal";
 import { Link } from "wouter";
-import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark, MessageSquare, Flag } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, AlertTriangle, Shield, Heart, User, Eye, EyeOff, Bookmark, MessageSquare, Flag, Share2 } from "lucide-react";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { getSpotifyDisplayName } from "@/lib/spotify";
@@ -42,6 +42,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { admin, user } = useAuth();
@@ -395,6 +396,69 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
     });
   };
 
+  const handleShare = async (platform?: string) => {
+    const messageUrl = `${window.location.origin}/message/${message.id}`;
+    const messageText = `Check out this message: "${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}"`;
+    
+    if (platform) {
+      let shareUrl = '';
+      const encodedUrl = encodeURIComponent(messageUrl);
+      const encodedText = encodeURIComponent(messageText);
+      
+      switch (platform) {
+        case 'facebook':
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+          break;
+        case 'twitter':
+          shareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
+          break;
+        case 'instagram':
+          // Instagram doesn't support direct URL sharing, copy to clipboard instead
+          navigator.clipboard.writeText(messageUrl);
+          toast({
+            title: "Link Copied",
+            description: "Link copied! You can now share it on Instagram.",
+          });
+          return;
+        case 'messenger':
+          shareUrl = `fb-messenger://share?link=${encodedUrl}`;
+          break;
+        default:
+          navigator.clipboard.writeText(messageUrl);
+          toast({
+            title: "Link Copied",
+            description: "Message link copied to clipboard!",
+          });
+          return;
+      }
+      
+      if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+      }
+    } else if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Whisper Network Message',
+          text: messageText,
+          url: messageUrl,
+        });
+      } catch (error) {
+        // Fallback to copy
+        navigator.clipboard.writeText(messageUrl);
+        toast({
+          title: "Link Copied",
+          description: "Message link copied to clipboard!",
+        });
+      }
+    } else {
+      navigator.clipboard.writeText(messageUrl);
+      toast({
+        title: "Link Copied",
+        description: "Message link copied to clipboard!",
+      });
+    }
+  };
+
   if (!message) {
     return null;
   }
@@ -598,6 +662,38 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 <span className="sm:hidden">Thread</span>
               </Button>
             </Link>
+            
+            {/* Share Button */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-primary h-9 px-2">
+                  <Share2 className="w-3 h-3 mr-1" />
+                  <span className="hidden sm:inline">Share</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleShare()}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Copy Link
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare('facebook')}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Facebook
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare('twitter')}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Twitter
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare('instagram')}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Instagram
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare('messenger')}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Messenger
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Admin Controls or User Board Control */}
