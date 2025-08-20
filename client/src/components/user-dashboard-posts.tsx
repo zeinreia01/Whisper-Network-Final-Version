@@ -17,6 +17,7 @@ import { MessageSquare, Plus, Music, X, Download, Eye } from "lucide-react";
 import html2canvas from "html2canvas";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
+import { Link } from "wouter";
 import type { DashboardMessage } from "@shared/schema";
 
 export interface SpotifyTrack {
@@ -335,18 +336,27 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                 </div>
               ))}
               
-              {dashboardMessages.length > 2 && (
-                <div className="text-center pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAllMessages(!showAllMessages)}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {showAllMessages ? `Show Less (${Math.min(2, dashboardMessages.length)})` : `View All ${dashboardMessages.length} Messages`}
+              <div className="text-center pt-4 space-y-2">
+                <Link href={`/board/${username}`}>
+                  <Button variant="default" className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    View Full Board ({dashboardMessages.length} messages)
                   </Button>
-                </div>
-              )}
+                </Link>
+                {dashboardMessages.length > 2 && (
+                  <div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAllMessages(!showAllMessages)}
+                      className="flex items-center gap-2"
+                      size="sm"
+                    >
+                      <Eye className="w-4 h-4" />
+                      {showAllMessages ? `Show Less (2)` : `Show All ${dashboardMessages.length} Here`}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </CardContent>

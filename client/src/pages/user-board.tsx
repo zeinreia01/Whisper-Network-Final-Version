@@ -196,6 +196,8 @@ export default function UserBoard() {
     try {
       const response = await fetch(`/api/dashboard-messages/${messageId}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include session cookies
       });
 
       if (response.ok) {
@@ -203,6 +205,13 @@ export default function UserBoard() {
         toast({
           title: "Success",
           description: "Message deleted successfully",
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.message || "Failed to delete message",
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -410,6 +419,12 @@ export default function UserBoard() {
                           ...message,
                           isPublic: false,
                           recipient: boardUser.username,
+                          userId: message.senderUserId || null,
+                          adminId: message.senderAdminId || null,
+                          isAuthenticated: Boolean(message.senderUserId || message.senderAdminId),
+                          isOwnerPrivate: false,
+                          isPinned: false,
+                          replies: [],
                           user: message.senderUserId ? {
                             id: message.senderUserId,
                             username: message.senderName,

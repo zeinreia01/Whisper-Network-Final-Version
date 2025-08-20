@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyAPI } from "./spotify";
+import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG } from "./dynamic-meta";
 import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema, insertUserMusicSchema, insertDashboardMessageSchema, insertAdminAnnouncementSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -312,6 +313,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching public messages:", error);
       res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Generate dynamic meta tags for social sharing
+  app.get("/api/meta/user/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const meta = generateUserProfileOG(user);
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating user meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/board/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const meta = generateUserBoardOG(user);
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating board meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/message/:id", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const message = await storage.getMessageById(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+
+      const meta = generateMessageOG({
+        id: message.id,
+        content: message.content,
+        senderName: message.senderName || "Anonymous",
+        category: message.category || "General"
+      });
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating message meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/anonymous/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const meta = generateAnonymousLinkOG(username);
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating anonymous meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
     }
   });
 
