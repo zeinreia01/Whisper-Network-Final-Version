@@ -514,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (boardOwnerId && message.recipient) {
         // Check if this is an anonymous message to the board owner
         const boardOwner = await storage.getUserById(parseInt(boardOwnerId));
-        canDelete = boardOwner && message.recipient === boardOwner.username;
+        canDelete = (boardOwner && message.recipient === boardOwner.username) || false;
       }
 
       if (!canDelete) {
@@ -883,7 +883,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/leaderboard/my-ranking", async (req, res) => {
     try {
-      const userId = req.session?.user?.id;
+      // Note: session middleware would need to be set up for this to work
+      // For now, we'll need to get userId from request body or headers
+      const userId = req.body.userId || req.headers['x-user-id'];
       if (!userId) {
         return res.status(401).json({ error: "Not authenticated" });
       }
