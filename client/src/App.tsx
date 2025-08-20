@@ -22,6 +22,7 @@ import AdminProfileViewPage from "@/pages/admin-profile-view";
 import AnonymousMessaging from "@/pages/anonymous-messaging";
 import { PasswordManagementPage } from "@/pages/password-management";
 import { AdminAnnouncementsPage } from "@/pages/admin-announcements";
+import LeaderboardPage from "@/pages/leaderboard";
 import { useState, useEffect } from "react";
 
 function Router() {
@@ -62,6 +63,7 @@ function Router() {
           <Route path="/personal-archive" component={PersonalArchivePage} />
           <Route path="/password-management" component={PasswordManagementPage} />
           <Route path="/announcements" component={AdminAnnouncementsPage} />
+          <Route path="/leaderboard" component={LeaderboardPage} />
           <Route path="/u/:username" component={AnonymousMessaging} />
           <Route component={NotFound} />
         </Switch>

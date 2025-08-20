@@ -220,6 +220,61 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             </p>
           </div>
 
+          {/* Spotify track display for downloads */}
+          {(message.spotifyTrackId || message.spotifyLink) && (
+            <div className="mb-4 p-3 rounded-lg border" style={{
+              background: document.documentElement.classList.contains('pink') 
+                ? 'rgba(76, 29, 149, 0.08)'
+                : document.documentElement.classList.contains('dark')
+                ? 'rgba(255, 255, 255, 0.05)'
+                : 'rgba(30, 41, 59, 0.05)',
+              borderColor: document.documentElement.classList.contains('pink') 
+                ? 'rgba(76, 29, 149, 0.15)'
+                : document.documentElement.classList.contains('dark')
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(30, 41, 59, 0.1)'
+            }}>
+              <div className="flex items-center gap-3">
+                {message.spotifyAlbumCover && (
+                  <img 
+                    src={message.spotifyAlbumCover} 
+                    alt="Album cover"
+                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-sm truncate" style={{
+                    color: document.documentElement.classList.contains('pink') 
+                      ? '#4c1d95'
+                      : document.documentElement.classList.contains('dark')
+                      ? '#ffffff'
+                      : '#1e293b'
+                  }}>
+                    {message.spotifyTrackName || 'Unknown Track'}
+                  </div>
+                  <div className="text-xs truncate mt-0.5" style={{
+                    color: document.documentElement.classList.contains('pink') 
+                      ? 'rgba(76, 29, 149, 0.7)'
+                      : document.documentElement.classList.contains('dark')
+                      ? 'rgba(255, 255, 255, 0.7)'
+                      : 'rgba(30, 41, 59, 0.7)'
+                  }}>
+                    {message.spotifyArtistName || 'Unknown Artist'}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs flex-shrink-0" style={{
+                  color: document.documentElement.classList.contains('pink') 
+                    ? 'rgba(76, 29, 149, 0.6)'
+                    : document.documentElement.classList.contains('dark')
+                    ? 'rgba(255, 255, 255, 0.6)'
+                    : 'rgba(30, 41, 59, 0.6)'
+                }}>
+                  🎵 Spotify
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Attribution with profile picture - exactly like reference */}
           <div className="text-center mb-4">
             {/* Profile picture if available */}

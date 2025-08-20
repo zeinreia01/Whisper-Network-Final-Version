@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Moon, Sun, User, Shield, Info, Heart } from "lucide-react";
+import { Settings, Moon, Sun, User, Shield, Info, Heart, Trophy } from "lucide-react";
 import { InfoDialog } from "@/components/info-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { UserAccountModal } from "@/components/user-account-modal";
@@ -97,6 +97,15 @@ export function AccessibilityMenu() {
   return (
     <>
       <div ref={menuRef} className="fixed top-16 right-5 z-30 flex flex-col items-end space-y-2">
+        {/* Leaderboard button */}
+        <a
+          href="/leaderboard"
+          className="bg-white dark:bg-gray-800 pink:bg-pink-50 rounded-full p-3 shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700 pink:border-pink-200 transition-all duration-300 inline-flex items-center justify-center"
+          aria-label="View Leaderboard"
+        >
+          <Trophy className="w-5 h-5 text-primary" />
+        </a>
+
         {/* Info button as separate circular button */}
         <InfoDialog 
           trigger={

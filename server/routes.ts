@@ -870,6 +870,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Leaderboard routes
+  app.get("/api/leaderboard", async (req, res) => {
+    try {
+      const leaderboardData = await storage.getLeaderboardData();
+      res.json(leaderboardData);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ error: "Failed to fetch leaderboard data" });
+    }
+  });
+
+  app.get("/api/leaderboard/my-ranking", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const userRanking = await storage.getUserRanking(userId);
+      res.json(userRanking);
+    } catch (error) {
+      console.error("Error fetching user ranking:", error);
+      res.status(500).json({ error: "Failed to fetch user ranking" });
+    }
+  });
+
   // User profile update routes
   // Message privacy routes
   app.patch("/api/messages/:messageId/privacy", async (req, res) => {

@@ -154,6 +154,10 @@ export interface IStorage {
   markAnonymousMessageAsRead(messageId: number): Promise<void>;
   deleteAnonymousMessage(messageId: number): Promise<void>;
   getAnonymousMessageCount(userId: number, adminId?: number): Promise<number>;
+
+  // Leaderboard operations
+  getLeaderboardData(): Promise<any>;
+  getUserRanking(userId: number): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -344,6 +348,145 @@ export class DatabaseStorage implements IStorage {
     );
 
     return messagesWithReactions;
+  }
+
+  // Leaderboard functionality
+  async getLeaderboardData() {
+    try {
+      // Get message leaders
+      const messageLeaders = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          profilePicture: users.profilePicture,
+          isVerified: users.isVerified,
+          messageCount: sql<number>`count(${messages.id})`.as('messageCount'),
+        })
+        .from(users)
+        .leftJoin(messages, eq(users.id, messages.userId))
+        .where(eq(users.isActive, true))
+        .groupBy(users.id)
+        .orderBy(sql`count(${messages.id}) DESC`)
+        .limit(100);
+
+      // Get reply leaders
+      const replyLeaders = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          profilePicture: users.profilePicture,
+          isVerified: users.isVerified,
+          replyCount: sql<number>`count(${replies.id})`.as('replyCount'),
+        })
+        .from(users)
+        .leftJoin(replies, eq(users.id, replies.userId))
+        .where(eq(users.isActive, true))
+        .groupBy(users.id)
+        .orderBy(sql`count(${replies.id}) DESC`)
+        .limit(100);
+
+      // Get like leaders (users with most reactions)
+      const likeLeaders = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          profilePicture: users.profilePicture,
+          isVerified: users.isVerified,
+          likeCount: sql<number>`count(${reactions.id})`.as('likeCount'),
+        })
+        .from(users)
+        .leftJoin(messages, eq(users.id, messages.userId))
+        .leftJoin(reactions, eq(messages.id, reactions.messageId))
+        .where(eq(users.isActive, true))
+        .groupBy(users.id)
+        .orderBy(sql`count(${reactions.id}) DESC`)
+        .limit(100);
+
+      // Get follower leaders
+      const followerLeaders = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          profilePicture: users.profilePicture,
+          isVerified: users.isVerified,
+          followerCount: sql<number>`count(${follows.id})`.as('followerCount'),
+        })
+        .from(users)
+        .leftJoin(follows, eq(users.id, follows.followedUserId))
+        .where(eq(users.isActive, true))
+        .groupBy(users.id)
+        .orderBy(sql`count(${follows.id}) DESC`)
+        .limit(100);
+
+      // Add rank to each user
+      const addRanks = (leaders: any[]) => {
+        return leaders.map((leader, index) => ({
+          ...leader,
+          rank: index + 1,
+        }));
+      };
+
+      return {
+        messageLeaders: addRanks(messageLeaders),
+        replyLeaders: addRanks(replyLeaders),
+        likeLeaders: addRanks(likeLeaders),
+        followerLeaders: addRanks(followerLeaders),
+      };
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+      throw error;
+    }
+  }
+
+  async getUserRanking(userId: number) {
+    try {
+      // Get user's message rank
+      const messageRank = await db
+        .select({ rank: sql<number>`ROW_NUMBER() OVER (ORDER BY COUNT(${messages.id}) DESC)`.as('rank') })
+        .from(users)
+        .leftJoin(messages, eq(users.id, messages.userId))
+        .where(and(eq(users.isActive, true), eq(users.id, userId)))
+        .groupBy(users.id);
+
+      // Get user's reply rank
+      const replyRank = await db
+        .select({ rank: sql<number>`ROW_NUMBER() OVER (ORDER BY COUNT(${replies.id}) DESC)`.as('rank') })
+        .from(users)
+        .leftJoin(replies, eq(users.id, replies.userId))
+        .where(and(eq(users.isActive, true), eq(users.id, userId)))
+        .groupBy(users.id);
+
+      // Get user's like rank
+      const likeRank = await db
+        .select({ rank: sql<number>`ROW_NUMBER() OVER (ORDER BY COUNT(${reactions.id}) DESC)`.as('rank') })
+        .from(users)
+        .leftJoin(messages, eq(users.id, messages.userId))
+        .leftJoin(reactions, eq(messages.id, reactions.messageId))
+        .where(and(eq(users.isActive, true), eq(users.id, userId)))
+        .groupBy(users.id);
+
+      // Get user's follower rank
+      const followerRank = await db
+        .select({ rank: sql<number>`ROW_NUMBER() OVER (ORDER BY COUNT(${follows.id}) DESC)`.as('rank') })
+        .from(users)
+        .leftJoin(follows, eq(users.id, follows.followedUserId))
+        .where(and(eq(users.isActive, true), eq(users.id, userId)))
+        .groupBy(users.id);
+
+      return {
+        messageRank: messageRank[0]?.rank || 999,
+        replyRank: replyRank[0]?.rank || 999,
+        likeRank: likeRank[0]?.rank || 999,
+        followerRank: followerRank[0]?.rank || 999,
+      };
+    } catch (error) {
+      console.error('Error fetching user ranking:', error);
+      throw error;
+    }
   }
 
   async getMessagesByCategory(category: string): Promise<MessageWithReplies[]> {
