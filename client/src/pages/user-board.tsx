@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon } from "lucide-react";
+import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff } from "lucide-react";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { MessageViewer } from "@/components/message-viewer";
 import type { DashboardMessage, User, Admin } from "@shared/schema";
@@ -54,10 +55,12 @@ export default function UserBoard() {
     const loadUserBoard = async () => {
       setIsLoading(true);
       try {
+        let profile: User | Admin | null = null;
+        
         // Load user/admin profile
         const profileResponse = await fetch(`/api/users/profile/${username}`);
         if (profileResponse.ok) {
-          const profile = await profileResponse.json();
+          profile = await profileResponse.json();
           setBoardUser(profile);
           setBoardName(profile.boardName || `${profile.displayName || profile.username}'s Board`);
           setBoardBanner(profile.boardBanner || "");
@@ -65,14 +68,14 @@ export default function UserBoard() {
           // Try admin profile
           const adminResponse = await fetch(`/api/admins/profile/${username}`);
           if (adminResponse.ok) {
-            const adminProfile = await adminResponse.json();
-            setBoardUser(adminProfile);
-            setBoardName(adminProfile.boardName || `${adminProfile.displayName || adminProfile.username}'s Board`);
-            setBoardBanner(adminProfile.boardBanner || "");
+            profile = await adminResponse.json();
+            setBoardUser(profile);
+            setBoardName(profile.boardName || `${profile.displayName || profile.username}'s Board`);
+            setBoardBanner(profile.boardBanner || "");
           }
         }
 
-        // Load board messages
+        // Load board messages using the profile we just fetched
         if (profile) {
           const endpoint = 'role' in profile 
             ? `/api/admins/${profile.id}/dashboard`
@@ -81,7 +84,13 @@ export default function UserBoard() {
           const messagesResponse = await fetch(endpoint);
           if (messagesResponse.ok) {
             const messages = await messagesResponse.json();
-            setBoardMessages(messages);
+            // Sort messages: pinned first, then by creation date
+            const sortedMessages = messages.sort((a: DashboardMessage, b: DashboardMessage) => {
+              if (a.isPinned && !b.isPinned) return -1;
+              if (!a.isPinned && b.isPinned) return 1;
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            setBoardMessages(sortedMessages);
           }
         }
       } catch (error) {
@@ -120,7 +129,14 @@ export default function UserBoard() {
 
       if (response.ok) {
         const newMessage = await response.json();
-        setBoardMessages(prev => [newMessage, ...prev]);
+        setBoardMessages(prev => {
+          const updated = [newMessage, ...prev];
+          return updated.sort((a, b) => {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+        });
         setMessageContent("");
         setSenderName("");
         setIsPostingMessage(false);
@@ -203,7 +219,7 @@ export default function UserBoard() {
       const response = await fetch(`/api/dashboard/messages/${messageId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // Include session cookies
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -225,6 +241,48 @@ export default function UserBoard() {
       toast({
         title: "Error",
         description: "Failed to delete message",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePinMessage = async (messageId: number, isPinned: boolean) => {
+    try {
+      const response = await fetch(`/api/dashboard/messages/${messageId}/pin`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPinned }),
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setBoardMessages(prev => {
+          const updated = prev.map(msg => 
+            msg.id === messageId ? { ...msg, isPinned } : msg
+          );
+          return updated.sort((a, b) => {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+        });
+        toast({
+          title: "Success",
+          description: isPinned ? "Message pinned to top" : "Message unpinned",
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.message || "Failed to pin message",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error pinning message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to pin message",
         variant: "destructive",
       });
     }
@@ -348,19 +406,20 @@ export default function UserBoard() {
         </Card>
 
         {/* Post Message Section */}
-        {!isOwnBoard && (
-          <Card>
-            <CardContent className="p-4">
-              <Button
-                onClick={() => setIsPostingMessage(true)}
-                className="w-full flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Post a Message to {boardUser.displayName || boardUser.username}'s Board
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardContent className="p-4">
+            <Button
+              onClick={() => setIsPostingMessage(true)}
+              className="w-full flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              {isOwnBoard 
+                ? `Post to Your Board` 
+                : `Post a Message to ${boardUser.displayName || boardUser.username}'s Board`
+              }
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Messages */}
         <Card>
@@ -379,133 +438,162 @@ export default function UserBoard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {boardMessages.map((message) => (
-                  <div key={message.id} className="p-4 rounded-lg border bg-background relative group">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
-                            {message.senderName.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{message.senderName}</span>
-                            {message.senderAdminId && (
-                              <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-purple-50 border-purple-200 text-purple-700">
-                                Admin
-                              </Badge>
-                            )}
+                {boardMessages.map((message) => {
+                  const isBoardOwnerPost = (message.senderUserId && message.senderUserId === boardUser.id) || 
+                                          (message.senderAdminId && message.senderAdminId === boardUser.id);
+                  
+                  return (
+                    <div key={message.id} className={`p-4 rounded-lg border bg-background relative group ${message.isPinned ? 'border-yellow-300 bg-yellow-50/20' : ''}`}>
+                      {message.isPinned && (
+                        <div className="flex items-center gap-1 text-yellow-600 text-xs font-medium mb-2">
+                          <Pin className="w-3 h-3" />
+                          Pinned
+                        </div>
+                      )}
+                      
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-8 h-8">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
+                              {message.senderName.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{message.senderName}</span>
+                              {message.senderAdminId && (
+                                <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-purple-50 border-purple-200 text-purple-700">
+                                  Admin
+                                </Badge>
+                              )}
+                              {isBoardOwnerPost && (
+                                <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-50 border-blue-200 text-blue-700">
+                                  Board Owner
+                                </Badge>
+                              )}
+                            </div>
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5 w-fit" style={{
+                              backgroundColor: `${categories.find(c => c.name === message.category)?.color}15`,
+                              borderColor: `${categories.find(c => c.name === message.category)?.color}35`,
+                              color: categories.find(c => c.name === message.category)?.color,
+                            }}>
+                              {message.category}
+                            </Badge>
                           </div>
-                          <Badge variant="outline" className="text-xs px-1.5 py-0.5 w-fit" style={{
-                            backgroundColor: `${categories.find(c => c.name === message.category)?.color}15`,
-                            borderColor: `${categories.find(c => c.name === message.category)?.color}35`,
-                            color: categories.find(c => c.name === message.category)?.color,
-                          }}>
-                            {message.category}
-                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {isOwnBoard && (
+                            <Button
+                              onClick={() => handlePinMessage(message.id, !message.isPinned)}
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-yellow-600 hover:text-yellow-700"
+                              title={message.isPinned ? "Unpin message" : "Pin message"}
+                            >
+                              {message.isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                            </Button>
+                          )}
+                          
+                          {(isOwnBoard || admin) && (
+                            <Button
+                              onClick={() => handleDeleteMessage(message.id)}
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-destructive hover:text-destructive"
+                              title="Delete message"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          <MessageViewer message={{
+                            ...message,
+                            isPublic: false,
+                            recipient: boardUser.username,
+                            userId: message.senderUserId || null,
+                            adminId: message.senderAdminId || null,
+                            isAuthenticated: Boolean(message.senderUserId || message.senderAdminId),
+                            isOwnerPrivate: false,
+                            isPinned: message.isPinned || false,
+                            replies: [],
+                            user: message.senderUserId ? {
+                              id: message.senderUserId,
+                              username: message.senderName,
+                              password: "",
+                              displayName: message.senderName,
+                              profilePicture: null,
+                              backgroundPhoto: null,
+                              bio: null,
+                              boardName: null,
+                              boardBanner: null,
+                              lastDisplayNameChange: null,
+                              isVerified: false,
+                              likedMessagesPrivacy: "private",
+                              isAnonymousLinkPaused: false,
+                              createdAt: new Date(),
+                              isActive: true,
+                              spotifyTrackId: null,
+                              spotifyTrackName: null,
+                              spotifyArtistName: null,
+                              spotifyAlbumCover: null,
+                            } : null,
+                            admin: message.senderAdminId ? {
+                              id: message.senderAdminId,
+                              username: message.senderName,
+                              password: null,
+                              displayName: message.senderName,
+                              profilePicture: null,
+                              backgroundPhoto: null,
+                              bio: null,
+                              role: "admin",
+                              isVerified: false,
+                              lastDisplayNameChange: null,
+                              createdAt: new Date(),
+                              isActive: true,
+                              spotifyTrackId: null,
+                              spotifyTrackName: null,
+                              spotifyArtistName: null,
+                              spotifyAlbumCover: null,
+                            } : null,
+                          }} trigger={
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8" title="View as image">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          } />
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {(isOwnBoard || admin) && (
-                          <Button
-                            onClick={() => handleDeleteMessage(message.id)}
-                            variant="ghost"
+
+                      <p className="text-sm leading-relaxed mb-3">{message.content}</p>
+
+                      {message.spotifyTrackId && (
+                        <div className="mt-3">
+                          <SpotifyTrackDisplay
+                            track={{
+                              id: message.spotifyTrackId,
+                              name: message.spotifyTrackName || "",
+                              artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
+                              album: {
+                                id: "stored",
+                                name: "Unknown Album",
+                                images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
+                              },
+                              external_urls: {
+                                spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
+                              },
+                              preview_url: null,
+                              duration_ms: 0,
+                              popularity: 0,
+                            }}
                             size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-destructive hover:text-destructive"
-                            title="Delete message"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                        
-                        <MessageViewer message={{
-                          ...message,
-                          isPublic: false,
-                          recipient: boardUser.username,
-                          userId: message.senderUserId || null,
-                          adminId: message.senderAdminId || null,
-                          isAuthenticated: Boolean(message.senderUserId || message.senderAdminId),
-                          isOwnerPrivate: false,
-                          isPinned: false,
-                          replies: [],
-                          user: message.senderUserId ? {
-                            id: message.senderUserId,
-                            username: message.senderName,
-                            password: "",
-                            displayName: message.senderName,
-                            profilePicture: null,
-                            backgroundPhoto: null,
-                            bio: null,
-                            boardName: null,
-                            boardBanner: null,
-                            lastDisplayNameChange: null,
-                            isVerified: false,
-                            likedMessagesPrivacy: "private",
-                            isAnonymousLinkPaused: false,
-                            createdAt: new Date(),
-                            isActive: true,
-                            spotifyTrackId: null,
-                            spotifyTrackName: null,
-                            spotifyArtistName: null,
-                            spotifyAlbumCover: null,
-                          } : null,
-                          admin: message.senderAdminId ? {
-                            id: message.senderAdminId,
-                            username: message.senderName,
-                            password: null,
-                            displayName: message.senderName,
-                            profilePicture: null,
-                            backgroundPhoto: null,
-                            bio: null,
-                            role: "admin",
-                            isVerified: false,
-                            lastDisplayNameChange: null,
-                            createdAt: new Date(),
-                            isActive: true,
-                            spotifyTrackId: null,
-                            spotifyTrackName: null,
-                            spotifyArtistName: null,
-                            spotifyAlbumCover: null,
-                          } : null,
-                        }} trigger={
-                          <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8" title="View as image">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        } />
-                      </div>
+                            showPreview={true}
+                          />
+                        </div>
+                      )}
                     </div>
-
-                    <p className="text-sm leading-relaxed mb-3">{message.content}</p>
-
-                    {message.spotifyTrackId && (
-                      <div className="mt-3">
-                        <SpotifyTrackDisplay
-                          track={{
-                            id: message.spotifyTrackId,
-                            name: message.spotifyTrackName || "",
-                            artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
-                            album: {
-                              id: "stored",
-                              name: "Unknown Album",
-                              images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
-                            },
-                            external_urls: {
-                              spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
-                            },
-                            preview_url: null,
-                            duration_ms: 0,
-                            popularity: 0,
-                          }}
-                          size="sm"
-                          showPreview={true}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -523,7 +611,10 @@ export default function UserBoard() {
             <div>
               <label className="text-sm font-medium mb-2 block">Message</label>
               <Textarea
-                placeholder={`Share your thoughts on ${boardUser.displayName || boardUser.username}'s board...`}
+                placeholder={isOwnBoard 
+                  ? `Share an update on your board...` 
+                  : `Share your thoughts on ${boardUser.displayName || boardUser.username}'s board...`
+                }
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
                 className="min-h-32 resize-none"
@@ -549,33 +640,40 @@ export default function UserBoard() {
               </select>
             </div>
 
-            {isAnonymous ? (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Display Name (Optional)</label>
-                <Input
-                  placeholder="Enter a name or leave empty for 'Anonymous'"
-                  value={senderName}
-                  onChange={(e) => setSenderName(e.target.value)}
-                  maxLength={50}
-                />
-              </div>
-            ) : (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm">
-                  Posting as: <strong>{user?.displayName || user?.username || admin?.displayName || "User"}</strong>
-                </p>
-              </div>
+            {!isOwnBoard && (
+              <>
+                {isAnonymous ? (
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Display Name (Optional)</label>
+                    <Input
+                      placeholder="Enter a name or leave empty for 'Anonymous'"
+                      value={senderName}
+                      onChange={(e) => setSenderName(e.target.value)}
+                      maxLength={50}
+                    />
+                  </div>
+                ) : (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm">
+                      Posting as: <strong>{user?.displayName || user?.username || admin?.displayName || "User"}</strong>
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-between">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                    />
+                    Post anonymously
+                  </label>
+                </div>
+              </>
             )}
 
-            <div className="flex justify-between">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={isAnonymous}
-                  onChange={(e) => setIsAnonymous(e.target.checked)}
-                />
-                Post anonymously
-              </label>
+            <div className="flex justify-end">
               <Button onClick={handlePostMessage} disabled={!messageContent.trim()}>
                 Post Message
               </Button>

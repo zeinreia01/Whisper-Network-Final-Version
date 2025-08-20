@@ -178,6 +178,7 @@ export const dashboardMessages = pgTable("dashboard_messages", {
   spotifyAlbumCover: text("spotify_album_cover"),
   spotifyLink: text("spotify_link"),
   isVisible: boolean("is_visible").default(true).notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

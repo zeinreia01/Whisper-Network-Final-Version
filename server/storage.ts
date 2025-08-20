@@ -2062,6 +2062,15 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     await db.delete(dashboardMessages).where(eq(dashboardMessages.id, messageId));
   }
 
+  async pinDashboardMessage(messageId: number, isPinned: boolean): Promise<DashboardMessage> {
+    const [message] = await db
+      .update(dashboardMessages)
+      .set({ isPinned })
+      .where(eq(dashboardMessages.id, messageId))
+      .returning();
+    return message;
+  }
+
   // Admin announcement methods
   async createAdminAnnouncement(announcement: InsertAdminAnnouncement): Promise<AdminAnnouncement> {
     const [adminAnnouncement] = await db

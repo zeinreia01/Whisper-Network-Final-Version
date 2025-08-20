@@ -2207,6 +2207,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/dashboard/messages/:id/pin", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isPinned } = req.body;
+      const messageId = parseInt(id);
+
+      const message = await storage.pinDashboardMessage(messageId, isPinned);
+      res.json(message);
+    } catch (error) {
+      console.error("Pin dashboard message error:", error);
+      res.status(500).json({ message: "Failed to pin dashboard message" });
+    }
+  });
+
   // Admin Announcements Routes
   app.post("/api/admin/announcements", async (req, res) => {
     try {

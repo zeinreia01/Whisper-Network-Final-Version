@@ -198,16 +198,17 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
               Sent Posts To {username}
               <Badge variant="secondary">{dashboardMessages.length}</Badge>
             </div>
-            {!isOwnProfile && (
-              <Button
+            <Button
                 onClick={() => setIsPostingMessage(true)}
                 size="sm"
                 className="flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Post Message to {username}'s Board
+                {isOwnProfile 
+                  ? `Post to Your Board`
+                  : `Post Message to ${username}'s Board`
+                }
               </Button>
-            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -219,7 +220,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                   ? "No messages have been posted to your board yet"
                   : `No messages posted to ${username}'s board yet`}
               </p>
-              {!isOwnProfile && (
+              {isOwnProfile && (
                 <Button
                   onClick={() => setIsPostingMessage(true)}
                   size="sm"
@@ -255,7 +256,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                           </AvatarFallback>
                         </Avatar>
                       )}
-                      
+
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">
@@ -269,6 +270,12 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                           {message.senderAdminId && (
                             <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-purple-50 border-purple-200 text-purple-700">
                               Admin
+                            </Badge>
+                          )}
+                          {/* Board Owner Tag */}
+                          {(message.senderUserId === userId || message.senderAdminId === adminId) && (
+                            <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-green-500 text-white">
+                              Board Owner
                             </Badge>
                           )}
                         </div>
@@ -335,7 +342,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                   )}
                 </div>
               ))}
-              
+
               <div className="text-center pt-4 space-y-2">
                 <Link href={`/board/${username}`}>
                   <Button variant="default" className="flex items-center gap-2">
