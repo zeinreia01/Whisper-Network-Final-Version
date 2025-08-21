@@ -20,6 +20,7 @@ import { MessageViewer } from "@/components/message-viewer";
 import { categories } from "@/lib/categories";
 import { useToast } from "@/hooks/use-toast";
 import { AdSenseContainer } from "@/components/google-adsense-modal";
+import avatarFallback from "@/assets/avatar-fallback.png";
 
 export interface SpotifyTrack {
   id: string;
@@ -265,8 +266,8 @@ export default function AnonymousMessaging() {
                 src={recipientProfile.profilePicture || undefined} 
                 alt={recipientProfile.displayName || recipientProfile.username}
               />
-              <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-bold">
-                {(recipientProfile.displayName || recipientProfile.username)[0].toUpperCase()}
+              <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+                <img src={avatarFallback} alt="Avatar" className="w-full h-full object-cover" />
               </AvatarFallback>
             </Avatar>
           </div>

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, User, Users, MessageSquare, Shield } from "lucide-react";
 import { Link } from "wouter";
 import { formatTimeAgo } from "@/lib/utils";
+import avatarFallback from "@/assets/avatar-fallback.png";
 import type { User as UserType } from "@shared/schema";
 
 interface GlobalSearchProps {
@@ -115,8 +116,8 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                       <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer transition-colors">
                         <Avatar className="w-10 h-10">
                           <AvatarImage src={user.profilePicture || undefined} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                            {user.displayName?.charAt(0) || user.username.charAt(0).toUpperCase()}
+                          <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+                            <img src={avatarFallback} alt="Avatar" className="w-full h-full object-cover" />
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">

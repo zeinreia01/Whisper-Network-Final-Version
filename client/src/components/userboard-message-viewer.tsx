@@ -7,6 +7,7 @@ import { Download, Heart, Pin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import type { DashboardMessage } from "@shared/schema";
+import avatarFallback from "@/assets/avatar-fallback.png";
 
 interface UserBoardMessageViewerProps {
   message: DashboardMessage & {
@@ -240,10 +241,8 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                     src={senderProfile?.profilePicture || ""} 
                     alt={displayName} 
                   />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
-                    <span style={{ lineHeight: '1', transform: 'translateY(1px)' }}>
-                      {displayName.charAt(0).toUpperCase()}
-                    </span>
+                  <AvatarFallback className="bg-gray-100 dark:bg-gray-800" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                    <img src={avatarFallback} alt="Avatar" className="w-full h-full object-cover" />
                   </AvatarFallback>
                 </Avatar>
                 {isBoardOwnerPost && (
@@ -336,10 +335,8 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               <div className="flex items-center gap-4">
                 <Avatar className="w-12 h-12 ring-2 ring-white/20">
                   <AvatarImage src={boardUser.profilePicture || ""} alt={boardUser.displayName || boardUser.username} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
-                    <span style={{ lineHeight: '1', transform: 'translateY(1px)' }}>
-                      {(boardUser.displayName || boardUser.username).charAt(0).toUpperCase()}
-                    </span>
+                  <AvatarFallback className="bg-gray-100 dark:bg-gray-800" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                    <img src={avatarFallback} alt="Avatar" className="w-full h-full object-cover" />
                   </AvatarFallback>
                 </Avatar>
                 <div>

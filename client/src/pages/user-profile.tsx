@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, User, MessageSquare, Heart, Calendar, UserPlus, UserMinus, Users, Edit, Settings, Shield, Flag, MoreVertical } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
+import avatarFallback from "@/assets/avatar-fallback.png";
 import type { UserProfile, MessageWithReplies } from "@shared/schema";
 
 export function UserProfilePage() {
@@ -330,8 +331,8 @@ export function UserProfilePage() {
                         src={(profile as any).profilePicture || undefined} 
                         alt={(profile as any).displayName || (profile as any).username}
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl font-bold">
-                        {((profile as any).displayName || (profile as any).username || 'U').charAt(0).toUpperCase()}
+                      <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+                        <img src={avatarFallback} alt="Avatar" className="w-full h-full object-cover" />
                       </AvatarFallback>
                     </Avatar>
                     <div>

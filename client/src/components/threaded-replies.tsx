@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTimeAgo } from "@/lib/utils";
+import avatarFallback from "@/assets/avatar-fallback.png";
 import { Link } from "wouter";
 import { 
   MessageSquare, 
@@ -111,8 +112,8 @@ function ReplyItem({ reply, messageId, messageUserId, level, onWarning, onReply,
         {/* Avatar */}
         <Avatar className="w-8 h-8 flex-shrink-0">
           <AvatarImage src={reply.user?.profilePicture || reply.admin?.profilePicture || undefined} />
-          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-            {reply.admin?.displayName?.charAt(0) || reply.user?.displayName?.charAt(0) || reply.user?.username?.charAt(0) || reply.nickname?.charAt(0) || "A"}
+          <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+            <img src={avatarFallback} alt="Avatar" className="w-full h-full object-cover" />
           </AvatarFallback>
         </Avatar>
 
