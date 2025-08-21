@@ -20,7 +20,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
   const messageRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const category = categories.find(c => c.id === message.category);
+  const category = categories.find(c => c.name === message.category);
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
@@ -37,44 +37,56 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const downloadAsImage = async () => {
-    if (!messageRef.current || isDownloading) return;
+  // Determine if this is a user board message (has recipient field)
+  const isUserBoardMessage = 'recipient' in message && message.recipient;
 
+  const downloadAsImage = async () => {
     setIsDownloading(true);
-    
     try {
-      const canvas = await html2canvas(messageRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: document.documentElement.classList.contains('dark') ? '#1e1b4b' : '#ffffff',
+      const element = document.getElementById(`message-viewer-${message.id}`);
+      if (!element) {
+        throw new Error("Message element not found");
+      }
+
+      // Wait for fonts and images to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(element, {
+        backgroundColor: isUserBoardMessage ? "#f8f9fa" : "#ffffff", // Use a subtle background for user boards
+        scale: 3, // Higher scale for better resolution
+        useCORS: true, // Use CORS to load external images
+        allowTaint: false, // Allow taint to handle cross-origin images correctly
         logging: false,
-        width: 400,
-        height: messageRef.current.scrollHeight,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 400,
-        windowHeight: messageRef.current.scrollHeight,
-        allowTaint: true,
-        foreignObjectRendering: true
+        height: element.scrollHeight,
+        width: element.scrollWidth,
+        foreignObjectRendering: true, // Render elements in foreign objects
+        imageTimeout: 5000, // Timeout for image loading
+        onclone: (clonedDoc) => {
+          // Ensure all styles are properly applied in the cloned document
+          const clonedElement = clonedDoc.getElementById(`message-viewer-${message.id}`);
+          if (clonedElement) {
+            clonedElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            clonedElement.style.fontSize = '14px'; // Default font size
+            clonedElement.style.lineHeight = '1.5'; // Default line height
+          }
+        }
       });
 
-      const dataURL = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.download = `whisper-${message.id}-${Date.now()}.png`;
-      link.href = dataURL;
+      const link = document.createElement("a");
+      link.download = `${isUserBoardMessage ? 'board-message' : 'whisper'}-${message.id}.png`; // Differentiate filenames
+      link.href = canvas.toDataURL('image/png', 1.0); // Save as PNG with highest quality
       link.click();
 
       toast({
-        title: "Download Started",
-        description: "Your whisper image is being downloaded.",
+        title: "Success",
+        description: "Message saved as image!",
       });
-
     } catch (error) {
-      console.error('Failed to download image:', error);
+      console.error("Error downloading image:", error);
       toast({
-        title: "Download Failed",
-        description: "There was an error downloading the image. Please try again.",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to save image. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
@@ -113,6 +125,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
 
         {/* Instagram-style Message Display - matching reference exactly */}
         <div 
+          id={`message-viewer-${message.id}`}
           ref={messageRef}
           className="rounded-xl border relative overflow-hidden bg-card"
           style={{
