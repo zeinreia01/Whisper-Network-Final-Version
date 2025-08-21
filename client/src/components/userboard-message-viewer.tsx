@@ -321,7 +321,6 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               </div>
             </div>
           )}
-        </div>
 
           {/* Board Info Footer */}
           <div className="pt-6 border-t-2 border-gray-700/50">
