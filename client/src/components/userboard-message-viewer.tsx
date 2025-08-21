@@ -50,7 +50,6 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
     
     setIsDownloading(true);
     
-    // Show initial loading message
     toast({
       title: "Converting image...",
       description: "Please wait for a moment, image converting...",
@@ -62,86 +61,67 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
         throw new Error('Message element not found');
       }
 
-      // Force all fonts to load completely
+      // Ensure element is visible and properly rendered
+      element.style.display = 'block';
+      element.style.visibility = 'visible';
+      element.style.opacity = '1';
+      
+      // Wait for fonts and rendering
       await document.fonts.ready;
-      
-      // Load additional fonts that might be used
-      const fontPromises = [
-        document.fonts.load('16px ui-sans-serif'),
-        document.fonts.load('18px ui-sans-serif'),
-        document.fonts.load('20px ui-sans-serif'),
-        document.fonts.load('24px ui-sans-serif'),
-        document.fonts.load('bold 16px ui-sans-serif'),
-        document.fonts.load('bold 18px ui-sans-serif'),
-      ];
-      
-      await Promise.allSettled(fontPromises);
-      
-      // Wait longer for complete rendering
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Force layout recalculation
-      element.style.transform = 'translateZ(0)';
-      element.offsetHeight; // Trigger reflow
+      // Force a reflow to ensure everything is rendered
+      element.offsetHeight;
       
-      // Wait additional time for Spotify section to render properly
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log('Element dimensions:', element.offsetWidth, element.offsetHeight);
+      console.log('Element visible:', element.offsetWidth > 0 && element.offsetHeight > 0);
 
       const canvas = await html2canvas(element, {
-        backgroundColor: 'transparent',
-        scale: 3, // Higher scale for better quality
+        backgroundColor: null, // Use null instead of transparent
+        scale: 2,
         useCORS: true,
         allowTaint: false,
-        logging: false,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        letterRendering: true,
-        foreignObjectRendering: true,
-        imageTimeout: 10000, // 10 second timeout for images
-        onclone: (clonedDoc) => {
-          // Fix text rendering issues in cloned document
-          const clonedElement = clonedDoc.getElementById('userboard-message-capture');
-          if (clonedElement) {
-            // Add CSS to fix text clipping
-            const style = clonedDoc.createElement('style');
-            style.textContent = `
-              * {
-                -webkit-font-smoothing: antialiased !important;
-                -moz-osx-font-smoothing: grayscale !important;
-                text-rendering: optimizeLegibility !important;
-                line-height: 1.5 !important;
-                overflow: visible !important;
-              }
-              .text-lg, .text-xl, .text-2xl {
-                line-height: 1.6 !important;
-                padding: 2px 0 !important;
-              }
-              .font-bold, .font-semibold {
-                font-weight: bold !important;
-                line-height: 1.4 !important;
-              }
-              .spotify-section * {
-                overflow: visible !important;
-                line-height: 1.5 !important;
-              }
-            `;
-            clonedDoc.head.appendChild(style);
+        logging: true, // Enable logging for debugging
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+        onclone: (clonedDoc, clonedElement) => {
+          // Ensure the cloned element is visible
+          const targetElement = clonedDoc.getElementById('userboard-message-capture');
+          if (targetElement) {
+            targetElement.style.display = 'block';
+            targetElement.style.visibility = 'visible';
+            targetElement.style.opacity = '1';
+            targetElement.style.position = 'relative';
             
-            // Reset transform
-            clonedElement.style.transform = 'none';
+            // Copy all styles from original document
+            const originalStyles = document.querySelectorAll('style, link[rel="stylesheet"]');
+            originalStyles.forEach(styleEl => {
+              const newStyle = clonedDoc.createElement(styleEl.tagName.toLowerCase());
+              if (styleEl.tagName === 'STYLE') {
+                newStyle.textContent = styleEl.textContent;
+              } else if (styleEl.tagName === 'LINK') {
+                newStyle.rel = styleEl.rel;
+                newStyle.href = styleEl.href;
+              }
+              clonedDoc.head.appendChild(newStyle);
+            });
           }
         },
       });
 
-      // Reset transform
-      element.style.transform = 'none';
+      console.log('Canvas dimensions:', canvas.width, canvas.height);
+      
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Canvas has zero dimensions');
+      }
 
       // Create download link
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
       const link = document.createElement('a');
-      link.download = `whisper-board-${boardUser.username}-${timestamp}.png`;
+      link.download = `board-message-${message.id}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       document.body.appendChild(link);
       link.click();
@@ -149,13 +129,13 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
       toast({
         title: "Image saved successfully!",
-        description: "High-quality board message saved to your downloads.",
+        description: "Board message saved to your downloads.",
       });
     } catch (error) {
       console.error('Download failed:', error);
       toast({
         title: "Download failed",
-        description: "Could not save the image. Please try again.",
+        description: `Error: ${error.message}. Please try again.`,
         variant: "destructive",
       });
     } finally {
