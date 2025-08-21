@@ -37,31 +37,32 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const canvas = await html2canvas(element, {
-        backgroundColor: isUserBoardMessage ? "#1a1a1a" : "#ffffff",
+        backgroundColor: null, // Transparent background for all images
         scale: 3,
         useCORS: true,
         allowTaint: true,
         logging: false,
         width: 400,
-        height: element.scrollHeight + 20,
+        height: element.scrollHeight + 40, // More padding to prevent cutoff
         onclone: (clonedDoc) => {
           const clonedElement = clonedDoc.querySelector('[data-message-viewer]') as HTMLElement;
           if (clonedElement) {
             clonedElement.style.transform = 'none';
             clonedElement.style.position = 'static';
-            clonedElement.style.margin = '0';
+            clonedElement.style.margin = '20px';
             clonedElement.style.display = 'block';
             clonedElement.style.overflow = 'visible';
 
-            // Fix font rendering for clean text - prevent text cutoff
+            // Fix font rendering and prevent text cutoff
             const allText = clonedElement.querySelectorAll('*');
             allText.forEach((el: any) => {
               el.style.textRendering = 'optimizeLegibility';
               el.style.webkitFontSmoothing = 'antialiased';
               el.style.mozOsxFontSmoothing = 'grayscale';
-              el.style.lineHeight = '1.4';
-              el.style.padding = '2px 0';
+              el.style.lineHeight = '1.5';
+              el.style.padding = '4px 0';
               el.style.boxSizing = 'border-box';
+              el.style.marginBottom = '4px'; // Extra spacing to prevent cutoff
             });
           }
         }
@@ -286,121 +287,150 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             )}
           </div>
         ) : (
-          // Public Dashboard Design - Original gradient design with proper dark mode
+          // Public Dashboard Design - ORIGINAL BLUE GRADIENT DESIGN WITH OUTLINE
           <div 
             ref={messageRef}
             data-message-viewer
             style={{
               fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               width: '400px',
-              minHeight: '500px',
+              minHeight: '520px',
               margin: '0 auto',
-              padding: '32px',
+              padding: '0',
               boxSizing: 'border-box',
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '20px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-              color: '#ffffff',
-              position: 'relative'
+              borderRadius: '24px',
+              border: '3px solid transparent',
+              backgroundClip: 'padding-box',
+              position: 'relative',
+              boxShadow: '0 25px 50px rgba(102, 126, 234, 0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+              color: '#ffffff'
             }}
           >
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h1 style={{ 
-                fontSize: '28px', 
-                fontWeight: '700', 
-                margin: '0 0 8px 0',
-                background: 'linear-gradient(135deg, #fff 0%, #f0f0f0 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
-                Whisper Network
-              </h1>
-              <p style={{ 
-                fontSize: '14px', 
-                margin: '0',
-                opacity: '0.9',
-                color: '#ffffff'
-              }}>
-                Anonymous Message
-              </p>
-            </div>
+            {/* Blue gradient outline effect */}
+            <div style={{
+              position: 'absolute',
+              top: '-3px',
+              left: '-3px',
+              right: '-3px',
+              bottom: '-3px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%)',
+              borderRadius: '24px',
+              zIndex: -1
+            }} />
 
-            {/* Message content */}
-            <div style={{ 
-              fontSize: '18px', 
-              lineHeight: '1.6', 
-              marginBottom: '24px', 
-              textAlign: 'center',
-              color: '#ffffff',
-              fontWeight: '400',
-              wordWrap: 'break-word'
-            }}>
-              {message.content}
-            </div>
-
-            {/* Spotify track if available */}
-            {message.spotifyTrackId && (
-              <div style={{ marginBottom: '24px' }}>
-                <SpotifyTrackDisplay
-                  track={{
-                    id: message.spotifyTrackId,
-                    name: message.spotifyTrackName || "",
-                    artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
-                    album: {
-                      id: "stored",
-                      name: "Unknown Album",
-                      images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
-                    },
-                    external_urls: {
-                      spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
-                    },
-                    preview_url: null,
-                    duration_ms: 0,
-                    popularity: 0,
-                  }}
-                  size="sm"
-                  showPreview={false}
-                />
+            {/* Inner content container */}
+            <div style={{ padding: '32px' }}>
+              {/* Header with tagline */}
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  marginBottom: '8px',
+                  color: '#ffffff',
+                  opacity: '0.9'
+                }}>
+                  A place where voices unite and hearts connect
+                </div>
+                <div style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontSize: '14px',
+                  color: '#ffffff',
+                  opacity: '0.8'
+                }}>
+                  <span>•</span>
+                  <span>{category?.name || "Anything"}</span>
+                  <span>•</span>
+                  <span>{formatTimeAgo(message.createdAt || new Date())}</span>
+                </div>
               </div>
-            )}
 
-            {/* Footer */}
-            <div style={{ 
-              textAlign: 'center', 
-              marginTop: 'auto',
-              paddingTop: '24px',
-              borderTop: '1px solid rgba(255,255,255,0.2)'
-            }}>
-              {category && (
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ 
-                    fontSize: '12px',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    color: '#ffffff',
-                    fontWeight: '500'
-                  }}>
-                    {category.name}
-                  </span>
+              {/* Message content in quote-like box */}
+              <div style={{
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                <div style={{ 
+                  fontSize: '18px', 
+                  lineHeight: '1.6', 
+                  color: '#ffffff',
+                  fontWeight: '400',
+                  wordWrap: 'break-word',
+                  textAlign: 'left'
+                }}>
+                  "{message.content}"
+                </div>
+              </div>
+
+              {/* Spotify track if available */}
+              {message.spotifyTrackId && (
+                <div style={{ marginBottom: '24px' }}>
+                  <SpotifyTrackDisplay
+                    track={{
+                      id: message.spotifyTrackId,
+                      name: message.spotifyTrackName || "",
+                      artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
+                      album: {
+                        id: "stored",
+                        name: "Unknown Album",
+                        images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
+                      },
+                      external_urls: {
+                        spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
+                      },
+                      preview_url: null,
+                      duration_ms: 0,
+                      popularity: 0,
+                    }}
+                    size="sm"
+                    showPreview={false}
+                  />
                 </div>
               )}
-              <div style={{ 
-                fontSize: '14px', 
-                color: '#ffffff',
-                opacity: '0.8'
-              }}>
-                From: {message.senderName || "Anonymous"}
+
+              {/* User info and attribution */}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.2)',
+                  margin: '0 auto 12px auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                  fontWeight: '600'
+                }}>
+                  {message.senderName ? message.senderName.charAt(0).toUpperCase() : "A"}
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#ffffff',
+                  opacity: '0.9',
+                  fontStyle: 'italic'
+                }}>
+                  — {message.senderName || "Anonymous"} (Admin)
+                </div>
               </div>
+
+              {/* Footer */}
               <div style={{ 
-                fontSize: '12px', 
+                textAlign: 'center', 
+                marginTop: '24px',
+                paddingTop: '16px',
+                borderTop: '1px solid rgba(255,255,255,0.2)',
+                fontSize: '12px',
                 color: '#ffffff',
-                opacity: '0.6',
-                marginTop: '4px'
+                opacity: '0.7'
               }}>
-                {formatTimeAgo(message.createdAt || new Date())}
+                This whisper was shared on Whisper Network • {new Date().toLocaleDateString()}
               </div>
             </div>
           </div>

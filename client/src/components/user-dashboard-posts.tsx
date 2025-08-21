@@ -146,20 +146,41 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
   const downloadMessageAsImage = async (messageElement: HTMLElement, messageId: number) => {
     try {
       const canvas = await html2canvas(messageElement, {
-        backgroundColor: null,
-        scale: 2,
+        backgroundColor: null, // Transparent background
+        scale: 3,
         useCORS: true,
         allowTaint: true,
+        logging: false,
+        width: messageElement.offsetWidth + 40,
+        height: messageElement.offsetHeight + 40,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector(`#board-message-${messageId}`) as HTMLElement;
+          if (clonedElement) {
+            clonedElement.style.margin = '20px';
+            clonedElement.style.padding = '20px';
+            clonedElement.style.boxSizing = 'border-box';
+            
+            // Fix text cutoff issues
+            const allText = clonedElement.querySelectorAll('*');
+            allText.forEach((el: any) => {
+              el.style.textRendering = 'optimizeLegibility';
+              el.style.webkitFontSmoothing = 'antialiased';
+              el.style.lineHeight = '1.5';
+              el.style.padding = '4px 0';
+              el.style.marginBottom = '4px';
+            });
+          }
+        }
       });
 
       const link = document.createElement('a');
       link.download = `board-message-${messageId}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
 
       toast({
         title: "Success",
-        description: "Message downloaded as image!",
+        description: "Message downloaded as image with transparent background!",
       });
     } catch (error) {
       console.error('Error downloading image:', error);
