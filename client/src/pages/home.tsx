@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MessageCard } from "@/components/message-card";
+import { GuidedWalkthrough } from "@/components/guided-walkthrough";
 import { categories } from "@/lib/categories";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -139,10 +140,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background py-6 sm:py-12">
+      <GuidedWalkthrough />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Hero Section - Calming and Minimal */}
-        <div className="text-center mb-12 sm:mb-16">
+        <div className="text-center mb-12 sm:mb-16 guided-tour-welcome">
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 bg-card shadow-lg rounded-3xl flex items-center justify-center border border-border">
               <MessageCircle className="w-8 h-8 text-primary" />
@@ -176,7 +178,7 @@ export default function Home() {
               <Card className="mt-6 border border-border shadow-sm bg-card/70 backdrop-blur-sm">
                 <CardContent className="p-6 sm:p-8">
                   <div className="space-y-6">
-                    <div>
+                    <div data-tour-categories>
                       <Label htmlFor="category">Category</Label>
                       <Select value={category} onValueChange={setCategory}>
                         <SelectTrigger className="w-full">
@@ -214,7 +216,7 @@ export default function Home() {
                       />
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4" data-tour-spotify>
                       <Label htmlFor="spotify">Spotify Track</Label>
                       <Input
                         id="spotify"
@@ -313,7 +315,7 @@ export default function Home() {
                       )}
                     </div>
 
-                    <div className="mt-6 text-center">
+                    <div className="mt-6 text-center" data-tour-navigation>
                       <Link href="/dashboard">
                         <Button variant="outline" className="text-primary hover:text-primary/80">
                           View Community Dashboard
@@ -349,7 +351,7 @@ export default function Home() {
       </div>
 
       {/* Recent Messages Preview */}
-      <Card className="mt-8">
+      <Card className="mt-8" data-tour-messages>
         <CardContent className="p-4 sm:p-6 lg:p-8">
           <h2 className="text-xl sm:text-2xl font-light text-foreground mb-4 sm:mb-6">Recent Community Messages</h2>
           {isLoading ? (
@@ -363,12 +365,14 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-4">
-              {recentMessages.slice(0, 3).map((message) => (
-                <MessageCard key={message.id} message={message} showReplies={false} />
+              {recentMessages.slice(0, 3).map((message, index) => (
+                <div key={message.id} data-tour-message-actions={index === 0 ? "true" : undefined}>
+                  <MessageCard message={message} showReplies={false} />
+                </div>
               ))}
             </div>
           )}
-          <div className="text-center mt-6">
+          <div className="text-center mt-6" data-tour-search>
             <Link href="/dashboard">
               <Button variant="outline" className="text-primary hover:text-primary/80">
                 View All Messages →

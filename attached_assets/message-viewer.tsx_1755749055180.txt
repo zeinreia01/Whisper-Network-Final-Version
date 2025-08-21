@@ -17,7 +17,6 @@ interface MessageViewerProps {
 
 export function MessageViewer({ message, trigger }: MessageViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -35,6 +34,8 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     return 'Just now';
   };
+
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadAsImage = async () => {
     if (!messageRef.current || isDownloading) return;
@@ -78,7 +79,6 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     }
   };
 
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -103,7 +103,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 disabled={isDownloading}
               >
                 <Download className="w-4 h-4" />
-                {isDownloading ? 'Saving...' : 'Save as Image'}
+                {isDownloading ? 'Downloading...' : 'Download'}
               </Button>
             </div>
           </div>
@@ -306,7 +306,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
               {message.userId && message.user ? (
                 `— ${message.user.displayName || message.user.username} (Registered User)`
               ) : message.adminId && message.admin ? (
-                `— ${message.admin.displayName}`
+                `— ${message.admin.displayName} (Admin)`
               ) : message.senderName ? (
                 `— ${message.senderName}`
               ) : (
@@ -356,7 +356,6 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             </p>
           </div>
         </div>
-
       </DialogContent>
     </Dialog>
   );
