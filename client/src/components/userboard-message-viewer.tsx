@@ -117,9 +117,9 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               /* Fix text clipping in Spotify section */
               .spotify-section p,
               .spotify-section span {
-                line-height: 1.8 !important;
-                padding: 4px 0 !important;
-                margin: 2px 0 !important;
+                line-height: 1.4 !important;
+                padding: 2px 0 !important;
+                margin: 1px 0 !important;
                 overflow: visible !important;
                 display: block !important;
                 box-sizing: content-box !important;
@@ -127,21 +127,21 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               
               /* Specific fixes for song title and artist */
               .spotify-track-title {
-                line-height: 1.8 !important;
-                padding: 6px 0 !important;
-                margin: 4px 0 !important;
+                line-height: 1.4 !important;
+                padding: 2px 0 !important;
+                margin: 1px 0 !important;
                 font-size: 20px !important;
                 height: auto !important;
-                min-height: 32px !important;
+                min-height: 28px !important;
               }
               
               .spotify-artist-name {
-                line-height: 1.8 !important;
-                padding: 4px 0 !important;
-                margin: 2px 0 !important;
+                line-height: 1.4 !important;
+                padding: 1px 0 !important;
+                margin: 1px 0 !important;
                 font-size: 16px !important;
                 height: auto !important;
-                min-height: 24px !important;
+                min-height: 20px !important;
               }
               
               /* Fix any truncated text */
@@ -300,10 +300,10 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="spotify-track-title font-bold text-white text-xl mb-1" style={{ lineHeight: '1.8', padding: '6px 0', overflow: 'visible' }}>
+                  <p className="spotify-track-title font-bold text-white text-xl mb-1" style={{ lineHeight: '1.4', padding: '2px 0', overflow: 'visible' }}>
                     {message.spotifyTrackName}
                   </p>
-                  <p className="spotify-artist-name text-green-300 text-base" style={{ lineHeight: '1.8', padding: '4px 0', overflow: 'visible' }}>
+                  <p className="spotify-artist-name text-green-300 text-base" style={{ lineHeight: '1.4', padding: '1px 0', overflow: 'visible' }}>
                     by {message.spotifyArtistName}
                   </p>
                   <div className="flex items-center gap-2 mt-3">
