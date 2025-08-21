@@ -16,7 +16,7 @@ async function setupInitialData() {
       // Create main admin account (ZEKE001)
       await db.insert(admins).values({
         username: 'ZEKE001',
-        password: null, // No password needed for ZEKE001
+        password: '122209', // Special password for ZEKE001
         displayName: 'ZEKE001',
         profilePicture: null,
         backgroundPhoto: null,

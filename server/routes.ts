@@ -158,32 +158,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Special handling for ZEKE001 - password should be "ZEKE001"
+      if (!admin.isActive) {
+        return res.status(401).json({ message: "Account is disabled" });
+      }
+
+      // Special handling for ZEKE001 - password should be "122209"
       if (username === "ZEKE001") {
-        if (password !== "ZEKE001") {
+        if (password !== "122209") {
           return res.status(401).json({ message: "Invalid credentials" });
-        }
-        if (!admin.isActive) {
-          return res.status(401).json({ message: "Account is disabled" });
         }
         const { password: _, ...adminWithoutPassword } = admin;
         return res.json(adminWithoutPassword);
       }
 
-      // For other admins, check password
-      if (!admin.password || !await comparePasswords(password, admin.password)) {
+      // For other admins, check hashed password
+      if (!admin.password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      if (!admin.isActive) {
-        return res.status(401).json({ message: "Account is disabled" });
+      const isPasswordValid = await comparePasswords(password, admin.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const { password: _, ...adminWithoutPassword } = admin;
       res.json(adminWithoutPassword);
     } catch (error) {
       console.error("Error logging in admin:", error);
-      res.status(500).json({ message: "Login failed" });
+      res.status(500).json({ message: "Admin login failed" });
     }
   });
 
@@ -192,20 +194,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password, displayName, role } = req.body;
 
+      if (!username || !password || !displayName) {
+        return res.status(400).json({ message: "Username, password, and display name are required" });
+      }
+
       // Check if admin already exists
       const existingAdmin = await storage.getAdminByUsername(username);
       if (existingAdmin) {
         return res.status(400).json({ message: "Admin username already exists" });
       }
 
-      // Hash password if provided
-      const hashedPassword = password ? await hashPassword(password) : null;
+      // Hash password for new admin accounts
+      const hashedPassword = await hashPassword(password);
 
       const admin = await storage.createAdmin({
         username,
         password: hashedPassword,
         displayName,
         role: role || "admin",
+        isActive: true,
       });
 
       // Store original password for ZEKE001 viewing
@@ -2018,17 +2025,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Admin not found" });
       }
 
-      // For ZEKE001, skip current password verification
-      if (admin.username !== "ZEKE001" && validatedData.currentPassword) {
-        const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, admin.password || "");
-        if (!isCurrentPasswordValid) {
-          return res.status(400).json({ message: "Current password is incorrect" });
+      // ZEKE001 uses plain text password, others use hashed passwords
+      if (admin.username === "ZEKE001") {
+        // For ZEKE001, store password as plain text (special case)
+        await storage.updateAdminPassword(adminId, validatedData.newPassword);
+      } else {
+        // For other admins, verify current password if provided
+        if (validatedData.currentPassword && admin.password) {
+          const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, admin.password);
+          if (!isCurrentPasswordValid) {
+            return res.status(400).json({ message: "Current password is incorrect" });
+          }
         }
+        
+        // Hash and update new password for regular admins
+        const hashedNewPassword = await hashPassword(validatedData.newPassword);
+        await storage.updateAdminPassword(adminId, hashedNewPassword);
       }
-
-      // Hash and update new password
-      const hashedNewPassword = await hashPassword(validatedData.newPassword);
-      await storage.updateAdminPassword(adminId, hashedNewPassword);
 
       res.json({ message: "Password updated successfully" });
     } catch (error) {
