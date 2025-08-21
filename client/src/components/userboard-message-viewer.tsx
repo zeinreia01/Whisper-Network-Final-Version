@@ -240,7 +240,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                     src={senderProfile?.profilePicture || ""} 
                     alt={displayName} 
                   />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold flex items-center justify-center">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold flex items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -263,7 +263,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                   )}
                 </div>
                 <p className="text-gray-300 text-base mt-1">
-                  @{isBoardOwnerPost ? boardUser.username : 'anonymous'} • {new Date(message.createdAt).toLocaleDateString()}
+                  @{isBoardOwnerPost ? boardUser.username : (message.senderName || 'anonymous')} • {new Date(message.createdAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -320,7 +320,8 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 </div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
           {/* Board Info Footer */}
           <div className="pt-6 border-t-2 border-gray-700/50">
@@ -328,7 +329,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               <div className="flex items-center gap-4">
                 <Avatar className="w-12 h-12 ring-2 ring-white/20">
                   <AvatarImage src={boardUser.profilePicture || ""} alt={boardUser.displayName || boardUser.username} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold flex items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                     {(boardUser.displayName || boardUser.username).charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
