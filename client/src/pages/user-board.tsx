@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff, User } from "lucide-react";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { SpotifySearch } from "@/components/spotify-search";
-import { MessageViewer } from "@/components/message-viewer";
+import { UserBoardMessageViewer } from "@/components/userboard-message-viewer";
 import type { DashboardMessage, Admin } from "@shared/schema";
 import type { SpotifyTrack } from "@/lib/spotify";
 
@@ -595,57 +595,10 @@ export default function UserBoard() {
                             </Button>
                           )}
 
-                          <MessageViewer 
-                            message={{
-                              ...message,
-                              isPublic: false,
-                              recipient: boardUser.username,
-                              userId: message.senderUserId || null,
-                              adminId: message.senderAdminId || null,
-                              isAuthenticated: Boolean(message.senderUserId || message.senderAdminId),
-                              isOwnerPrivate: false,
-                              isPinned: message.isPinned || false,
-                              replies: [],
-                              user: message.senderUserId ? {
-                                id: message.senderUserId,
-                                username: message.senderName,
-                                password: "",
-                                displayName: displayName,
-                                profilePicture: senderProfile?.profilePicture || null,
-                                backgroundPhoto: null,
-                                bio: null,
-                                boardName: null,
-                                boardBanner: null,
-                                lastDisplayNameChange: null,
-                                isVerified: false,
-                                likedMessagesPrivacy: "private",
-                                isAnonymousLinkPaused: false,
-                                createdAt: new Date(),
-                                isActive: true,
-                                spotifyTrackId: null,
-                                spotifyTrackName: null,
-                                spotifyArtistName: null,
-                                spotifyAlbumCover: null,
-                              } : null,
-                              admin: message.senderAdminId ? {
-                                id: message.senderAdminId,
-                                username: message.senderName,
-                                password: null,
-                                displayName: displayName,
-                                profilePicture: senderProfile?.profilePicture || null,
-                                backgroundPhoto: null,
-                                bio: null,
-                                role: "admin",
-                                isVerified: false,
-                                lastDisplayNameChange: null,
-                                createdAt: new Date(),
-                                isActive: true,
-                                spotifyTrackId: null,
-                                spotifyTrackName: null,
-                                spotifyArtistName: null,
-                                spotifyAlbumCover: null,
-                              } : null,
-                            }} 
+                          <UserBoardMessageViewer
+                            message={message}
+                            boardUser={boardUser}
+                            boardName={boardName}
                             trigger={
                               <Button 
                                 variant="ghost" 
