@@ -101,14 +101,14 @@ export function GuidedWalkthrough() {
       targetElement.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 6px rgba(59, 130, 246, 0.3)';
       targetElement.style.borderRadius = '8px';
       targetElement.style.isolation = 'isolate';
-      
+
       // Scroll element into view
       targetElement.scrollIntoView({ 
         behavior: 'smooth', 
         block: 'center',
         inline: 'center'
       });
-      
+
       setHighlightedElement(targetElement);
     }
   };
@@ -143,7 +143,7 @@ export function GuidedWalkthrough() {
       highlightedElement.style.boxShadow = '';
       highlightedElement.style.borderRadius = '';
     }
-    
+
     // Mark as completed
     localStorage.setItem('whisper-network-walkthrough-completed', 'true');
     setIsVisible(false);
@@ -189,12 +189,12 @@ export function GuidedWalkthrough() {
         case 'top':
           let topPos = rect.top - tooltipOffset;
           let leftPos = rect.left + rect.width / 2;
-          
+
           // Ensure tooltip doesn't go off screen
           if (topPos < 20) topPos = rect.bottom + tooltipOffset;
           if (leftPos < 192) leftPos = 192;
           if (leftPos > viewportWidth - 192) leftPos = viewportWidth - 192;
-          
+
           position = {
             ...position,
             top: `${topPos}px`,
@@ -205,11 +205,11 @@ export function GuidedWalkthrough() {
         case 'bottom':
           let bottomTopPos = rect.bottom + tooltipOffset;
           let bottomLeftPos = rect.left + rect.width / 2;
-          
+
           if (bottomTopPos > viewportHeight - 200) bottomTopPos = rect.top - tooltipOffset;
           if (bottomLeftPos < 192) bottomLeftPos = 192;
           if (bottomLeftPos > viewportWidth - 192) bottomLeftPos = viewportWidth - 192;
-          
+
           position = {
             ...position,
             top: `${bottomTopPos}px`,
@@ -220,11 +220,11 @@ export function GuidedWalkthrough() {
         case 'left':
           let leftTopPos = rect.top + rect.height / 2;
           let leftLeftPos = rect.left - tooltipOffset;
-          
+
           if (leftLeftPos < 20) leftLeftPos = rect.right + tooltipOffset;
           if (leftTopPos < 100) leftTopPos = 100;
           if (leftTopPos > viewportHeight - 100) leftTopPos = viewportHeight - 100;
-          
+
           position = {
             ...position,
             top: `${leftTopPos}px`,
@@ -235,11 +235,11 @@ export function GuidedWalkthrough() {
         case 'right':
           let rightTopPos = rect.top + rect.height / 2;
           let rightLeftPos = rect.right + tooltipOffset;
-          
+
           if (rightLeftPos > viewportWidth - 400) rightLeftPos = rect.left - tooltipOffset;
           if (rightTopPos < 100) rightTopPos = 100;
           if (rightTopPos > viewportHeight - 100) rightTopPos = viewportHeight - 100;
-          
+
           position = {
             ...position,
             top: `${rightTopPos}px`,
@@ -268,7 +268,7 @@ export function GuidedWalkthrough() {
     <>
       {/* Overlay */}
       <div className="fixed inset-0 bg-black bg-opacity-50 z-[9998]" />
-      
+
       {/* Tooltip */}
       <Card 
         className="z-[10000] bg-white dark:bg-gray-800 shadow-2xl border-2 border-blue-500 md:max-w-sm"
@@ -288,16 +288,16 @@ export function GuidedWalkthrough() {
               <X className="w-4 h-4" />
             </Button>
           </div>
-          
+
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
             {currentStepData.description}
           </p>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500">
               {currentStep + 1} of {walkthroughSteps.length}
             </span>
-            
+
             <div className="flex gap-2">
               {currentStep > 0 && (
                 <Button
@@ -310,7 +310,7 @@ export function GuidedWalkthrough() {
                   Back
                 </Button>
               )}
-              
+
               <Button
                 onClick={nextStep}
                 size="sm"
@@ -327,7 +327,7 @@ export function GuidedWalkthrough() {
               </Button>
             </div>
           </div>
-          
+
           <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
             <Button
               variant="ghost"

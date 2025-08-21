@@ -237,7 +237,7 @@ export default function Boards() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
-                    {boards.reduce((sum, board) => sum + board.messageCount, 0)}
+                    {boards.reduce((sum, board) => sum + (board.messageCount || 0), 0)}
                   </p>
                   <p className="text-sm text-muted-foreground">Total Messages</p>
                 </div>
@@ -263,6 +263,9 @@ export default function Boards() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Google AdSense Inline */}
+        <AdSenseContainer pageType="boards" />
 
         {/* Boards Grid */}
         {filteredBoards.length === 0 ? (

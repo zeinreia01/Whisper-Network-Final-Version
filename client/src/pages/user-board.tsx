@@ -877,8 +877,10 @@ export default function UserBoard() {
         </DialogContent>
       </Dialog>
 
-      {/* Google AdSense Modal */}
-      <AdSenseContainer pageType="userboard" />
+      {/* Google AdSense Inline */}
+        <div className="mt-8">
+          <AdSenseContainer pageType="userboard" />
+        </div>
     </div>
   );
 }

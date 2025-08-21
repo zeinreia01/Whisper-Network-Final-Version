@@ -631,8 +631,10 @@ export default function AnonymousMessaging() {
         </Card>
       )}
 
-      {/* Google AdSense Modal */}
-      <AdSenseContainer pageType="anonymous" />
+      {/* Google AdSense Inline */}
+      <div className="mt-8">
+        <AdSenseContainer pageType="anonymous" />
+      </div>
     </div>
   );
 }

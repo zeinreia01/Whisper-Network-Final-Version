@@ -107,6 +107,9 @@ export default function Dashboard() {
           />
         )}
 
+        {/* Google AdSense Inline */}
+        <AdSenseContainer pageType="dashboard" />
+
         {isLoading || isSearching ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -133,8 +136,7 @@ export default function Dashboard() {
         )}
         </div>
 
-        {/* Google AdSense Modal */}
-        <AdSenseContainer pageType="dashboard" />
+        
       </div>
     </>
   );

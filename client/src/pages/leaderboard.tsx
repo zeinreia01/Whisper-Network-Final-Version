@@ -188,6 +188,8 @@ export default function LeaderboardPage() {
     <>
       <GuidedWalkthroughLeaderboard />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Google AdSense Inline */}
+      <AdSenseContainer pageType="leaderboard" />
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">

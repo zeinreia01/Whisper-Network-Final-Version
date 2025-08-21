@@ -1,36 +1,31 @@
+
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { X } from "lucide-react";
 
-interface GoogleAdSenseModalProps {
-  isVisible: boolean;
+interface GoogleAdSenseInlineProps {
   onClose: () => void;
 }
 
-export function GoogleAdSenseModal({ isVisible, onClose }: GoogleAdSenseModalProps) {
-  if (!isVisible) return null;
-
+export function GoogleAdSenseInline({ onClose }: GoogleAdSenseInlineProps) {
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-80">
-      <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-3">
+    <div className="w-full max-w-4xl mx-auto my-8 px-4">
+      <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
             <div className="text-xs text-gray-500 dark:text-gray-400">
               Advertisement
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={onClose}
-              className="p-1 h-auto w-auto text-gray-400 hover:text-gray-600"
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
-              <X className="w-3 h-3" />
-            </Button>
+              <X className="w-4 h-4" />
+            </button>
           </div>
           
           {/* Google AdSense Ad Unit */}
-          <div className="min-h-[100px] flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-md border-2 border-dashed border-gray-300 dark:border-gray-600">
+          <div className="min-h-[120px] flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-md border-2 border-dashed border-gray-300 dark:border-gray-600">
             <div className="text-center">
               <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 Advertisement
@@ -47,12 +42,13 @@ export function GoogleAdSenseModal({ isVisible, onClose }: GoogleAdSenseModalPro
 }
 
 interface AdSenseContainerProps {
-  pageType: "home" | "dashboard" | "userboard" | "leaderboard" | "anonymous";
+  pageType: "home" | "dashboard" | "userboard" | "leaderboard" | "anonymous" | "boards";
 }
 
 export function AdSenseContainer({ pageType }: AdSenseContainerProps) {
   const [isAdVisible, setIsAdVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [hasScrolledEnough, setHasScrolledEnough] = useState(false);
 
   useEffect(() => {
     // Check if user has dismissed ads for this session
@@ -62,15 +58,25 @@ export function AdSenseContainer({ pageType }: AdSenseContainerProps) {
       return;
     }
 
-    // Show ad after a delay based on page type
-    const delay = pageType === "anonymous" ? 5000 : 3000; // Longer delay for anonymous pages
-    
-    const timer = setTimeout(() => {
-      setIsAdVisible(true);
-    }, delay);
+    // Show ad based on scroll position
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      // Show ad when user has scrolled at least 50% of viewport height
+      if (scrollPosition > windowHeight * 0.5 && !hasScrolledEnough) {
+        setHasScrolledEnough(true);
+        
+        // Add a delay before showing the ad
+        setTimeout(() => {
+          setIsAdVisible(true);
+        }, 1000);
+      }
+    };
 
-    return () => clearTimeout(timer);
-  }, [pageType]);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [pageType, hasScrolledEnough]);
 
   const handleCloseAd = () => {
     setIsAdVisible(false);
@@ -79,12 +85,7 @@ export function AdSenseContainer({ pageType }: AdSenseContainerProps) {
     sessionStorage.setItem(`ad-dismissed-${pageType}`, 'true');
   };
 
-  if (isDismissed) return null;
+  if (isDismissed || !isAdVisible) return null;
 
-  return (
-    <GoogleAdSenseModal 
-      isVisible={isAdVisible} 
-      onClose={handleCloseAd} 
-    />
-  );
+  return <GoogleAdSenseInline onClose={handleCloseAd} />;
 }
