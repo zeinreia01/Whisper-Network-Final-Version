@@ -104,11 +104,54 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               if (styleEl.tagName === 'STYLE') {
                 newStyle.textContent = styleEl.textContent;
               } else if (styleEl.tagName === 'LINK') {
-                newStyle.rel = styleEl.rel;
-                newStyle.href = styleEl.href;
+                const linkEl = styleEl as HTMLLinkElement;
+                (newStyle as HTMLLinkElement).rel = linkEl.rel;
+                (newStyle as HTMLLinkElement).href = linkEl.href;
               }
               clonedDoc.head.appendChild(newStyle);
             });
+            
+            // Add specific CSS to fix Spotify text clipping
+            const spotifyFixStyle = clonedDoc.createElement('style');
+            spotifyFixStyle.textContent = `
+              /* Fix text clipping in Spotify section */
+              .spotify-section p,
+              .spotify-section span {
+                line-height: 1.8 !important;
+                padding: 4px 0 !important;
+                margin: 2px 0 !important;
+                overflow: visible !important;
+                display: block !important;
+                box-sizing: content-box !important;
+              }
+              
+              /* Specific fixes for song title and artist */
+              .spotify-track-title {
+                line-height: 1.8 !important;
+                padding: 6px 0 !important;
+                margin: 4px 0 !important;
+                font-size: 20px !important;
+                height: auto !important;
+                min-height: 32px !important;
+              }
+              
+              .spotify-artist-name {
+                line-height: 1.8 !important;
+                padding: 4px 0 !important;
+                margin: 2px 0 !important;
+                font-size: 16px !important;
+                height: auto !important;
+                min-height: 24px !important;
+              }
+              
+              /* Fix any truncated text */
+              .truncate {
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: normal !important;
+              }
+            `;
+            clonedDoc.head.appendChild(spotifyFixStyle);
           }
         },
       });
@@ -135,7 +178,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
       console.error('Download failed:', error);
       toast({
         title: "Download failed",
-        description: `Error: ${error.message}. Please try again.`,
+        description: `Error: ${(error as Error).message}. Please try again.`,
         variant: "destructive",
       });
     } finally {
@@ -247,7 +290,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
           {/* Spotify Integration */}
           {message.spotifyTrackId && (
-            <div className="mb-8 p-6 bg-gradient-to-r from-green-600/30 to-green-400/30 rounded-2xl border-2 border-green-500/40 shadow-xl">
+            <div className="spotify-section mb-8 p-6 bg-gradient-to-r from-green-600/30 to-green-400/30 rounded-2xl border-2 border-green-500/40 shadow-xl">
               <div className="flex items-center gap-6">
                 {message.spotifyAlbumCover && (
                   <img 
@@ -257,10 +300,10 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-white text-xl truncate mb-1">
+                  <p className="spotify-track-title font-bold text-white text-xl mb-1" style={{ lineHeight: '1.8', padding: '6px 0', overflow: 'visible' }}>
                     {message.spotifyTrackName}
                   </p>
-                  <p className="text-green-300 text-base truncate">
+                  <p className="spotify-artist-name text-green-300 text-base" style={{ lineHeight: '1.8', padding: '4px 0', overflow: 'visible' }}>
                     by {message.spotifyArtistName}
                   </p>
                   <div className="flex items-center gap-2 mt-3">
