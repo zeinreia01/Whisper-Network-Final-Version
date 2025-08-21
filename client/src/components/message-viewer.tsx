@@ -37,22 +37,32 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const canvas = await html2canvas(element, {
-        backgroundColor: "#ffffff",
-        scale: 2,
+        backgroundColor: isUserBoardMessage ? "#1a1a1a" : "#ffffff",
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         logging: false,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
+        width: 400,
+        height: element.scrollHeight + 20,
         onclone: (clonedDoc) => {
           const clonedElement = clonedDoc.querySelector('[data-message-viewer]') as HTMLElement;
           if (clonedElement) {
             clonedElement.style.transform = 'none';
             clonedElement.style.position = 'static';
-            clonedElement.style.padding = '24px';
             clonedElement.style.margin = '0';
-            clonedElement.style.maxWidth = 'none';
-            clonedElement.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+            clonedElement.style.display = 'block';
+            clonedElement.style.overflow = 'visible';
+            
+            // Fix font rendering for clean text - prevent text cutoff
+            const allText = clonedElement.querySelectorAll('*');
+            allText.forEach((el: any) => {
+              el.style.textRendering = 'optimizeLegibility';
+              el.style.webkitFontSmoothing = 'antialiased';
+              el.style.mozOsxFontSmoothing = 'grayscale';
+              el.style.lineHeight = '1.4';
+              el.style.padding = '2px 0';
+              el.style.boxSizing = 'border-box';
+            });
           }
         }
       });
@@ -239,36 +249,63 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             )}
           </div>
         ) : (
-          // Public Dashboard Design - Original whisper card design
+          // Public Dashboard Design - Original gradient design with proper dark mode
           <div 
             ref={messageRef}
             data-message-viewer
-            className="bg-white rounded-xl border p-6 max-w-md mx-auto shadow-lg"
             style={{
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '24px',
-              maxWidth: '400px',
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              width: '400px',
+              minHeight: '500px',
               margin: '0 auto',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              padding: '32px',
+              boxSizing: 'border-box',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '20px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+              color: '#ffffff',
+              position: 'relative'
             }}
           >
             {/* Header */}
-            <div className="text-center mb-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Whisper Network</h2>
-              <p className="text-sm text-gray-600">Anonymous Message</p>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h1 style={{ 
+                fontSize: '28px', 
+                fontWeight: '700', 
+                margin: '0 0 8px 0',
+                background: 'linear-gradient(135deg, #fff 0%, #f0f0f0 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
+                Whisper Network
+              </h1>
+              <p style={{ 
+                fontSize: '14px', 
+                margin: '0',
+                opacity: '0.9',
+                color: '#ffffff'
+              }}>
+                Anonymous Message
+              </p>
             </div>
 
             {/* Message content */}
-            <div className="text-gray-900 text-base leading-relaxed mb-4 text-center">
+            <div style={{ 
+              fontSize: '18px', 
+              lineHeight: '1.6', 
+              marginBottom: '24px', 
+              textAlign: 'center',
+              color: '#ffffff',
+              fontWeight: '400',
+              wordWrap: 'break-word'
+            }}>
               {message.content}
             </div>
 
             {/* Spotify track if available */}
             {message.spotifyTrackId && (
-              <div className="mb-4">
+              <div style={{ marginBottom: '24px' }}>
                 <SpotifyTrackDisplay
                   track={{
                     id: message.spotifyTrackId,
@@ -287,31 +324,47 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                     popularity: 0,
                   }}
                   size="sm"
-                  showPreview={true}
+                  showPreview={false}
                 />
               </div>
             )}
 
-            {/* Footer with category and sender */}
-            <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-2">
-                {category && (
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs"
-                    style={{ backgroundColor: category.color + '20', color: category.color }}
-                  >
+            {/* Footer */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginTop: 'auto',
+              paddingTop: '24px',
+              borderTop: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              {category && (
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{ 
+                    fontSize: '12px',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    color: '#ffffff',
+                    fontWeight: '500'
+                  }}>
                     {category.name}
-                  </Badge>
-                )}
+                  </span>
+                </div>
+              )}
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#ffffff',
+                opacity: '0.8'
+              }}>
+                From: {message.senderName || "Anonymous"}
               </div>
-              <div className="text-xs">
+              <div style={{ 
+                fontSize: '12px', 
+                color: '#ffffff',
+                opacity: '0.6',
+                marginTop: '4px'
+              }}>
                 {formatTimeAgo(message.createdAt || new Date())}
               </div>
-            </div>
-
-            <div className="text-center mt-4 text-sm text-gray-500">
-              From: {message.senderName || "Anonymous"}
             </div>
           </div>
         )}
