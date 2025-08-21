@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { MessageSquare, Search, Users, Flag, Trash2, Eye, EyeOff, Star } from "lucide-react";
 import type { User, Admin } from "@shared/schema";
+import { AdSenseContainer } from "@/components/google-adsense-modal";
 
 interface BoardUser extends User {
   messageCount: number;
