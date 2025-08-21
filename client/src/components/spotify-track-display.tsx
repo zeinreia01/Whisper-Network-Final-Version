@@ -271,14 +271,38 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
 
           {/* Track Info */}
           <div className="flex-1 min-w-0">
-            <p className={`font-medium truncate ${classes.title}`}>
+            <p className={`font-medium ${classes.title}`} style={{
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              overflow: 'visible',
+              textOverflow: 'clip',
+              lineHeight: '1.6',
+              minHeight: '1.6em',
+              paddingBottom: '2px'
+            }}>
               {fullTrack.name}
             </p>
-            <p className={`text-muted-foreground truncate ${classes.artist}`}>
+            <p className={`text-muted-foreground ${classes.artist}`} style={{
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              overflow: 'visible',
+              textOverflow: 'clip',
+              lineHeight: '1.5',
+              minHeight: '1.5em',
+              paddingBottom: '2px'
+            }}>
               {fullTrack.artists.map(artist => artist.name).join(", ")}
             </p>
             {size !== "sm" && (
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground" style={{
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+                overflow: 'visible',
+                textOverflow: 'clip',
+                lineHeight: '1.4',
+                minHeight: '1.4em',
+                paddingBottom: '2px'
+              }}>
                 {fullTrack.album.name} • {formatDuration(fullTrack.duration_ms)}
               </p>
             )}

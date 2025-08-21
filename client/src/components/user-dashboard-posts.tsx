@@ -200,6 +200,36 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
           el.style.paddingBottom = '4px';
         }
       });
+
+      // Specifically fix Spotify track display text elements
+      const spotifyTrackElements = clonedElement.querySelectorAll('[class*="spotify"], [class*="track"]') as NodeListOf<HTMLElement>;
+      spotifyTrackElements.forEach((el) => {
+        // Fix track name and artist name specifically
+        const trackText = el.querySelectorAll('p, span, div') as NodeListOf<HTMLElement>;
+        trackText.forEach((textEl) => {
+          if (textEl.textContent && textEl.textContent.trim()) {
+            textEl.style.fontSize = '14px';
+            textEl.style.lineHeight = '1.8';
+            textEl.style.minHeight = '1.8em';
+            textEl.style.paddingTop = '6px';
+            textEl.style.paddingBottom = '6px';
+            textEl.style.marginTop = '4px';
+            textEl.style.marginBottom = '4px';
+            textEl.style.whiteSpace = 'normal';
+            textEl.style.overflow = 'visible';
+            textEl.style.textOverflow = 'clip';
+            textEl.style.display = 'block';
+            textEl.style.width = '100%';
+          }
+        });
+        
+        // Extra spacing for the entire Spotify container
+        el.style.paddingTop = '12px';
+        el.style.paddingBottom = '12px';
+        el.style.marginTop = '8px';
+        el.style.marginBottom = '8px';
+        el.style.minHeight = 'auto';
+      });
       
       tempContainer.appendChild(clonedElement);
       document.body.appendChild(tempContainer);
