@@ -437,7 +437,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+              <label className="text-sm font-medium mb-2 block flex items-center gap-2" data-tour-anonymous-link>
                 Post Type
                 <Switch
                   checked={!isAnonymous}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MessageCard } from "@/components/message-card";
 import { CategoryFilter } from "@/components/category-filter";
 import { SearchBar } from "@/components/search-bar";
+import { GuidedWalkthroughDashboard } from "@/components/guided-walkthrough-dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
@@ -67,8 +68,10 @@ export default function Dashboard() {
         : messages.filter(message => message.category === activeCategory));
 
   return (
-    <div className="min-h-screen bg-background py-4 sm:py-8">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
+    <>
+      <GuidedWalkthroughDashboard />
+      <div className="min-h-screen bg-background py-4 sm:py-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-foreground mb-4 page-title">Community Dashboard</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -77,7 +80,7 @@ export default function Dashboard() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-8" data-tour-filter-controls>
           <SearchBar 
             onSearch={handleSearch}
             placeholder="Search messages by content, category, or sender..."
@@ -121,13 +124,14 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-tour-message-feed>
             {displayMessages.map((message) => (
               <MessageCard key={message.id} message={message} showReplies={true} />
             ))}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

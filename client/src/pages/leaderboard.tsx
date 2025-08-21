@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GuidedWalkthroughLeaderboard } from "@/components/guided-walkthrough-leaderboard";
 import { Search, Trophy, MessageSquare, Heart, Users, Crown, Medal, Award } from "lucide-react";
 
 interface LeaderboardUser {
@@ -183,7 +184,9 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <>
+      <GuidedWalkthroughLeaderboard />
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -209,7 +212,7 @@ export default function LeaderboardPage() {
       <MyRankingCard />
 
       {/* Leaderboard Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" data-tour-leaderboard-tabs>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="messages" className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4" />
@@ -237,7 +240,7 @@ export default function LeaderboardPage() {
                 Most Messages Posted
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent data-tour-top-users>
               <LeaderboardList users={leaderboardData?.messageLeaders || []} type="messages" />
             </CardContent>
           </Card>
@@ -286,5 +289,6 @@ export default function LeaderboardPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </>
   );
 }

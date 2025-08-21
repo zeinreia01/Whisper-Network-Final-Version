@@ -15,6 +15,7 @@ import { UserBadge } from "@/components/user-badge";
 import { UserMusicList } from "@/components/user-music-list";
 import { UserDashboardPosts } from "@/components/user-dashboard-posts";
 import { ProfileMusicSection } from "@/components/profile-music-section";
+import { GuidedWalkthroughProfile } from "@/components/guided-walkthrough-profile";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -297,6 +298,7 @@ export function UserProfilePage() {
 
   return (
     <>
+      <GuidedWalkthroughProfile />
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
@@ -309,7 +311,7 @@ export function UserProfilePage() {
             </Link>
 
             {/* Profile header with background photo */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6 overflow-hidden">
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6 overflow-hidden" data-tour-profile-header>
               {/* Background Photo */}
               {(profile as any).backgroundPhoto && (
                 <div 
@@ -355,7 +357,7 @@ export function UserProfilePage() {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3" data-tour-follow-system>
                     {/* Follow/Unfollow button */}
                     {(user || admin) && targetUserId !== (user?.id || admin?.id) && (
                       <Button
@@ -421,7 +423,7 @@ export function UserProfilePage() {
               </CardHeader>
 
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4" data-tour-profile-stats>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <div className="flex items-center justify-center text-primary mb-2">
                       <MessageSquare className="w-6 h-6" />
@@ -463,11 +465,13 @@ export function UserProfilePage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Profile Music Section */}
-              <ProfileMusicSection 
-                user={profile as any}
-                isOwnProfile={isOwnProfile}
-                title="Profile Song"
-              />
+              <div data-tour-music-section>
+                <ProfileMusicSection 
+                  user={profile as any}
+                  isOwnProfile={isOwnProfile}
+                  title="Profile Song"
+                />
+              </div>
 
               {/* Music Collection */}
               <UserMusicList 
@@ -478,14 +482,16 @@ export function UserProfilePage() {
             </div>
 
             {/* Dashboard Posts */}
-            <UserDashboardPosts 
-              userId={userId}
-              username={(profile as any)?.displayName || (profile as any)?.username}
-              isOwnProfile={isOwnProfile}
-            />
+            <div data-tour-board-posts>
+              <UserDashboardPosts 
+                userId={userId}
+                username={(profile as any)?.displayName || (profile as any)?.username}
+                isOwnProfile={isOwnProfile}
+              />
+            </div>
 
             {/* User's messages */}
-            <div>
+            <div data-tour-public-messages>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Public Messages ({Array.isArray(userMessages) ? userMessages.length : 0})
               </h2>
