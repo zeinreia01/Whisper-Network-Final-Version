@@ -27,63 +27,89 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
   const isUserBoardMessage = 'recipient' in message && message.recipient;
 
   const downloadAsImage = async () => {
+    if (!messageRef.current || isDownloading) return;
+
     setIsDownloading(true);
+    
     try {
-      const element = messageRef.current;
-      if (!element) {
-        throw new Error("Message element not found");
-      }
+      // Wait for all images and content to load
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const canvas = await html2canvas(element, {
-        backgroundColor: null, // Transparent background for all images
-        scale: 3,
+      // Enhanced settings for accuracy like umamin.link
+      const canvas = await html2canvas(messageRef.current, {
+        scale: 2, // Good balance of quality and performance
         useCORS: true,
-        allowTaint: true,
+        backgroundColor: '#ffffff',
         logging: false,
-        width: 400,
-        height: element.scrollHeight + 40, // More padding to prevent cutoff
+        width: messageRef.current.offsetWidth,
+        height: messageRef.current.offsetHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: messageRef.current.offsetWidth,
+        windowHeight: messageRef.current.offsetHeight,
+        ignoreElements: (element) => {
+          // Ignore scroll bars and hidden elements
+          return element.classList.contains('scrollbar') || 
+                 getComputedStyle(element).visibility === 'hidden' ||
+                 getComputedStyle(element).display === 'none';
+        },
         onclone: (clonedDoc) => {
           const clonedElement = clonedDoc.querySelector('[data-message-viewer]') as HTMLElement;
           if (clonedElement) {
+            // Ensure proper positioning and sizing
             clonedElement.style.transform = 'none';
-            clonedElement.style.position = 'static';
-            clonedElement.style.margin = '20px';
+            clonedElement.style.position = 'relative';
+            clonedElement.style.margin = '0';
+            clonedElement.style.padding = '0';
             clonedElement.style.display = 'block';
             clonedElement.style.overflow = 'visible';
+            clonedElement.style.width = '400px';
+            clonedElement.style.boxSizing = 'border-box';
 
-            // Fix font rendering and prevent text cutoff
-            const allText = clonedElement.querySelectorAll('*');
-            allText.forEach((el: any) => {
+            // Fix all images and ensure they load properly
+            const images = clonedElement.querySelectorAll('img');
+            images.forEach((img: any) => {
+              img.style.display = 'block';
+              img.style.maxWidth = '100%';
+              img.style.height = 'auto';
+              img.style.objectFit = 'cover';
+            });
+
+            // Improve text rendering
+            const allElements = clonedElement.querySelectorAll('*');
+            allElements.forEach((el: any) => {
               el.style.textRendering = 'optimizeLegibility';
               el.style.webkitFontSmoothing = 'antialiased';
               el.style.mozOsxFontSmoothing = 'grayscale';
-              el.style.lineHeight = '1.5';
-              el.style.padding = '4px 0';
               el.style.boxSizing = 'border-box';
-              el.style.marginBottom = '4px'; // Extra spacing to prevent cutoff
+              
+              // Ensure proper line heights and spacing
+              if (el.tagName === 'P' || el.tagName === 'DIV' || el.tagName === 'SPAN') {
+                el.style.lineHeight = '1.4';
+                el.style.wordWrap = 'break-word';
+              }
             });
           }
         }
       });
 
-      const link = document.createElement("a");
-      const fileName = isUserBoardMessage ? `board-post-${message.id}.png` : `whisper-${message.id}.png`;
-      link.download = fileName;
-      link.href = canvas.toDataURL("image/png", 1.0);
+      const dataURL = canvas.toDataURL('image/png', 1.0);
+      const link = document.createElement('a');
+      link.download = `${isUserBoardMessage ? 'board-post' : 'whisper'}-${message.id}-${Date.now()}.png`;
+      link.href = dataURL;
       link.click();
 
       toast({
-        title: "Success",
-        description: isUserBoardMessage ? "Board post saved as image!" : "Whisper saved as image!",
+        title: "Download Started",
+        description: "Your image has been downloaded successfully!",
       });
+
     } catch (error) {
-      console.error("Error downloading image:", error);
+      console.error('Failed to download image:', error);
       toast({
-        title: "Error",
-        description: "Failed to save image. Please try again.",
-        variant: "destructive",
+        title: "Download Failed",
+        description: "There was an error downloading the image. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsDownloading(false);
@@ -242,29 +268,58 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
               {message.content}
             </div>
 
-            {/* Spotify track if available */}
-            {message.spotifyTrackId && (
-              <div style={{ marginBottom: '12px' }}>
-                <SpotifyTrackDisplay
-                  track={{
-                    id: message.spotifyTrackId,
-                    name: message.spotifyTrackName || "",
-                    artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
-                    album: {
-                      id: "stored",
-                      name: "Unknown Album",
-                      images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
-                    },
-                    external_urls: {
-                      spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
-                    },
-                    preview_url: null,
-                    duration_ms: 0,
-                    popularity: 0,
-                  }}
-                  size="sm"
-                  showPreview={true}
-                />
+            {/* Spotify track display - clean umamin.link style */}
+            {(message.spotifyTrackId || message.spotifyLink) && (
+              <div style={{ 
+                marginBottom: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '8px',
+                padding: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {message.spotifyAlbumCover && (
+                    <img 
+                      src={message.spotifyAlbumCover} 
+                      alt="Album cover"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '4px',
+                        objectFit: 'cover',
+                        flexShrink: 0
+                      }}
+                    />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ 
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#ffffff',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {message.spotifyTrackName || 'Unknown Track'}
+                    </div>
+                    <div style={{ 
+                      fontSize: '11px',
+                      color: '#9ca3af',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {message.spotifyArtistName || 'Unknown Artist'}
+                    </div>
+                  </div>
+                  <div style={{ 
+                    fontSize: '10px',
+                    color: '#6b7280',
+                    fontWeight: '500'
+                  }}>
+                    🎵
+                  </div>
+                </div>
               </div>
             )}
 
@@ -368,29 +423,62 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 </div>
               </div>
 
-              {/* Spotify track if available */}
-              {message.spotifyTrackId && (
-                <div style={{ marginBottom: '24px' }}>
-                  <SpotifyTrackDisplay
-                    track={{
-                      id: message.spotifyTrackId,
-                      name: message.spotifyTrackName || "",
-                      artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
-                      album: {
-                        id: "stored",
-                        name: "Unknown Album",
-                        images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
-                      },
-                      external_urls: {
-                        spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
-                      },
-                      preview_url: null,
-                      duration_ms: 0,
-                      popularity: 0,
-                    }}
-                    size="sm"
-                    showPreview={false}
-                  />
+              {/* Spotify track if available - Instagram-style integration */}
+              {(message.spotifyTrackId || message.spotifyLink) && (
+                <div style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  marginBottom: '20px',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {message.spotifyAlbumCover && (
+                      <img 
+                        src={message.spotifyAlbumCover} 
+                        alt="Album cover"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '6px',
+                          objectFit: 'cover',
+                          flexShrink: 0
+                        }}
+                      />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ 
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#ffffff',
+                        marginBottom: '2px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {message.spotifyTrackName || 'Unknown Track'}
+                      </div>
+                      <div style={{ 
+                        fontSize: '12px',
+                        color: 'rgba(255,255,255,0.8)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {message.spotifyArtistName || 'Unknown Artist'}
+                      </div>
+                    </div>
+                    <div style={{ 
+                      fontSize: '12px',
+                      color: 'rgba(255,255,255,0.6)',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      🎵 Spotify
+                    </div>
+                  </div>
                 </div>
               )}
 
