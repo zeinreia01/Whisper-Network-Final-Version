@@ -395,6 +395,11 @@ export const updateUserProfileSchema = z.object({
   backgroundPhoto: z.string().optional(),
   bio: z.string().max(200).optional(),
   isAnonymousLinkPaused: z.boolean().optional(),
+  boardName: z.string().min(1).max(100).optional(),
+  boardBanner: z.string().optional().refine(
+    (val) => !val || val === "" || val.startsWith("data:image/") || z.string().url().safeParse(val).success,
+    { message: "Must be a valid URL or base64 image data" }
+  ),
 });
 
 // Password change schemas

@@ -1549,6 +1549,14 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       updateData.isAnonymousLinkPaused = updates.isAnonymousLinkPaused;
     }
 
+    if (updates.boardName !== undefined) {
+      updateData.boardName = updates.boardName;
+    }
+
+    if (updates.boardBanner !== undefined) {
+      updateData.boardBanner = updates.boardBanner;
+    }
+
     // If no valid updates, return current user
     if (Object.keys(updateData).length === 0) {
       const [currentUser] = await db

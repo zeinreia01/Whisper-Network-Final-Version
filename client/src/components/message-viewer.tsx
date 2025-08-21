@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Download, Camera, Music, Heart, MessageCircle } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Eye, Download, Heart, MessageCircle, Share2, Copy, Facebook, Twitter, MessageSquare, Send } from "lucide-react";
 import { categories } from "@/lib/categories";
-import { getSpotifyDisplayName } from "@/lib/spotify";
+import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import type { MessageWithReplies } from "@shared/schema";
 import html2canvas from "html2canvas";
+import { formatTimeAgo } from "@/lib/utils";
 
 interface MessageViewerProps {
   message: MessageWithReplies;
@@ -17,69 +19,53 @@ interface MessageViewerProps {
 
 export function MessageViewer({ message, trigger }: MessageViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const category = categories.find(c => c.name === message.category);
-
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - new Date(date).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    return 'Just now';
-  };
-
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  // Determine if this is a user board message (has recipient field)
   const isUserBoardMessage = 'recipient' in message && message.recipient;
 
   const downloadAsImage = async () => {
     setIsDownloading(true);
     try {
-      const element = document.getElementById(`message-viewer-${message.id}`);
+      const element = messageRef.current;
       if (!element) {
         throw new Error("Message element not found");
       }
 
-      // Wait for fonts and images to load
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const canvas = await html2canvas(element, {
-        backgroundColor: isUserBoardMessage ? "#f8f9fa" : "#ffffff", // Use a subtle background for user boards
-        scale: 3, // Higher scale for better resolution
-        useCORS: true, // Use CORS to load external images
-        allowTaint: false, // Allow taint to handle cross-origin images correctly
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
         logging: false,
-        height: element.scrollHeight,
         width: element.scrollWidth,
-        foreignObjectRendering: true, // Render elements in foreign objects
-        imageTimeout: 5000, // Timeout for image loading
+        height: element.scrollHeight,
         onclone: (clonedDoc) => {
-          // Ensure all styles are properly applied in the cloned document
-          const clonedElement = clonedDoc.getElementById(`message-viewer-${message.id}`);
+          const clonedElement = clonedDoc.querySelector('[data-message-viewer]') as HTMLElement;
           if (clonedElement) {
-            clonedElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            clonedElement.style.fontSize = '14px'; // Default font size
-            clonedElement.style.lineHeight = '1.5'; // Default line height
+            clonedElement.style.transform = 'none';
+            clonedElement.style.position = 'static';
+            clonedElement.style.padding = '24px';
+            clonedElement.style.margin = '0';
+            clonedElement.style.maxWidth = 'none';
+            clonedElement.style.fontFamily = 'system-ui, -apple-system, sans-serif';
           }
         }
       });
 
       const link = document.createElement("a");
-      link.download = `${isUserBoardMessage ? 'board-message' : 'whisper'}-${message.id}.png`; // Differentiate filenames
-      link.href = canvas.toDataURL('image/png', 1.0); // Save as PNG with highest quality
+      const fileName = isUserBoardMessage ? `board-post-${message.id}.png` : `whisper-${message.id}.png`;
+      link.download = fileName;
+      link.href = canvas.toDataURL("image/png", 1.0);
       link.click();
 
       toast({
         title: "Success",
-        description: "Message saved as image!",
+        description: isUserBoardMessage ? "Board post saved as image!" : "Whisper saved as image!",
       });
     } catch (error) {
       console.error("Error downloading image:", error);
@@ -93,13 +79,41 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     }
   };
 
+  const shareToFacebook = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(`Check out this message: "${message.content.substring(0, 100)}..."`);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank');
+  };
+
+  const shareToTwitter = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(`"${message.content.substring(0, 200)}..." - Shared via Whisper Network`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Success",
+        description: "Link copied to clipboard!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline" size="sm" className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
-            View Whisper
+            View {isUserBoardMessage ? "Post" : "Whisper"}
           </Button>
         )}
       </DialogTrigger>
@@ -107,7 +121,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Whisper Preview</DialogTitle>
+            <DialogTitle>{isUserBoardMessage ? "Board Post Preview" : "Whisper Preview"}</DialogTitle>
             <div className="flex items-center gap-2">
               <Button 
                 onClick={downloadAsImage}
@@ -117,259 +131,205 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 disabled={isDownloading}
               >
                 <Download className="w-4 h-4" />
-                {isDownloading ? 'Downloading...' : 'Download'}
+                {isDownloading ? 'Saving...' : 'Save as Image'}
               </Button>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Instagram-style Message Display - matching reference exactly */}
-        <div 
-          id={`message-viewer-${message.id}`}
-          ref={messageRef}
-          className="rounded-xl border relative overflow-hidden bg-card"
-          style={{
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            width: '400px',
-            minHeight: '500px',
-            margin: '0 auto',
-            padding: '24px',
-            boxSizing: 'border-box',
-            background: document.documentElement.classList.contains('pink') 
-              ? 'linear-gradient(135deg, #fce7f3 0%, #f8d7da 25%, #f1c0c5 50%, #ecadb0 75%, #e799a0 100%)'
-              : document.documentElement.classList.contains('dark')
-              ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4338ca 75%, #4f46e5 100%)'
-              : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f1f5f9 50%, #e2e8f0 75%, #cbd5e1 100%)',
-            border: document.documentElement.classList.contains('pink') 
-              ? '1px solid rgba(221, 114, 133, 0.3)'
-              : document.documentElement.classList.contains('dark')
-              ? '1px solid rgba(255,255,255,0.1)'
-              : '1px solid rgba(0,0,0,0.1)',
-            boxShadow: document.documentElement.classList.contains('pink')
-              ? '0 8px 32px rgba(221, 114, 133, 0.2)'
-              : document.documentElement.classList.contains('dark')
-              ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-              : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            color: document.documentElement.classList.contains('pink') 
-              ? '#7c2d12'
-              : document.documentElement.classList.contains('dark')
-              ? '#ffffff'
-              : '#1e293b'
-          }}
-        >
-          {/* Header with branding - exactly like reference */}
-          <div className="text-center mb-5">
-            <h1 className="text-xl font-bold mb-1" style={{
-              background: document.documentElement.classList.contains('pink') 
-                ? 'linear-gradient(135deg, #f4a261 0%, #e76f51 50%, #e9c46a 100%)'
-                : document.documentElement.classList.contains('dark')
-                ? 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)'
-                : 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent'
-            }}>
-              Whisper Network
-            </h1>
-            <p className="text-xs mb-2" style={{
-              color: document.documentElement.classList.contains('pink') 
-                ? 'rgba(76, 29, 149, 0.7)'
-                : document.documentElement.classList.contains('dark')
-                ? 'rgba(255, 255, 255, 0.7)'
-                : 'rgba(30, 41, 59, 0.7)'
-            }}>
-              A place where voices unite and hearts connect
-            </p>
-
-            {/* Category and time - exactly like reference */}
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-1.5 h-1.5 rounded-full" style={{
-                background: document.documentElement.classList.contains('pink') 
-                  ? 'rgba(76, 29, 149, 0.8)'
-                  : document.documentElement.classList.contains('dark')
-                  ? 'rgba(255, 255, 255, 0.8)'
-                  : 'rgba(30, 41, 59, 0.8)'
-              }}></div>
-              <span className="text-xs font-medium" style={{
-                color: document.documentElement.classList.contains('pink') 
-                  ? 'rgba(76, 29, 149, 0.8)'
-                  : document.documentElement.classList.contains('dark')
-                  ? 'rgba(255, 255, 255, 0.8)'
-                  : 'rgba(30, 41, 59, 0.8)'
-              }}>
-                {category?.name || message.category}
-              </span>
-              <span className="text-xs ml-2" style={{
-                color: document.documentElement.classList.contains('pink') 
-                  ? 'rgba(76, 29, 149, 0.6)'
-                  : document.documentElement.classList.contains('dark')
-                  ? 'rgba(255, 255, 255, 0.6)'
-                  : 'rgba(30, 41, 59, 0.6)'
-              }}>
-                {formatTimeAgo(message.createdAt!)}
-              </span>
-            </div>
-          </div>
-
-          {/* Message content in box - exactly like reference */}
-          <div className="rounded-xl p-4 mb-3 border" style={{
-            background: document.documentElement.classList.contains('pink') 
-              ? 'rgba(76, 29, 149, 0.15)'
-              : document.documentElement.classList.contains('dark')
-              ? 'rgba(255, 255, 255, 0.1)'
-              : 'rgba(30, 41, 59, 0.1)',
-            borderColor: document.documentElement.classList.contains('pink') 
-              ? 'rgba(76, 29, 149, 0.25)'
-              : document.documentElement.classList.contains('dark')
-              ? 'rgba(255, 255, 255, 0.15)'
-              : 'rgba(30, 41, 59, 0.15)'
-          }}>
-            <p className="text-center text-base leading-relaxed" style={{
-              color: document.documentElement.classList.contains('pink') 
-                ? '#4c1d95'
-                : document.documentElement.classList.contains('dark')
-                ? '#ffffff'
-                : '#1e293b'
-            }}>
-              "{message.content}"
-            </p>
-          </div>
-
-          {/* Spotify track display for downloads */}
-          {(message.spotifyTrackId || message.spotifyLink) && (
-            <div className="mb-4 p-3 rounded-lg border" style={{
-              background: document.documentElement.classList.contains('pink') 
-                ? 'rgba(76, 29, 149, 0.08)'
-                : document.documentElement.classList.contains('dark')
-                ? 'rgba(255, 255, 255, 0.05)'
-                : 'rgba(30, 41, 59, 0.05)',
-              borderColor: document.documentElement.classList.contains('pink') 
-                ? 'rgba(76, 29, 149, 0.15)'
-                : document.documentElement.classList.contains('dark')
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(30, 41, 59, 0.1)'
-            }}>
-              <div className="flex items-center gap-3">
-                {message.spotifyAlbumCover && (
-                  <img 
-                    src={message.spotifyAlbumCover} 
-                    alt="Album cover"
-                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm truncate" style={{
-                    color: document.documentElement.classList.contains('pink') 
-                      ? '#4c1d95'
-                      : document.documentElement.classList.contains('dark')
-                      ? '#ffffff'
-                      : '#1e293b'
-                  }}>
-                    {message.spotifyTrackName || 'Unknown Track'}
-                  </div>
-                  <div className="text-xs truncate mt-0.5" style={{
-                    color: document.documentElement.classList.contains('pink') 
-                      ? 'rgba(76, 29, 149, 0.7)'
-                      : document.documentElement.classList.contains('dark')
-                      ? 'rgba(255, 255, 255, 0.7)'
-                      : 'rgba(30, 41, 59, 0.7)'
-                  }}>
-                    {message.spotifyArtistName || 'Unknown Artist'}
-                  </div>
+        {/* Different designs for user board vs public dashboard */}
+        {isUserBoardMessage ? (
+          // User Board Design - Exact umamin.link style (dark theme, Twitter-like)
+          <div 
+            ref={messageRef}
+            data-message-viewer
+            style={{
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              backgroundColor: '#1a1a1a',
+              border: '1px solid #3a3a3a',
+              borderRadius: '16px',
+              padding: '20px 24px',
+              maxWidth: '400px',
+              margin: '0 auto',
+              color: '#ffffff'
+            }}
+          >
+            {/* Header with user avatar and info - exactly like umamin.link */}
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  backgroundColor: '#4a4a4a',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#ffffff'
+                }}
+              >
+                {message.senderName ? message.senderName.charAt(0).toUpperCase() : "A"}
+              </div>
+              <div className="flex-1">
+                <div style={{ fontWeight: '600', fontSize: '15px', color: '#ffffff' }}>
+                  {message.senderName || "Anonymous"}
                 </div>
-                <div className="flex items-center gap-1 text-xs flex-shrink-0" style={{
-                  color: document.documentElement.classList.contains('pink') 
-                    ? 'rgba(76, 29, 149, 0.6)'
-                    : document.documentElement.classList.contains('dark')
-                    ? 'rgba(255, 255, 255, 0.6)'
-                    : 'rgba(30, 41, 59, 0.6)'
-                }}>
-                  🎵 Spotify
+                <div style={{ fontSize: '13px', color: '#9ca3af' }}>
+                  @{message.senderName?.toLowerCase() || "anonymous"} • {formatTimeAgo(message.createdAt || new Date())}
                 </div>
               </div>
+              <div style={{ fontSize: '16px', color: '#6b7280', fontWeight: 'bold' }}>•••</div>
             </div>
-          )}
 
-          {/* Attribution with profile picture - exactly like reference */}
-          <div className="text-center mb-4">
-            {/* Profile picture if available */}
-            {((message.userId && message.user?.profilePicture) || (message.adminId && message.admin?.profilePicture)) && (
-              <div className="flex justify-center mb-2">
-                <img
-                  src={message.user?.profilePicture || message.admin?.profilePicture || ''}
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full border-2"
-                  style={{
-                    borderColor: document.documentElement.classList.contains('pink') 
-                      ? 'rgba(76, 29, 149, 0.3)'
-                      : document.documentElement.classList.contains('dark')
-                      ? 'rgba(255, 255, 255, 0.3)'
-                      : 'rgba(30, 41, 59, 0.3)',
-                    objectFit: 'cover'
+            {/* Message content - clean and readable */}
+            <div style={{ 
+              color: '#ffffff', 
+              fontSize: '15px', 
+              lineHeight: '1.4', 
+              marginBottom: '16px',
+              wordWrap: 'break-word'
+            }}>
+              {message.content}
+            </div>
+
+            {/* Spotify track if available */}
+            {message.spotifyTrackId && (
+              <div style={{ marginBottom: '12px' }}>
+                <SpotifyTrackDisplay
+                  track={{
+                    id: message.spotifyTrackId,
+                    name: message.spotifyTrackName || "",
+                    artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
+                    album: {
+                      id: "stored",
+                      name: "Unknown Album",
+                      images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
+                    },
+                    external_urls: {
+                      spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
+                    },
+                    preview_url: null,
+                    duration_ms: 0,
+                    popularity: 0,
                   }}
+                  size="sm"
+                  showPreview={true}
                 />
               </div>
             )}
-            <p className="text-xs italic" style={{
-              color: document.documentElement.classList.contains('pink') 
-                ? 'rgba(76, 29, 149, 0.6)'
-                : document.documentElement.classList.contains('dark')
-                ? 'rgba(255, 255, 255, 0.6)'
-                : 'rgba(30, 41, 59, 0.6)'
-            }}>
-              {/* Show registered user info if available */}
-              {message.userId && message.user ? (
-                `— ${message.user.displayName || message.user.username} (Registered User)`
-              ) : message.adminId && message.admin ? (
-                `— ${message.admin.displayName} (Admin)`
-              ) : message.senderName ? (
-                `— ${message.senderName}`
-              ) : (
-                '— Anonymous Whisper'
-              )}
-            </p>
-          </div>
 
-          {/* Stats - exactly like reference */}
-          <div className="flex items-center justify-center gap-5 mb-4">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs" style={{
-                color: document.documentElement.classList.contains('pink') 
-                  ? 'rgba(76, 29, 149, 0.8)'
-                  : document.documentElement.classList.contains('dark')
-                  ? 'rgba(255, 255, 255, 0.8)'
-                  : 'rgba(30, 41, 59, 0.8)'
-              }}>♥ {message.reactionCount || 0} hearts</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs" style={{
-                color: document.documentElement.classList.contains('pink') 
-                  ? 'rgba(76, 29, 149, 0.8)'
-                  : document.documentElement.classList.contains('dark')
-                  ? 'rgba(255, 255, 255, 0.8)'
-                  : 'rgba(30, 41, 59, 0.8)'
-              }}>💬 {message.replies?.length || 0} replies</span>
-            </div>
+            {/* Category badge - minimal style */}
+            {category && (
+              <div style={{ marginBottom: '8px' }}>
+                <span 
+                  style={{ 
+                    fontSize: '11px',
+                    padding: '4px 8px',
+                    borderRadius: '12px',
+                    backgroundColor: category.color + '20',
+                    color: category.color,
+                    fontWeight: '500'
+                  }}
+                >
+                  {category.name}
+                </span>
+              </div>
+            )}
           </div>
+        ) : (
+          // Public Dashboard Design - Original whisper card design
+          <div 
+            ref={messageRef}
+            data-message-viewer
+            className="bg-white rounded-xl border p-6 max-w-md mx-auto shadow-lg"
+            style={{
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '400px',
+              margin: '0 auto',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            {/* Header */}
+            <div className="text-center mb-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-1">Whisper Network</h2>
+              <p className="text-sm text-gray-600">Anonymous Message</p>
+            </div>
 
-          {/* Footer - exactly like reference */}
-          <div className="text-center pt-3 border-t" style={{
-            borderColor: document.documentElement.classList.contains('pink') 
-              ? 'rgba(76, 29, 149, 0.1)'
-              : document.documentElement.classList.contains('dark')
-              ? 'rgba(255, 255, 255, 0.1)'
-              : 'rgba(30, 41, 59, 0.1)'
-          }}>
-            <p className="text-xs" style={{
-              color: document.documentElement.classList.contains('pink') 
-                ? 'rgba(76, 29, 149, 0.5)'
-                : document.documentElement.classList.contains('dark')
-                ? 'rgba(255, 255, 255, 0.5)'
-                : 'rgba(30, 41, 59, 0.5)'
-            }}>
-              This whisper was shared on Whisper Network • {new Date(message.createdAt!).toLocaleDateString()}
-            </p>
+            {/* Message content */}
+            <div className="text-gray-900 text-base leading-relaxed mb-4 text-center">
+              {message.content}
+            </div>
+
+            {/* Spotify track if available */}
+            {message.spotifyTrackId && (
+              <div className="mb-4">
+                <SpotifyTrackDisplay
+                  track={{
+                    id: message.spotifyTrackId,
+                    name: message.spotifyTrackName || "",
+                    artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
+                    album: {
+                      id: "stored",
+                      name: "Unknown Album",
+                      images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
+                    },
+                    external_urls: {
+                      spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
+                    },
+                    preview_url: null,
+                    duration_ms: 0,
+                    popularity: 0,
+                  }}
+                  size="sm"
+                  showPreview={true}
+                />
+              </div>
+            )}
+
+            {/* Footer with category and sender */}
+            <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                {category && (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs"
+                    style={{ backgroundColor: category.color + '20', color: category.color }}
+                  >
+                    {category.name}
+                  </Badge>
+                )}
+              </div>
+              <div className="text-xs">
+                {formatTimeAgo(message.createdAt || new Date())}
+              </div>
+            </div>
+
+            <div className="text-center mt-4 text-sm text-gray-500">
+              From: {message.senderName || "Anonymous"}
+            </div>
           </div>
+        )}
+
+        {/* Social sharing buttons */}
+        <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t">
+          <Button variant="outline" size="sm" onClick={shareToFacebook}>
+            <Facebook className="w-4 h-4 mr-2" />
+            Facebook
+          </Button>
+          <Button variant="outline" size="sm" onClick={shareToTwitter}>
+            <Twitter className="w-4 h-4 mr-2" />
+            Twitter
+          </Button>
+          <Button variant="outline" size="sm" onClick={copyLink}>
+            <Copy className="w-4 h-4 mr-2" />
+            Copy Link
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
