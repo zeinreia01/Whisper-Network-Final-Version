@@ -337,10 +337,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/meta/board/:username", async (req, res) => {
     try {
       const { username } = req.params;
-      const user = await storage.getUserByUsername(username);
+      let user = await storage.getUserByUsername(username);
       
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        // Try admin
+        const admin = await storage.getAdminByUsername(username);
+        if (!admin) {
+          return res.status(404).json({ error: "User not found" });
+        }
+        user = admin;
       }
 
       const meta = generateUserBoardOG(user);
@@ -467,6 +472,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(meta);
     } catch (error) {
       console.error("Error generating password management meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  // Add generic meta generation for any route
+  app.get("/api/meta/generate", async (req, res) => {
+    try {
+      const { path, title, description } = req.query;
+      
+      let meta;
+      
+      if (typeof path === 'string') {
+        if (path.startsWith('/user/')) {
+          const username = path.split('/')[2];
+          if (username) {
+            const user = await storage.getUserByUsername(username);
+            if (user) {
+              meta = generateUserProfileOG(user);
+            }
+          }
+        } else if (path.startsWith('/board/')) {
+          const username = path.split('/')[2];
+          if (username) {
+            let user = await storage.getUserByUsername(username);
+            if (!user) {
+              user = await storage.getAdminByUsername(username);
+            }
+            if (user) {
+              meta = generateUserBoardOG(user);
+            }
+          }
+        } else if (path.startsWith('/admin/')) {
+          const username = path.split('/')[2];
+          if (username) {
+            const admin = await storage.getAdminByUsername(username);
+            if (admin) {
+              meta = generateAdminProfileOG(admin);
+            }
+          } else {
+            meta = generateAdminDashboardOG();
+          }
+        } else if (path.startsWith('/anonymous/')) {
+          const username = path.split('/')[2];
+          if (username) {
+            meta = generateAnonymousLinkOG(username);
+          }
+        } else if (path === '/dashboard') {
+          meta = generateDashboardOG();
+        } else if (path === '/leaderboard') {
+          meta = generateLeaderboardOG();
+        } else if (path === '/personal') {
+          meta = generatePersonalArchiveOG();
+        } else if (path === '/home') {
+          meta = generateHomePageOG();
+        } else if (path === '/password-management') {
+          meta = generatePasswordManagementOG();
+        } else if (path === '/') {
+          meta = generateLandingPageOG();
+        }
+      }
+
+      if (!meta) {
+        meta = {
+          title: (title as string) || 'Whisper Network',
+          description: (description as string) || 'Anonymous messaging platform for authentic conversations',
+          image: 'https://og-image.umamin.link/api/generic?title=' + encodeURIComponent((title as string) || 'Whisper Network'),
+          url: path || '/'
+        };
+      }
+
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating generic meta:", error);
       res.status(500).json({ error: "Failed to generate meta tags" });
     }
   });

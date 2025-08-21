@@ -530,118 +530,68 @@ export default function UserBoard() {
                     <div 
                       key={message.id}
                       id={`board-message-${message.id}`}
-                      className={`bg-gray-900/70 backdrop-blur-sm text-white rounded-2xl border border-gray-700/50 p-4 relative group transition-all duration-200 hover:bg-gray-900/80 hover:border-gray-600/50 ${
-                        message.isPinned ? 'ring-2 ring-yellow-400/50 ring-offset-2 ring-offset-gray-950' : ''
+                      className={`relative bg-gradient-to-br from-gray-800/90 via-gray-900/90 to-black/90 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-gray-700/40 transition-all duration-300 hover:shadow-3xl hover:border-gray-600/60 ${
+                        message.isPinned ? 'ring-2 ring-yellow-400/60 ring-offset-2 ring-offset-transparent shadow-yellow-400/20' : ''
                       }`}
+                      style={{
+                        background: `linear-gradient(135deg, 
+                          rgba(31, 41, 55, 0.9) 0%, 
+                          rgba(17, 24, 39, 0.95) 50%, 
+                          rgba(0, 0, 0, 0.9) 100%)`
+                      }}
                     >
                       {message.isPinned && (
-                        <div className="flex items-center gap-1 text-yellow-400 text-xs font-medium mb-3">
+                        <div className="absolute -top-3 left-6 bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                           <Pin className="w-3 h-3" />
-                          Pinned Message
+                          PINNED
                         </div>
                       )}
 
-                      {/* Header with profile info - umamin.link style */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <Avatar className="w-10 h-10 ring-2 ring-gray-600/30">
-                          <AvatarImage src={senderProfile?.profilePicture || ""} alt={displayName} />
-                          <AvatarFallback className="bg-gray-700 text-gray-200 font-bold">
-                            {displayName.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-white text-sm">
-                              {displayName}
-                            </span>
-                            <span className="text-gray-400 text-xs">
-                              @{isBoardOwnerPost ? boardUser.username : 'anonymous'}
-                            </span>
-                            <span className="text-gray-500 text-xs">
-                              {new Date(message.createdAt).toLocaleDateString()}
-                            </span>
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <Avatar className="w-12 h-12 ring-2 ring-white/20 shadow-lg">
+                              <AvatarImage src={senderProfile?.profilePicture || ""} alt={displayName} />
+                              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-lg">
+                                {displayName.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            {isBoardOwnerPost && (
+                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                                <span className="text-white text-xs">👑</span>
+                              </div>
+                            )}
                           </div>
                           
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs border-gray-600 text-gray-300 bg-gray-800/50"
-                              style={{
-                                borderColor: categories.find(c => c.name === message.category)?.color + '80',
-                                color: categories.find(c => c.name === message.category)?.color,
-                              }}
-                            >
-                              {message.category}
-                            </Badge>
-                            
-                            {message.senderAdminId && (
-                              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-purple-900/50 text-purple-300 border-purple-700/50">
-                                Whisper Listener
-                              </Badge>
-                            )}
-                            
-                            {isBoardOwnerPost && (
-                              <Badge variant="default" className="text-xs px-2 py-0.5 bg-green-900/50 text-green-300 border-green-700/50">
-                                Board Owner
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Message content */}
-                      <div className="mb-3">
-                        <p className="text-gray-100 leading-relaxed text-[15px] font-light">
-                          {message.content}
-                        </p>
-                      </div>
-
-                      {/* Spotify track display - umamin style */}
-                      {message.spotifyTrackId && (
-                        <div className="mt-3 p-3 bg-gray-800/50 rounded-xl border border-gray-700/30">
-                          <div className="flex items-center gap-3">
-                            {message.spotifyAlbumCover && (
-                              <img 
-                                src={message.spotifyAlbumCover} 
-                                alt="Album cover" 
-                                className="w-12 h-12 rounded-lg object-cover shadow-lg"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white text-sm truncate">
-                                {message.spotifyTrackName}
-                              </p>
-                              <p className="text-xs text-gray-400 truncate">
-                                by {message.spotifyArtistName}
-                              </p>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-white text-lg">
+                                {displayName}
+                              </h3>
+                              {message.senderAdminId && (
+                                <Badge className="bg-purple-600/80 text-white text-xs px-2 py-1 rounded-full">
+                                  🎧 Listener
+                                </Badge>
+                              )}
                             </div>
-                            <a 
-                              href={message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-400 hover:text-green-300 transition-colors p-2 hover:bg-gray-700/50 rounded-lg"
-                            >
-                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.301.421-1.02.599-1.559.3z"/>
-                              </svg>
-                            </a>
+                            <p className="text-gray-300 text-sm">
+                              @{isBoardOwnerPost ? boardUser.username : 'anonymous'} • {new Date(message.createdAt).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
-                      )}
 
-                      {/* Action buttons - Always visible with umamin.link style */}
-                      <div className="absolute top-3 right-3">
-                        <div className="flex items-center gap-1 bg-gray-800/70 backdrop-blur-sm rounded-lg p-1 shadow-lg border border-gray-600/30">
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-xl p-1">
                           {isOwnBoard && (
                             <Button
                               onClick={() => handlePinMessage(message.id, !message.isPinned)}
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-gray-400 hover:text-yellow-400 hover:bg-gray-700/50"
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded-lg"
                               title={message.isPinned ? "Unpin message" : "Pin message"}
                             >
-                              {message.isPinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                              {message.isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                             </Button>
                           )}
 
@@ -700,10 +650,10 @@ export default function UserBoard() {
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50" 
-                                title="Download as image"
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg" 
+                                title="Save as image"
                               >
-                                <Download className="h-3 w-3" />
+                                <Download className="h-4 w-4" />
                               </Button>
                             } 
                           />
@@ -714,10 +664,10 @@ export default function UserBoard() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 w-7 p-0 text-gray-400 hover:text-red-400 hover:bg-gray-700/50"
+                                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg"
                                   title="Delete message"
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className="bg-gray-900 text-white border-gray-700">
@@ -739,6 +689,68 @@ export default function UserBoard() {
                               </AlertDialogContent>
                             </AlertDialog>
                           )}
+                        </div>
+                      </div>
+
+                      {/* Category Badge */}
+                      <div className="mb-4">
+                        <Badge 
+                          className="px-3 py-1 text-sm font-medium rounded-full border-0"
+                          style={{
+                            backgroundColor: categories.find(c => c.name === message.category)?.color + '20',
+                            color: categories.find(c => c.name === message.category)?.color,
+                            border: `1px solid ${categories.find(c => c.name === message.category)?.color}40`
+                          }}
+                        >
+                          {message.category}
+                        </Badge>
+                      </div>
+
+                      {/* Message Content */}
+                      <div className="mb-6">
+                        <p className="text-gray-100 text-lg leading-relaxed font-light tracking-wide">
+                          {message.content}
+                        </p>
+                      </div>
+
+                      {/* Spotify Integration */}
+                      {message.spotifyTrackId && (
+                        <div className="mt-4 p-4 bg-gradient-to-r from-green-600/20 to-green-400/20 rounded-2xl border border-green-500/30">
+                          <div className="flex items-center gap-4">
+                            {message.spotifyAlbumCover && (
+                              <img 
+                                src={message.spotifyAlbumCover} 
+                                alt="Album cover" 
+                                className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-green-400/30"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-white text-lg truncate">
+                                {message.spotifyTrackName}
+                              </p>
+                              <p className="text-green-300 text-sm truncate">
+                                by {message.spotifyArtistName}
+                              </p>
+                            </div>
+                            <a 
+                              href={message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-green-500 hover:bg-green-400 text-white p-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-green-500/20"
+                            >
+                              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.301.421-1.02.599-1.559.3z"/>
+                              </svg>
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Footer watermark */}
+                      <div className="mt-6 pt-4 border-t border-gray-700/30">
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Posted on {boardName}</span>
+                          <span className="font-mono">umamin.link</span>
                         </div>
                       </div>
                     </div>
