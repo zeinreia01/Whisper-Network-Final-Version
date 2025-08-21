@@ -138,17 +138,17 @@ export default function UserBoard() {
       const messageData = {
         content: messageContent,
         category: selectedCategory,
-        targetUserId: 'id' in boardUser && !('role' in boardUser) ? boardUser.id : null,
-        targetAdminId: 'role' in boardUser ? boardUser.id : null,
-        senderUserId: !isAnonymous && user ? user.id : null,
-        senderAdminId: !isAnonymous && admin ? admin.id : null,
+        targetUserId: 'id' in boardUser && !('role' in boardUser) ? boardUser.id : undefined,
+        targetAdminId: 'role' in boardUser ? boardUser.id : undefined,
+        senderUserId: !isAnonymous && user ? user.id : undefined,
+        senderAdminId: !isAnonymous && admin ? admin.id : undefined,
         senderName: isAnonymous ? (senderName || "Anonymous") : (user?.displayName || user?.username || admin?.displayName || "User"),
         isVisible: true,
-        spotifyTrackId: selectedTrack?.id || null,
-        spotifyTrackName: selectedTrack?.name || null,
-        spotifyArtistName: selectedTrack?.artists?.map(a => a.name).join(", ") || null,
-        spotifyAlbumCover: selectedTrack?.album?.images?.[0]?.url || null,
-        spotifyLink: selectedTrack ? `https://open.spotify.com/track/${selectedTrack.id}` : null,
+        spotifyTrackId: selectedTrack?.id || undefined,
+        spotifyTrackName: selectedTrack?.name || undefined,
+        spotifyArtistName: selectedTrack?.artists?.map(a => a.name).join(", ") || undefined,
+        spotifyAlbumCover: selectedTrack?.album?.images?.[0]?.url || undefined,
+        spotifyLink: selectedTrack ? `https://open.spotify.com/track/${selectedTrack.id}` : undefined,
       };
 
       const response = await fetch("/api/dashboard/messages", {

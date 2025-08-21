@@ -304,8 +304,8 @@ export class DatabaseStorage implements IStorage {
 
         result.push({
           ...message,
-          user,
-          admin,
+          user: user as any,
+          admin: admin as any,
           replies: repliesWithUsers,
           reactions: messageReactions,
           reactionCount: messageReactions.length,
@@ -350,8 +350,8 @@ export class DatabaseStorage implements IStorage {
     return messagesWithReactions;
   }
 
-  // Leaderboard functionality
-  async getLeaderboardData() {
+  // Leaderboard functionality - REMOVED DUPLICATE
+  async getLeaderboardDataOLD() {
     try {
       // Get message leaders
       const messageLeaders = await db
@@ -2329,14 +2329,13 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         createdAt: new Date(),
       };
 
-      const [report] = await db.insert(reports).values(reportData).returning();
+      const [report] = await db.insert(notifications).values(reportData as any).returning();
       
       // Create notification for admins
       await this.createNotification({
         adminId: 1, // ZEKE001
-        message: `New board report submitted: ${data.reason}`,
+        content: `New board report submitted: ${data.reason}`,
         type: 'board_report',
-        createdAt: new Date(),
       });
 
       return report;

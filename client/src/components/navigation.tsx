@@ -53,15 +53,15 @@ export function Navigation() {
             </div>
 
             {/* Center - Main Navigation (Desktop Only) */}
-            <div className="hidden sm:flex items-center space-x-2">
+            <div className="hidden sm:flex items-center space-x-4">
               <Link href="/">
                 <Button
                   variant={location === "/" ? "default" : "ghost"}
                   size="sm"
-                  className="flex items-center"
+                  className="flex items-center justify-center w-10 h-10 p-0"
+                  title="Home"
                 >
-                  <Home className="h-4 w-4 mr-2" />
-                  Home
+                  <Home className="h-5 w-5" />
                 </Button>
               </Link>
 
@@ -69,38 +69,38 @@ export function Navigation() {
                 <Button
                   variant={location === "/dashboard" ? "default" : "ghost"}
                   size="sm"
-                  className="flex items-center"
+                  className="flex items-center justify-center w-10 h-10 p-0"
+                  title="Dashboard"
                 >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Dashboard
+                  <BarChart3 className="h-5 w-5" />
                 </Button>
               </Link>
+
+              {(user || admin) && (
+                <Link href="/boards">
+                  <Button
+                    variant={location === "/boards" ? "default" : "ghost"}
+                    size="sm"
+                    className="flex items-center justify-center w-10 h-10 p-0 relative"
+                    title="Boards"
+                  >
+                    <Users className="h-5 w-5" />
+                    <Badge variant="destructive" className="absolute -top-1 -right-1 text-xs font-bold h-4 px-1 scale-75">
+                      NEW!
+                    </Badge>
+                  </Button>
+                </Link>
+              )}
 
               {admin && (
                 <Link href="/admin">
                   <Button
                     variant={location === "/admin" ? "default" : "ghost"}
                     size="sm"
-                    className="flex items-center"
+                    className="flex items-center justify-center w-10 h-10 p-0"
+                    title="Admin"
                   >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
-
-              {admin && (
-                <Link href="/boards">
-                  <Button
-                    variant={location === "/boards" ? "default" : "ghost"}
-                    size="sm"
-                    className="flex items-center relative"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Boards
-                    <Badge variant="destructive" className="ml-1 text-xs font-bold h-4 px-1">
-                      NEW!
-                    </Badge>
+                    <Shield className="h-5 w-5" />
                   </Button>
                 </Link>
               )}
@@ -109,10 +109,10 @@ export function Navigation() {
                 <Button
                   variant={location === "/announcements" ? "default" : "ghost"}
                   size="sm"
-                  className="flex items-center"
+                  className="flex items-center justify-center w-10 h-10 p-0"
+                  title="Updates"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Updates 🎀🫶
+                  <Sparkles className="h-5 w-5" />
                 </Button>
               </Link>
             </div>

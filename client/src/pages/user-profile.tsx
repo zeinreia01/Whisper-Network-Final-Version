@@ -34,6 +34,33 @@ export function UserProfilePage() {
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportReason, setReportReason] = useState("");
+
+  // Board configuration helper
+  const updateProfileField = async (field: string, value: any) => {
+    if (!currentUserId || !isOwnProfile) return;
+    
+    try {
+      const endpoint = userId === currentUserId && user ? 
+        `/api/users/${currentUserId}/profile` : 
+        `/api/admins/${currentUserId}/profile`;
+      
+      const response = await apiRequest('PATCH', endpoint, { [field]: value });
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
+        toast({
+          title: "Settings updated",
+          description: "Your board settings have been updated.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update profile field:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update settings",
+        variant: "destructive",
+      });
+    }
+  };
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const currentUserId = user?.id || admin?.id;
@@ -448,14 +475,14 @@ export function UserProfilePage() {
                     <div className="flex items-center justify-center text-blue-500 mb-2">
                       <Users className="w-6 h-6" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{(profile as any).followersCount || 0}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{Number((profile as any).followersCount) || 0}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Followers</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <div className="flex items-center justify-center text-purple-500 mb-2">
                       <Users className="w-6 h-6" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{(profile as any).followingCount || 0}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{Number((profile as any).followingCount) || 0}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Following</div>
                   </div>
                 </div>
