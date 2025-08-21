@@ -49,21 +49,47 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
     if (isDownloading) return;
     
     setIsDownloading(true);
+    
+    // Show initial loading message
+    toast({
+      title: "Converting image...",
+      description: "Please wait for a moment, image converting...",
+    });
+    
     try {
       const element = document.getElementById('userboard-message-capture');
       if (!element) {
         throw new Error('Message element not found');
       }
 
-      // Ensure all fonts are loaded before capture
+      // Force all fonts to load completely
       await document.fonts.ready;
       
-      // Wait a bit more for any dynamic content
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Load additional fonts that might be used
+      const fontPromises = [
+        document.fonts.load('16px ui-sans-serif'),
+        document.fonts.load('18px ui-sans-serif'),
+        document.fonts.load('20px ui-sans-serif'),
+        document.fonts.load('24px ui-sans-serif'),
+        document.fonts.load('bold 16px ui-sans-serif'),
+        document.fonts.load('bold 18px ui-sans-serif'),
+      ];
+      
+      await Promise.allSettled(fontPromises);
+      
+      // Wait longer for complete rendering
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Force layout recalculation
+      element.style.transform = 'translateZ(0)';
+      element.offsetHeight; // Trigger reflow
+      
+      // Wait additional time for Spotify section to render properly
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       const canvas = await html2canvas(element, {
         backgroundColor: 'transparent',
-        scale: 2,
+        scale: 3, // Higher scale for better quality
         useCORS: true,
         allowTaint: false,
         logging: false,
@@ -71,19 +97,59 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
         height: element.scrollHeight,
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight,
+        letterRendering: true,
+        foreignObjectRendering: true,
+        imageTimeout: 10000, // 10 second timeout for images
+        onclone: (clonedDoc) => {
+          // Fix text rendering issues in cloned document
+          const clonedElement = clonedDoc.getElementById('userboard-message-capture');
+          if (clonedElement) {
+            // Add CSS to fix text clipping
+            const style = clonedDoc.createElement('style');
+            style.textContent = `
+              * {
+                -webkit-font-smoothing: antialiased !important;
+                -moz-osx-font-smoothing: grayscale !important;
+                text-rendering: optimizeLegibility !important;
+                line-height: 1.5 !important;
+                overflow: visible !important;
+              }
+              .text-lg, .text-xl, .text-2xl {
+                line-height: 1.6 !important;
+                padding: 2px 0 !important;
+              }
+              .font-bold, .font-semibold {
+                font-weight: bold !important;
+                line-height: 1.4 !important;
+              }
+              .spotify-section * {
+                overflow: visible !important;
+                line-height: 1.5 !important;
+              }
+            `;
+            clonedDoc.head.appendChild(style);
+            
+            // Reset transform
+            clonedElement.style.transform = 'none';
+          }
+        },
       });
 
+      // Reset transform
+      element.style.transform = 'none';
+
       // Create download link
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
       const link = document.createElement('a');
-      link.download = `board-message-${message.id}.png`;
+      link.download = `whisper-board-${boardUser.username}-${timestamp}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       toast({
-        title: "Image saved!",
-        description: "Board message saved to your downloads.",
+        title: "Image saved successfully!",
+        description: "High-quality board message saved to your downloads.",
       });
     } catch (error) {
       console.error('Download failed:', error);
@@ -114,7 +180,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               disabled={isDownloading}
             >
               <Download className="w-4 h-4" />
-              {isDownloading ? 'Saving...' : 'Save as Image'}
+              {isDownloading ? 'Converting...' : 'Save as Image'}
             </Button>
           </div>
         </DialogHeader>
