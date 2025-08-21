@@ -238,7 +238,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               <div className="relative">
                 <Avatar className="w-16 h-16 ring-4 ring-white/20 shadow-2xl">
                   <AvatarImage src={senderProfile?.profilePicture || ""} alt={displayName} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-xl">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-xl flex items-center justify-center">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -270,7 +270,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
           {/* Category Badge */}
           <div className="mb-6">
             <Badge 
-              className="px-4 py-2 text-base font-semibold rounded-full border-0 shadow-lg"
+              className="px-4 py-2 text-base font-semibold rounded-full border-0 shadow-lg inline-flex items-center justify-center"
               style={{
                 backgroundColor: categories.find(c => c.name === message.category)?.color + '30',
                 color: categories.find(c => c.name === message.category)?.color,
@@ -325,7 +325,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               <div className="flex items-center gap-4">
                 <Avatar className="w-12 h-12 ring-2 ring-white/20">
                   <AvatarImage src={boardUser.profilePicture || ""} alt={boardUser.displayName || boardUser.username} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold flex items-center justify-center">
                     {(boardUser.displayName || boardUser.username).charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
