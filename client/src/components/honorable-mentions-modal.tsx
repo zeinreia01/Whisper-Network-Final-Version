@@ -157,7 +157,7 @@ export function HonorableMentionsModal({ trigger }: HonorableMentionsModalProps)
           </div>
 
           {/* Mentions Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-96 overflow-y-auto">
             {isLoading ? (
               <div className="col-span-full text-center py-8 text-gray-500">
                 Loading mentions...

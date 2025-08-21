@@ -82,7 +82,7 @@ export default function LeaderboardPage() {
 
   const LeaderboardList = ({ users, type }: { users: LeaderboardUser[]; type: string }) => {
     const filteredUsers = filterUsers(users);
-    
+
     return (
       <div className="space-y-3">
         {filteredUsers.map((user, index) => (
@@ -92,12 +92,12 @@ export default function LeaderboardPage() {
                 <div className="flex items-center justify-center w-12 h-12">
                   {getRankIcon(user.rank)}
                 </div>
-                
+
                 <Avatar className="w-12 h-12 ring-2 ring-background">
                   <AvatarImage src={user.profilePicture || ""} alt={user.displayName || user.username} />
                   <AvatarFallback>{(user.displayName || user.username).charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold truncate">
@@ -111,7 +111,7 @@ export default function LeaderboardPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">@{user.username}</p>
                 </div>
-                
+
                 <div className="text-right">
                   <div className="font-bold text-lg">
                     {type === "messages" && user.messageCount}
@@ -136,7 +136,7 @@ export default function LeaderboardPage() {
 
   const MyRankingCard = () => {
     if (!userRanking) return null;
-    
+
     return (
       <Card className="mb-6 bg-primary/5 border-primary/20">
         <CardHeader>
@@ -219,7 +219,7 @@ export default function LeaderboardPage() {
             <span className="hidden sm:inline">Messages</span>
           </TabsTrigger>
           <TabsTrigger value="replies" className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
+            <span className="text-lg">🫂</span>
             <span className="hidden sm:inline">Replies</span>
           </TabsTrigger>
           <TabsTrigger value="likes" className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export default function LeaderboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
+                <span className="text-lg">🫂</span>
                 Most Replies Sent
               </CardTitle>
             </CardHeader>

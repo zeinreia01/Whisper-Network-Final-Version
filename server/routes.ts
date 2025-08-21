@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyAPI } from "./spotify";
-import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG } from "./dynamic-meta";
+import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG, generateLandingPageOG } from "./dynamic-meta";
 import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema, insertUserMusicSchema, insertDashboardMessageSchema, insertAdminAnnouncementSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -380,6 +380,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(meta);
     } catch (error) {
       console.error("Error generating anonymous meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/landing", async (req, res) => {
+    try {
+      const meta = generateLandingPageOG();
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating landing meta:", error);
       res.status(500).json({ error: "Failed to generate meta tags" });
     }
   });
