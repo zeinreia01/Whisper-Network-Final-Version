@@ -28,7 +28,6 @@ async function setupInitialData() {
 
     if (existingAdmin.length === 0) {
       console.log("🔧 Creating main admin ZEKE001...");
-      // Hash the password for ZEKE001 like other admins
       const hashedPassword = await hashPassword("122209");
       await db.insert(admins).values({
         username: "ZEKE001",
@@ -38,20 +37,17 @@ async function setupInitialData() {
         isActive: true,
         isVerified: true,
       });
-      console.log("✅ Main admin ZEKE001 created with hashed password");
+      console.log("✅ Main admin ZEKE001 created with password 122209");
     } else {
       console.log("ℹ️ Main admin ZEKE001 already exists");
-      // Update existing ZEKE001 to use hashed password if it's still plain text
-      const admin = existingAdmin[0];
-      if (admin.password === "122209") {
-        console.log("🔧 Updating ZEKE001 password to hashed version...");
-        const hashedPassword = await hashPassword("122209");
-        await db
-          .update(admins)
-          .set({ password: hashedPassword })
-          .where(eq(admins.username, "ZEKE001"));
-        console.log("✅ ZEKE001 password updated to hashed version");
-      }
+      // Always update ZEKE001 password to ensure it works
+      console.log("🔧 Updating ZEKE001 password...");
+      const hashedPassword = await hashPassword("122209");
+      await db
+        .update(admins)
+        .set({ password: hashedPassword })
+        .where(eq(admins.username, "ZEKE001"));
+      console.log("✅ ZEKE001 password set to 122209 (hashed)");
     }
 
     // Check if honorable mentions exist

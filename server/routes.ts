@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password } = req.body;
 
       const admin = await storage.getAdminByUsername(username);
-      if (!admin) {
+      if (!admin || !await comparePasswords(password, admin.password)) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
@@ -162,21 +162,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Account is disabled" });
       }
 
-      // All admins now use hashed passwords for consistency
-      if (!admin.password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      const isPasswordValid = await comparePasswords(password, admin.password);
-      if (!isPasswordValid) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
+      // Return admin without password
       const { password: _, ...adminWithoutPassword } = admin;
       res.json(adminWithoutPassword);
     } catch (error) {
       console.error("Error logging in admin:", error);
-      res.status(500).json({ message: "Admin login failed" });
+      res.status(500).json({ message: "Login failed" });
     }
   });
 
