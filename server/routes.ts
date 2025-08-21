@@ -537,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         meta = {
           title: (title as string) || 'Whisper Network',
           description: (description as string) || 'Anonymous messaging platform for authentic conversations',
-          image: 'https://og-image.umamin.link/api/generic?title=' + encodeURIComponent((title as string) || 'Whisper Network'),
+          image: `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent((title as string) || 'Whisper Network')}&backgroundColor=3b82f6&fontSize=40`,
           url: path || '/'
         };
       }

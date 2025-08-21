@@ -19,6 +19,7 @@ import { User, Eye, EyeOff, MessageCircle, ChevronDown, Plus } from "lucide-reac
 import type { MessageWithReplies } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SpotifySearch } from "@/components/spotify-search";
+import { AdSenseContainer } from "@/components/google-adsense-modal";
 
 export default function Home() {
   const [category, setCategory] = useState("Anything");
@@ -381,6 +382,9 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Google AdSense Modal */}
+      <AdSenseContainer pageType="home" />
     </div>
   );
 }

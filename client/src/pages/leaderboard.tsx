@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GuidedWalkthroughLeaderboard } from "@/components/guided-walkthrough-leaderboard";
+import { AdSenseContainer } from "@/components/google-adsense-modal";
 import { Search, Trophy, MessageSquare, Heart, Users, Crown, Medal, Award } from "lucide-react";
 
 interface LeaderboardUser {
@@ -288,6 +289,9 @@ export default function LeaderboardPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Google AdSense Modal */}
+      <AdSenseContainer pageType="leaderboard" />
     </div>
     </>
   );

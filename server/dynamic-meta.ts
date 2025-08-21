@@ -1,6 +1,6 @@
 
 export function generateUserProfileOG(user: any) {
-  const imageUrl = user.profilePicture || 'https://og-image.umamin.link/api/user-profile?username=' + encodeURIComponent(user.username) + '&displayName=' + encodeURIComponent(user.displayName || user.username);
+  const imageUrl = user.profilePicture || `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(user.displayName || user.username)}&backgroundColor=6366f1&fontSize=40`;
   
   return {
     title: `${user.displayName || user.username} - Whisper Network`,
@@ -11,7 +11,7 @@ export function generateUserProfileOG(user: any) {
 }
 
 export function generateUserBoardOG(user: any) {
-  const imageUrl = user.boardBanner || user.profilePicture || 'https://og-image.umamin.link/api/user-board?username=' + encodeURIComponent(user.username) + '&displayName=' + encodeURIComponent(user.displayName || user.username) + '&boardName=' + encodeURIComponent(user.boardName || user.displayName + "'s Board");
+  const imageUrl = user.boardBanner || user.profilePicture || `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(user.displayName || user.username)}&backgroundColor=16a34a&fontSize=40`;
   
   return {
     title: `${user.displayName || user.username}'s Board - Whisper Network`,
@@ -22,7 +22,7 @@ export function generateUserBoardOG(user: any) {
 }
 
 export function generateMessageOG(message: any) {
-  const imageUrl = 'https://og-image.umamin.link/api/message?content=' + encodeURIComponent(message.content.substring(0, 100)) + '&sender=' + encodeURIComponent(message.senderName) + '&category=' + encodeURIComponent(message.category || 'General');
+  const imageUrl = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(message.senderName)}&backgroundColor=8b5cf6&fontSize=40`;
   
   return {
     title: `Message by ${message.senderName} - Whisper Network`,
@@ -33,7 +33,7 @@ export function generateMessageOG(message: any) {
 }
 
 export function generateAnonymousLinkOG(username: string) {
-  const imageUrl = 'https://og-image.umamin.link/api/anonymous-link?username=' + encodeURIComponent(username);
+  const imageUrl = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(username)}&backgroundColor=dc2626&fontSize=40`;
   
   return {
     title: `Send Anonymous Message to ${username} - Whisper Network`,
@@ -44,7 +44,7 @@ export function generateAnonymousLinkOG(username: string) {
 }
 
 export function generateLandingPageOG() {
-  const imageUrl = 'https://og-image.umamin.link/api/landing?title=Whisper%20Network&subtitle=Anonymous%20Messaging%20Platform';
+  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Whisper%20Network&backgroundColor=3b82f6&fontSize=40';
   
   return {
     title: 'Whisper Network - Anonymous Messaging Platform',
@@ -55,7 +55,7 @@ export function generateLandingPageOG() {
 }
 
 export function generateDashboardOG() {
-  const imageUrl = 'https://og-image.umamin.link/api/dashboard?title=Community%20Dashboard&subtitle=Whisper%20Network';
+  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Dashboard&backgroundColor=059669&fontSize=40';
   
   return {
     title: 'Community Dashboard - Whisper Network',
@@ -66,7 +66,7 @@ export function generateDashboardOG() {
 }
 
 export function generateLeaderboardOG() {
-  const imageUrl = 'https://og-image.umamin.link/api/leaderboard?title=Community%20Leaderboard&subtitle=Whisper%20Network';
+  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Leaderboard&backgroundColor=ca8a04&fontSize=40';
   
   return {
     title: 'Community Leaderboard - Whisper Network',
@@ -77,7 +77,7 @@ export function generateLeaderboardOG() {
 }
 
 export function generatePersonalArchiveOG() {
-  const imageUrl = 'https://og-image.umamin.link/api/personal?title=Personal%20Archive&subtitle=Whisper%20Network';
+  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Personal&backgroundColor=7c3aed&fontSize=40';
   
   return {
     title: 'Personal Archive - Whisper Network',
@@ -88,7 +88,7 @@ export function generatePersonalArchiveOG() {
 }
 
 export function generateAdminDashboardOG() {
-  const imageUrl = 'https://og-image.umamin.link/api/admin?title=Admin%20Dashboard&subtitle=Whisper%20Network';
+  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Admin&backgroundColor=dc2626&fontSize=40';
   
   return {
     title: 'Admin Dashboard - Whisper Network',
@@ -99,7 +99,7 @@ export function generateAdminDashboardOG() {
 }
 
 export function generateAdminProfileOG(admin: any) {
-  const imageUrl = admin.profilePicture || 'https://og-image.umamin.link/api/admin-profile?username=' + encodeURIComponent(admin.username) + '&displayName=' + encodeURIComponent(admin.displayName || admin.username);
+  const imageUrl = admin.profilePicture || `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(admin.displayName || admin.username)}&backgroundColor=dc2626&fontSize=40`;
   
   return {
     title: `${admin.displayName || admin.username} - Admin Profile`,
@@ -110,7 +110,7 @@ export function generateAdminProfileOG(admin: any) {
 }
 
 export function generateHomePageOG() {
-  const imageUrl = 'https://og-image.umamin.link/api/home?title=Home&subtitle=Whisper%20Network';
+  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Home&backgroundColor=3b82f6&fontSize=40';
   
   return {
     title: 'Home - Whisper Network',
@@ -121,7 +121,7 @@ export function generateHomePageOG() {
 }
 
 export function generatePasswordManagementOG() {
-  const imageUrl = 'https://og-image.umamin.link/api/admin?title=Password%20Management&subtitle=Admin%20Panel';
+  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Password&backgroundColor=dc2626&fontSize=40';
   
   return {
     title: 'Password Management - Whisper Network',

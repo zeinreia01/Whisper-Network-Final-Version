@@ -6,6 +6,7 @@ import { GuidedWalkthroughDashboard } from "@/components/guided-walkthrough-dash
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
+import { AdSenseContainer } from "@/components/google-adsense-modal";
 import type { MessageWithReplies } from "@shared/schema";
 
 export default function Dashboard() {
@@ -131,6 +132,9 @@ export default function Dashboard() {
           </div>
         )}
         </div>
+
+        {/* Google AdSense Modal */}
+        <AdSenseContainer pageType="dashboard" />
       </div>
     </>
   );

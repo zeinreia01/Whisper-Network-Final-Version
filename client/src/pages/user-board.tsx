@@ -10,12 +10,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff, User } from "lucide-react";
+import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff } from "lucide-react";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { SpotifySearch } from "@/components/spotify-search";
 import { UserBoardMessageViewer } from "@/components/userboard-message-viewer";
-import type { DashboardMessage, Admin } from "@shared/schema";
-import type { SpotifyTrack } from "@/lib/spotify";
+import { AdSenseContainer } from "@/components/google-adsense-modal";
+import type { DashboardMessage, Admin, User } from "@shared/schema";
+
+interface SpotifyTrack {
+  id: string;
+  name: string;
+  artists: Array<{ id: string; name: string }>;
+  album: {
+    id: string;
+    name: string;
+    images: Array<{ url: string; height: number | null; width: number | null }>;
+  };
+  external_urls: { spotify: string };
+  preview_url: string | null;
+  duration_ms: number;
+  popularity: number;
+}
 
 interface UserBoardProps {}
 
@@ -34,7 +49,7 @@ export default function UserBoard() {
   const { user, admin } = useAuth();
   const { toast } = useToast();
 
-  const [boardUser, setBoardUser] = useState<(User | Admin) | null>(null);
+  const [boardUser, setBoardUser] = useState<User | Admin | null>(null);
   const [boardMessages, setBoardMessages] = useState<DashboardMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPostingMessage, setIsPostingMessage] = useState(false);
@@ -66,16 +81,16 @@ export default function UserBoard() {
         if (profileResponse.ok) {
           profile = await profileResponse.json();
           setBoardUser(profile);
-          setBoardName(profile.boardName || `${profile.displayName || profile.username}'s Board`);
-          setBoardBanner(profile.boardBanner || "");
+          setBoardName((profile as any).boardName || `${profile.displayName || profile.username}'s Board`);
+          setBoardBanner((profile as any).boardBanner || "");
         } else {
           // Try admin profile
           const adminResponse = await fetch(`/api/admins/profile/${username}`);
           if (adminResponse.ok) {
             profile = await adminResponse.json();
             setBoardUser(profile);
-            setBoardName(profile.boardName || `${profile.displayName || profile.username}'s Board`);
-            setBoardBanner(profile.boardBanner || "");
+            setBoardName((profile as any).boardName || `${profile.displayName || profile.username}'s Board`);
+            setBoardBanner((profile as any).boardBanner || "");
           }
         }
 
@@ -337,7 +352,7 @@ export default function UserBoard() {
             {(boardBanner || boardUser?.boardBanner) && (
               <div 
                 className="h-48 bg-cover bg-center rounded-t-lg"
-                style={{ backgroundImage: `url(${boardBanner || boardUser?.boardBanner})` }}
+                style={{ backgroundImage: `url(${boardBanner || (boardUser as any)?.boardBanner})` }}
               />
             )}
 
@@ -576,7 +591,7 @@ export default function UserBoard() {
                               )}
                             </div>
                             <p className="text-gray-300 text-sm">
-                              @{isBoardOwnerPost ? boardUser.username : 'anonymous'} • {new Date(message.createdAt).toLocaleDateString()}
+                              @{isBoardOwnerPost ? boardUser.username : (message.senderUserId || message.senderAdminId ? message.senderName : 'anonymous')} • {new Date(message.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -703,7 +718,7 @@ export default function UserBoard() {
                       <div className="mt-6 pt-4 border-t border-gray-700/30">
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>Posted on {boardName}</span>
-                          <span className="font-mono">umamin.link</span>
+                          <span className="font-mono">Whisper Network</span>
                         </div>
                       </div>
                     </div>
@@ -854,10 +869,12 @@ export default function UserBoard() {
               setSelectedTrack(track);
               setShowSpotifySearch(false);
             }}
-            onClose={() => setShowSpotifySearch(false)}
           />
         </DialogContent>
       </Dialog>
+
+      {/* Google AdSense Modal */}
+      <AdSenseContainer pageType="userboard" />
     </div>
   );
 }

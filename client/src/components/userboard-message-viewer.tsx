@@ -243,7 +243,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-gray-500 text-sm font-mono">umamin.link</p>
+                <p className="text-gray-500 text-sm font-mono">Whisper Network</p>
                 <p className="text-gray-600 text-xs">Board Message</p>
               </div>
             </div>

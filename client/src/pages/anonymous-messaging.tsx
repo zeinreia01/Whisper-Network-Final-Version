@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { MessageViewer } from "@/components/message-viewer";
 import { categories } from "@/lib/categories";
 import { useToast } from "@/hooks/use-toast";
+import { AdSenseContainer } from "@/components/google-adsense-modal";
 
 export interface SpotifyTrack {
   id: string;
@@ -354,6 +355,10 @@ export default function AnonymousMessaging() {
                             senderName: msg.senderName || "Anonymous",
                             category: msg.category || "Anything",
                             spotifyLink: msg.spotifyLink || null,
+                            spotifyTrackId: msg.spotifyTrackId || null,
+                            spotifyTrackName: msg.spotifyTrackName || null,
+                            spotifyArtistName: msg.spotifyArtistName || null,
+                            spotifyAlbumCover: msg.spotifyAlbumCover || null,
                             recipient: recipientProfile.username,
                             reactionCount: 0,
                             replies: [],
@@ -361,7 +366,8 @@ export default function AnonymousMessaging() {
                             userId: null,
                             adminId: null,
                             isAuthenticated: false,
-                            isOwnerPrivate: false
+                            isOwnerPrivate: false,
+                            isPinned: null
                           }}
                           trigger={
                             <Button size="sm" variant="outline" className="flex items-center gap-1">
@@ -624,6 +630,9 @@ export default function AnonymousMessaging() {
           </CardContent>
         </Card>
       )}
+
+      {/* Google AdSense Modal */}
+      <AdSenseContainer pageType="anonymous" />
     </div>
   );
 }
