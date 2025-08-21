@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -33,12 +34,12 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  const isBoardOwnerPost = (message.senderUserId && message.senderUserId === boardUser.id) ||
+  const isBoardOwnerPost = (message.senderUserId && message.senderUserId === boardUser.id) || 
                           (message.senderAdminId && message.senderAdminId === boardUser.id);
 
   let senderProfile = null;
   let displayName = message.senderName;
-
+  
   if (isBoardOwnerPost) {
     senderProfile = boardUser;
     displayName = boardUser.displayName || boardUser.username;
@@ -46,14 +47,14 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
   const downloadAsImage = async () => {
     if (isDownloading) return;
-
+    
     setIsDownloading(true);
-
+    
     toast({
       title: "Converting image...",
       description: "Please wait for a moment, image converting...",
     });
-
+    
     try {
       const element = document.getElementById('userboard-message-capture');
       if (!element) {
@@ -64,14 +65,14 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
       element.style.display = 'block';
       element.style.visibility = 'visible';
       element.style.opacity = '1';
-
+      
       // Wait for fonts and rendering
       await document.fonts.ready;
       await new Promise(resolve => setTimeout(resolve, 2000));
-
+      
       // Force a reflow to ensure everything is rendered
       element.offsetHeight;
-
+      
       console.log('Element dimensions:', element.offsetWidth, element.offsetHeight);
       console.log('Element visible:', element.offsetWidth > 0 && element.offsetHeight > 0);
 
@@ -95,7 +96,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
             targetElement.style.visibility = 'visible';
             targetElement.style.opacity = '1';
             targetElement.style.position = 'relative';
-
+            
             // Copy all styles from original document
             const originalStyles = document.querySelectorAll('style, link[rel="stylesheet"]');
             originalStyles.forEach(styleEl => {
@@ -109,8 +110,8 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               }
               clonedDoc.head.appendChild(newStyle);
             });
-
-            // Add specific CSS to fix Spotify text clipping and alignment issues
+            
+            // Add specific CSS to fix Spotify text clipping
             const spotifyFixStyle = clonedDoc.createElement('style');
             spotifyFixStyle.textContent = `
               /* Fix text clipping in Spotify section */
@@ -123,7 +124,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 display: block !important;
                 box-sizing: content-box !important;
               }
-
+              
               /* Specific fixes for song title and artist */
               .spotify-track-title {
                 line-height: 1.4 !important;
@@ -133,7 +134,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 height: auto !important;
                 min-height: 28px !important;
               }
-
+              
               .spotify-artist-name {
                 line-height: 1.4 !important;
                 padding: 1px 0 !important;
@@ -142,42 +143,12 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 height: auto !important;
                 min-height: 20px !important;
               }
-
+              
               /* Fix any truncated text */
               .truncate {
                 overflow: visible !important;
                 text-overflow: clip !important;
                 white-space: normal !important;
-              }
-
-              /* Tighten spacing in the Spotify section container */
-              .spotify-section .flex-1 {
-                line-height: 1 !important;
-              }
-
-              /* Fix avatar fallback centering */
-              .bg-gradient-to-br {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                line-height: 1 !important;
-              }
-
-              /* Fix badge centering */
-              .px-4.py-2,
-              .px-3.py-1 {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                line-height: 1 !important;
-                text-align: center !important;
-              }
-
-              /* Ensure all flex containers are properly centered */
-              .flex.items-center.justify-center {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
               }
             `;
             clonedDoc.head.appendChild(spotifyFixStyle);
@@ -186,7 +157,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
       });
 
       console.log('Canvas dimensions:', canvas.width, canvas.height);
-
+      
       if (canvas.width === 0 || canvas.height === 0) {
         throw new Error('Canvas has zero dimensions');
       }
@@ -224,9 +195,9 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-white">Board Post Preview</DialogTitle>
-            <Button
+            <Button 
               onClick={downloadAsImage}
-              variant="outline"
+              variant="outline" 
               size="sm"
               className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white border-gray-700"
               disabled={isDownloading}
@@ -238,15 +209,15 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
         </DialogHeader>
 
         {/* Capture Container */}
-        <div
-          id="userboard-message-capture"
+        <div 
+          id="userboard-message-capture" 
           className="p-16 bg-transparent"
         >
-          <div
+          <div 
             className="relative bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl p-8 mx-auto max-w-2xl"
             style={{
-              background: `linear-gradient(135deg,
-                rgba(17, 24, 39, 1) 0%,
+              background: `linear-gradient(135deg, 
+                rgba(17, 24, 39, 1) 0%, 
                 rgba(31, 41, 55, 1) 25%,
                 rgba(55, 65, 81, 1) 50%,
                 rgba(31, 41, 55, 1) 75%,
@@ -267,7 +238,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               <div className="relative">
                 <Avatar className="w-16 h-16 ring-4 ring-white/20 shadow-2xl">
                   <AvatarImage src={senderProfile?.profilePicture || ""} alt={displayName} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-xl flex items-center justify-center">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-xl">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -277,7 +248,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                   </div>
                 )}
               </div>
-
+              
               <div>
                 <div className="flex items-center gap-3">
                   <h3 className="font-bold text-white text-2xl">
@@ -298,8 +269,8 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
           {/* Category Badge */}
           <div className="mb-6">
-            <Badge
-              className="px-4 py-2 text-base font-semibold rounded-full border-0 shadow-lg inline-flex items-center justify-center"
+            <Badge 
+              className="px-4 py-2 text-base font-semibold rounded-full border-0 shadow-lg"
               style={{
                 backgroundColor: categories.find(c => c.name === message.category)?.color + '30',
                 color: categories.find(c => c.name === message.category)?.color,
@@ -322,9 +293,9 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
             <div className="spotify-section mb-8 p-6 bg-gradient-to-r from-green-600/30 to-green-400/30 rounded-2xl border-2 border-green-500/40 shadow-xl">
               <div className="flex items-center gap-6">
                 {message.spotifyAlbumCover && (
-                  <img
-                    src={message.spotifyAlbumCover}
-                    alt="Album cover"
+                  <img 
+                    src={message.spotifyAlbumCover} 
+                    alt="Album cover" 
                     className="w-20 h-20 rounded-xl object-cover shadow-xl ring-4 ring-green-400/40"
                   />
                 )}
@@ -354,7 +325,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               <div className="flex items-center gap-4">
                 <Avatar className="w-12 h-12 ring-2 ring-white/20">
                   <AvatarImage src={boardUser.profilePicture || ""} alt={boardUser.displayName || boardUser.username} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold flex items-center justify-center">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
                     {(boardUser.displayName || boardUser.username).charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
