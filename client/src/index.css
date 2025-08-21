@@ -11,6 +11,47 @@
   .xs\:inline {
     display: inline;
   }
+
+  .xs\:hidden {
+    display: none;
+  }
+}
+
+/* Tooltip and overlay z-index fixes */
+.guided-tooltip {
+  z-index: 10000 !important;
+}
+
+.guided-overlay {
+  z-index: 9998 !important;
+}
+
+.guided-highlight {
+  z-index: 9999 !important;
+  isolation: isolate !important;
+}
+
+/* Image download canvas fixes */
+.download-canvas-container * {
+  line-height: 1.6 !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  margin-bottom: 2px !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+/* Mobile button responsive fixes */
+@media (max-width: 640px) {
+  .board-header-buttons {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .board-header-buttons .button-mobile {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
 }
 
 :root {

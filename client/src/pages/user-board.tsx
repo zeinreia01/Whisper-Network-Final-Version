@@ -334,10 +334,10 @@ export default function UserBoard() {
         <Card>
           <CardContent className="p-0">
             {/* Banner */}
-            {boardBanner && (
+            {(boardBanner || boardUser?.boardBanner) && (
               <div 
                 className="h-48 bg-cover bg-center rounded-t-lg"
-                style={{ backgroundImage: `url(${boardBanner})` }}
+                style={{ backgroundImage: `url(${boardBanner || boardUser?.boardBanner})` }}
               />
             )}
 
@@ -363,33 +363,36 @@ export default function UserBoard() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   <Button
                     onClick={() => window.location.href = `/user/${username}`}
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <User className="w-4 h-4" />
-                    View Profile
+                    <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden xs:inline">View Profile</span>
+                    <span className="xs:hidden">Profile</span>
                   </Button>
 
                   <Button
                     onClick={shareBoard}
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <Share2 className="w-4 h-4" />
-                    Share Board
+                    <Share2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden xs:inline">Share Board</span>
+                    <span className="xs:hidden">Share</span>
                   </Button>
 
                   {isOwnBoard && (
                     <Dialog open={isEditingBoard} onOpenChange={setIsEditingBoard}>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="flex items-center gap-2">
-                          <Settings className="w-4 h-4" />
-                          Customize
+                        <Button variant="outline" size="sm" className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                          <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden xs:inline">Customize</span>
+                          <span className="xs:hidden">Edit</span>
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
@@ -443,7 +446,12 @@ export default function UserBoard() {
 
                                     const reader = new FileReader();
                                     reader.onload = (e) => {
-                                      setBoardBanner(e.target?.result as string);
+                                      const result = e.target?.result as string;
+                                      setBoardBanner(result);
+                                      // Update the board user state to reflect the change immediately
+                                      if (boardUser) {
+                                        setBoardUser(prev => prev ? { ...prev, boardBanner: result } : null);
+                                      }
                                     };
                                     reader.readAsDataURL(file);
                                   }

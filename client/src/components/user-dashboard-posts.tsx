@@ -145,33 +145,81 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
 
   const downloadMessageAsImage = async (messageElement: HTMLElement, messageId: number) => {
     try {
-      const canvas = await html2canvas(messageElement, {
-        backgroundColor: null, // Transparent background
-        scale: 3,
+      // Create a temporary container with better styling for image capture
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.width = '600px';
+      tempContainer.style.padding = '24px';
+      tempContainer.style.backgroundColor = '#ffffff';
+      tempContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      
+      // Clone the message element
+      const clonedElement = messageElement.cloneNode(true) as HTMLElement;
+      clonedElement.style.width = '100%';
+      clonedElement.style.maxWidth = 'none';
+      clonedElement.style.margin = '0';
+      clonedElement.style.padding = '20px';
+      clonedElement.style.backgroundColor = '#ffffff';
+      clonedElement.style.border = '1px solid #e5e7eb';
+      clonedElement.style.borderRadius = '8px';
+      clonedElement.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+      
+      // Fix all text elements to prevent cutoff
+      const allElements = clonedElement.querySelectorAll('*') as NodeListOf<HTMLElement>;
+      allElements.forEach((el) => {
+        el.style.textRendering = 'optimizeLegibility';
+        el.style.webkitFontSmoothing = 'antialiased';
+        el.style.lineHeight = '1.6';
+        el.style.marginBottom = '4px';
+        el.style.paddingTop = '2px';
+        el.style.paddingBottom = '2px';
+        el.style.overflow = 'visible';
+        el.style.whiteSpace = 'normal';
+        el.style.wordBreak = 'break-word';
+        
+        // Ensure text elements have proper spacing
+        if (el.tagName === 'P' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
+          el.style.marginBottom = '8px';
+          el.style.paddingBottom = '4px';
+        }
+        
+        // Fix spotify track display elements
+        if (el.classList.contains('spotify-track') || el.querySelector('.spotify-track')) {
+          el.style.marginTop = '12px';
+          el.style.paddingTop = '8px';
+        }
+      });
+      
+      // Fix specific text elements that commonly get cut off
+      const textElements = clonedElement.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div') as NodeListOf<HTMLElement>;
+      textElements.forEach((el) => {
+        if (el.textContent && el.textContent.trim()) {
+          el.style.minHeight = '1.6em';
+          el.style.paddingBottom = '4px';
+        }
+      });
+      
+      tempContainer.appendChild(clonedElement);
+      document.body.appendChild(tempContainer);
+      
+      const canvas = await html2canvas(tempContainer, {
+        backgroundColor: '#ffffff',
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
-        width: messageElement.offsetWidth + 40,
-        height: messageElement.offsetHeight + 40,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector(`#board-message-${messageId}`) as HTMLElement;
-          if (clonedElement) {
-            clonedElement.style.margin = '20px';
-            clonedElement.style.padding = '20px';
-            clonedElement.style.boxSizing = 'border-box';
-            
-            // Fix text cutoff issues
-            const allText = clonedElement.querySelectorAll('*');
-            allText.forEach((el: any) => {
-              el.style.textRendering = 'optimizeLegibility';
-              el.style.webkitFontSmoothing = 'antialiased';
-              el.style.lineHeight = '1.5';
-              el.style.padding = '4px 0';
-              el.style.marginBottom = '4px';
-            });
-          }
-        }
+        width: 600,
+        height: tempContainer.scrollHeight + 48,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 600,
+        windowHeight: tempContainer.scrollHeight + 48
       });
+      
+      // Clean up
+      document.body.removeChild(tempContainer);
 
       const link = document.createElement('a');
       link.download = `board-message-${messageId}.png`;

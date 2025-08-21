@@ -97,9 +97,10 @@ export function GuidedWalkthrough() {
     if (targetElement) {
       // Highlight the element
       targetElement.style.position = 'relative';
-      targetElement.style.zIndex = '1001';
+      targetElement.style.zIndex = '9999';
       targetElement.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 0 6px rgba(59, 130, 246, 0.3)';
       targetElement.style.borderRadius = '8px';
+      targetElement.style.isolation = 'isolate';
       
       // Scroll element into view
       targetElement.scrollIntoView({ 
@@ -150,39 +151,113 @@ export function GuidedWalkthrough() {
 
   const getTooltipPosition = (step: WalkthroughStep) => {
     const targetElement = document.querySelector(step.target) as HTMLElement;
-    if (!targetElement) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+    if (!targetElement) return { 
+      top: '50%', 
+      left: '50%', 
+      transform: 'translate(-50%, -50%)',
+      maxWidth: 'calc(100vw - 32px)',
+      position: 'fixed' as const
+    };
 
     const rect = targetElement.getBoundingClientRect();
     const tooltipOffset = 20;
+    const isMobile = window.innerWidth < 768;
+    const maxWidth = isMobile ? 'calc(100vw - 32px)' : '384px';
 
-    switch (step.position) {
-      case 'top':
-        return {
-          top: `${rect.top - tooltipOffset}px`,
-          left: `${rect.left + rect.width / 2}px`,
-          transform: 'translate(-50%, -100%)'
-        };
-      case 'bottom':
-        return {
-          top: `${rect.bottom + tooltipOffset}px`,
-          left: `${rect.left + rect.width / 2}px`,
-          transform: 'translate(-50%, 0)'
-        };
-      case 'left':
-        return {
-          top: `${rect.top + rect.height / 2}px`,
-          left: `${rect.left - tooltipOffset}px`,
-          transform: 'translate(-100%, -50%)'
-        };
-      case 'right':
-        return {
-          top: `${rect.top + rect.height / 2}px`,
-          left: `${rect.right + tooltipOffset}px`,
-          transform: 'translate(0, -50%)'
-        };
-      default:
-        return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let position: any = {
+      maxWidth,
+      position: 'fixed' as const,
+      zIndex: 10000
+    };
+
+    if (isMobile) {
+      // On mobile, always position at bottom with some padding
+      position = {
+        ...position,
+        bottom: '80px',
+        left: '16px',
+        right: '16px',
+        transform: 'none',
+        width: 'auto'
+      };
+    } else {
+      switch (step.position) {
+        case 'top':
+          let topPos = rect.top - tooltipOffset;
+          let leftPos = rect.left + rect.width / 2;
+          
+          // Ensure tooltip doesn't go off screen
+          if (topPos < 20) topPos = rect.bottom + tooltipOffset;
+          if (leftPos < 192) leftPos = 192;
+          if (leftPos > viewportWidth - 192) leftPos = viewportWidth - 192;
+          
+          position = {
+            ...position,
+            top: `${topPos}px`,
+            left: `${leftPos}px`,
+            transform: topPos === rect.bottom + tooltipOffset ? 'translate(-50%, 0)' : 'translate(-50%, -100%)'
+          };
+          break;
+        case 'bottom':
+          let bottomTopPos = rect.bottom + tooltipOffset;
+          let bottomLeftPos = rect.left + rect.width / 2;
+          
+          if (bottomTopPos > viewportHeight - 200) bottomTopPos = rect.top - tooltipOffset;
+          if (bottomLeftPos < 192) bottomLeftPos = 192;
+          if (bottomLeftPos > viewportWidth - 192) bottomLeftPos = viewportWidth - 192;
+          
+          position = {
+            ...position,
+            top: `${bottomTopPos}px`,
+            left: `${bottomLeftPos}px`,
+            transform: bottomTopPos === rect.top - tooltipOffset ? 'translate(-50%, -100%)' : 'translate(-50%, 0)'
+          };
+          break;
+        case 'left':
+          let leftTopPos = rect.top + rect.height / 2;
+          let leftLeftPos = rect.left - tooltipOffset;
+          
+          if (leftLeftPos < 20) leftLeftPos = rect.right + tooltipOffset;
+          if (leftTopPos < 100) leftTopPos = 100;
+          if (leftTopPos > viewportHeight - 100) leftTopPos = viewportHeight - 100;
+          
+          position = {
+            ...position,
+            top: `${leftTopPos}px`,
+            left: `${leftLeftPos}px`,
+            transform: leftLeftPos === rect.right + tooltipOffset ? 'translate(0, -50%)' : 'translate(-100%, -50%)'
+          };
+          break;
+        case 'right':
+          let rightTopPos = rect.top + rect.height / 2;
+          let rightLeftPos = rect.right + tooltipOffset;
+          
+          if (rightLeftPos > viewportWidth - 400) rightLeftPos = rect.left - tooltipOffset;
+          if (rightTopPos < 100) rightTopPos = 100;
+          if (rightTopPos > viewportHeight - 100) rightTopPos = viewportHeight - 100;
+          
+          position = {
+            ...position,
+            top: `${rightTopPos}px`,
+            left: `${rightLeftPos}px`,
+            transform: rightLeftPos === rect.left - tooltipOffset ? 'translate(-100%, -50%)' : 'translate(0, -50%)'
+          };
+          break;
+        default:
+          position = {
+            ...position,
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)'
+          };
+      }
     }
+
+    return position;
   };
 
   if (!isVisible) return null;
@@ -192,11 +267,11 @@ export function GuidedWalkthrough() {
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-1000" />
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-[9998]" />
       
       {/* Tooltip */}
       <Card 
-        className="fixed z-1002 max-w-sm bg-white dark:bg-gray-800 shadow-2xl border-2 border-blue-500"
+        className="z-[10000] bg-white dark:bg-gray-800 shadow-2xl border-2 border-blue-500 md:max-w-sm"
         style={getTooltipPosition(currentStepData)}
       >
         <CardContent className="p-4">
