@@ -111,55 +111,10 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               clonedDoc.head.appendChild(newStyle);
             });
             
-            // Add specific CSS to fix avatar and badge centering
-            const fixStyle = clonedDoc.createElement('style');
-            fixStyle.textContent = `
-              /* Fix avatar fallback centering - perfect center alignment */
-              [data-radix-avatar-fallback] {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                text-align: center !important;
-                line-height: 1 !important;
-                vertical-align: middle !important;
-                position: relative !important;
-                top: 0 !important;
-                left: 0 !important;
-                transform: none !important;
-              }
-              
-              /* Ensure all avatar elements are perfectly centered */
-              .bg-gradient-to-br {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-              }
-              
-              /* Fix badge centering - perfect center alignment */
-              .inline-flex.items-center.rounded-full.border {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                text-align: center !important;
-                line-height: 1 !important;
-                vertical-align: middle !important;
-                box-sizing: border-box !important;
-              }
-              
-              /* Fix all rounded badge containers */
-              .px-4.py-2.text-base.font-semibold.rounded-full {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                text-align: center !important;
-                line-height: 1 !important;
-                padding-top: 8px !important;
-                padding-bottom: 8px !important;
-                min-height: auto !important;
-                height: auto !important;
-              }
-              
-              /* Fix Spotify text clipping */
+            // Add specific CSS to fix Spotify text clipping
+            const spotifyFixStyle = clonedDoc.createElement('style');
+            spotifyFixStyle.textContent = `
+              /* Fix text clipping in Spotify section */
               .spotify-section p,
               .spotify-section span {
                 line-height: 1.4 !important;
@@ -170,6 +125,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 box-sizing: content-box !important;
               }
               
+              /* Specific fixes for song title and artist */
               .spotify-track-title {
                 line-height: 1.4 !important;
                 padding: 2px 0 !important;
@@ -188,13 +144,14 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 min-height: 20px !important;
               }
               
+              /* Fix any truncated text */
               .truncate {
                 overflow: visible !important;
                 text-overflow: clip !important;
                 white-space: normal !important;
               }
             `;
-            clonedDoc.head.appendChild(fixStyle);
+            clonedDoc.head.appendChild(spotifyFixStyle);
           }
         },
       });
