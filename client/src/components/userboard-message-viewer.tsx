@@ -240,8 +240,10 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                     src={senderProfile?.profilePicture || ""} 
                     alt={displayName} 
                   />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold flex items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    {displayName.charAt(0).toUpperCase()}
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                    <span style={{ lineHeight: '1', transform: 'translateY(1px)' }}>
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
                   </AvatarFallback>
                 </Avatar>
                 {isBoardOwnerPost && (
@@ -277,10 +279,16 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 backgroundColor: `${categories.find(c => c.name === message.category)?.color}20`,
                 color: categories.find(c => c.name === message.category)?.color,
                 border: `2px solid ${categories.find(c => c.name === message.category)?.color}30`,
-                minHeight: '32px'
+                minHeight: '32px',
+                lineHeight: '1.2',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              {message.category}
+              <span style={{ transform: 'translateY(0.5px)' }}>
+                {message.category}
+              </span>
             </span>
           </div>
 
@@ -328,8 +336,10 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               <div className="flex items-center gap-4">
                 <Avatar className="w-12 h-12 ring-2 ring-white/20">
                   <AvatarImage src={boardUser.profilePicture || ""} alt={boardUser.displayName || boardUser.username} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold flex items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    {(boardUser.displayName || boardUser.username).charAt(0).toUpperCase()}
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                    <span style={{ lineHeight: '1', transform: 'translateY(1px)' }}>
+                      {(boardUser.displayName || boardUser.username).charAt(0).toUpperCase()}
+                    </span>
                   </AvatarFallback>
                 </Avatar>
                 <div>
