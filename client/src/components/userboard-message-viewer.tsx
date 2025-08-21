@@ -55,76 +55,27 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
         throw new Error('Message element not found');
       }
 
-      // Force load all images first
-      const images = element.querySelectorAll('img');
-      await Promise.all(
-        Array.from(images).map(img => {
-          return new Promise((resolve) => {
-            if (img.complete) {
-              resolve(true);
-            } else {
-              img.onload = () => resolve(true);
-              img.onerror = () => resolve(true); // Continue even if image fails
-            }
-          });
-        })
-      );
-
-      // Ensure all fonts are loaded
+      // Ensure all fonts are loaded before capture
       await document.fonts.ready;
       
-      // Wait for any CSS transitions/animations to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait a bit more for any dynamic content
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Get element dimensions for consistent sizing
-      const rect = element.getBoundingClientRect();
-      const computedStyle = window.getComputedStyle(element);
-      
       const canvas = await html2canvas(element, {
-        backgroundColor: '#111827', // Match the gradient start color
-        scale: 3, // Higher resolution for crisp images
+        backgroundColor: '#1a1a1a',
+        scale: 2,
         useCORS: true,
         allowTaint: false,
         logging: false,
-        width: Math.max(rect.width, 800), // Ensure minimum width
-        height: rect.height,
-        windowWidth: Math.max(rect.width, 800),
-        windowHeight: rect.height,
-        scrollX: 0,
-        scrollY: 0,
-        foreignObjectRendering: true, // Better CSS support
-        imageTimeout: 5000, // Wait longer for images
-        onclone: (clonedDoc) => {
-          // Ensure cloned document has proper styling
-          const clonedElement = clonedDoc.getElementById('userboard-message-capture');
-          if (clonedElement) {
-            // Force apply styles that might not transfer properly
-            clonedElement.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif';
-            clonedElement.style.background = computedStyle.background;
-            clonedElement.style.borderRadius = computedStyle.borderRadius;
-            
-            // Force load fonts in cloned document
-            const fontLinks = document.querySelectorAll('link[href*="font"]');
-            fontLinks.forEach(link => {
-              const newLink = clonedDoc.createElement('link');
-              newLink.rel = 'stylesheet';
-              newLink.href = link.href;
-              clonedDoc.head.appendChild(newLink);
-            });
-            
-            // Copy all stylesheets to cloned document
-            const styleSheets = document.querySelectorAll('style, link[rel="stylesheet"]');
-            styleSheets.forEach(sheet => {
-              clonedDoc.head.appendChild(sheet.cloneNode(true));
-            });
-          }
-        },
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
       });
 
-      // Create download link with timestamp
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+      // Create download link
       const link = document.createElement('a');
-      link.download = `whisper-board-${boardUser.username}-${timestamp}.png`;
+      link.download = `board-message-${message.id}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       document.body.appendChild(link);
       link.click();
@@ -132,7 +83,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
       toast({
         title: "Image saved!",
-        description: "Board message saved to your downloads with high quality.",
+        description: "Board message saved to your downloads.",
       });
     } catch (error) {
       console.error('Download failed:', error);
@@ -171,18 +122,14 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
         {/* Capture Container */}
         <div 
           id="userboard-message-capture" 
-          className="relative rounded-3xl p-8 mx-auto max-w-2xl font-sans"
+          className="relative bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl p-8 mx-auto max-w-2xl"
           style={{
             background: `linear-gradient(135deg, 
               rgba(17, 24, 39, 1) 0%, 
               rgba(31, 41, 55, 1) 25%,
               rgba(55, 65, 81, 1) 50%,
               rgba(31, 41, 55, 1) 75%,
-              rgba(17, 24, 39, 1) 100%)`,
-            width: '800px',
-            minHeight: '600px',
-            fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              rgba(17, 24, 39, 1) 100%)`
           }}
         >
           {/* Pinned Badge */}
