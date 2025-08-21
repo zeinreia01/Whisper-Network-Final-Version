@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,7 @@ import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Plus, Music, X, Download, Eye } from "lucide-react";
+import { MessageSquare, Plus, Music, X, Download, Eye, Trash2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
@@ -310,6 +311,42 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                       >
                         <Download className="h-4 w-4" />
                       </Button>
+                      
+                      {/* Delete button with confirmation */}
+                      {isOwnProfile && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-destructive hover:text-destructive"
+                              title="Delete message"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Board Message</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this message from your board? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => {
+                                  // Add delete functionality here
+                                  console.log('Delete message:', message.id);
+                                }}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete Message
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
 

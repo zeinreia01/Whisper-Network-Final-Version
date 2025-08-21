@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff, User } from "lucide-react";
@@ -576,15 +577,35 @@ export default function UserBoard() {
                           )}
 
                           {(isOwnBoard || admin) && (
-                            <Button
-                              onClick={() => handleDeleteMessage(message.id)}
-                              variant="ghost"
-                              size="sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-destructive hover:text-destructive"
-                              title="Delete message"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-destructive hover:text-destructive"
+                                  title="Delete message"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this message? This action cannot be undone and the message will be permanently removed from your board.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteMessage(message.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete Message
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           )}
 
                           <MessageViewer message={{

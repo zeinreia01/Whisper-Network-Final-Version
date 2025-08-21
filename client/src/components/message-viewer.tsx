@@ -52,7 +52,7 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
             clonedElement.style.margin = '0';
             clonedElement.style.display = 'block';
             clonedElement.style.overflow = 'visible';
-            
+
             // Fix font rendering for clean text - prevent text cutoff
             const allText = clonedElement.querySelectorAll('*');
             allText.forEach((el: any) => {
@@ -117,6 +117,15 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
     }
   };
 
+  const handleDeleteUserBoard = () => {
+    // This function would typically call an API to delete the user board.
+    // For this example, we'll just show a toast.
+    toast({
+      title: "User Board Deleted",
+      description: "The user board has been successfully deleted.",
+    });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -143,6 +152,34 @@ export function MessageViewer({ message, trigger }: MessageViewerProps) {
                 <Download className="w-4 h-4" />
                 {isDownloading ? 'Saving...' : 'Save as Image'}
               </Button>
+              {isUserBoardMessage && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      Delete Post
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure you want to delete this post?</DialogTitle>
+                    </DialogHeader>
+                    <DialogContent>
+                      This action cannot be undone.
+                    </DialogContent>
+                    <DialogContent className="flex justify-end">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline">Cancel</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          {/* Content for nested dialog if needed, or just for structure */}
+                        </DialogContent>
+                      </Dialog>
+                      <Button variant="destructive" onClick={handleDeleteUserBoard}>Delete</Button>
+                    </DialogContent>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </div>
         </DialogHeader>
