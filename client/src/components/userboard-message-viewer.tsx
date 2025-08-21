@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
   let senderProfile = null;
   let displayName = message.senderName;
-  
+
   if (isBoardOwnerPost) {
     senderProfile = boardUser;
     displayName = boardUser.displayName || boardUser.username;
@@ -47,14 +46,14 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
   const downloadAsImage = async () => {
     if (isDownloading) return;
-    
+
     setIsDownloading(true);
-    
+
     toast({
       title: "Converting image...",
       description: "Please wait for a moment, image converting...",
     });
-    
+
     try {
       const element = document.getElementById('userboard-message-capture');
       if (!element) {
@@ -65,14 +64,14 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
       element.style.display = 'block';
       element.style.visibility = 'visible';
       element.style.opacity = '1';
-      
+
       // Wait for fonts and rendering
       await document.fonts.ready;
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Force a reflow to ensure everything is rendered
       element.offsetHeight;
-      
+
       console.log('Element dimensions:', element.offsetWidth, element.offsetHeight);
       console.log('Element visible:', element.offsetWidth > 0 && element.offsetHeight > 0);
 
@@ -96,7 +95,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
             targetElement.style.visibility = 'visible';
             targetElement.style.opacity = '1';
             targetElement.style.position = 'relative';
-            
+
             // Copy all styles from original document
             const originalStyles = document.querySelectorAll('style, link[rel="stylesheet"]');
             originalStyles.forEach(styleEl => {
@@ -110,7 +109,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
               }
               clonedDoc.head.appendChild(newStyle);
             });
-            
+
             // Add specific CSS to fix Spotify text clipping
             const spotifyFixStyle = clonedDoc.createElement('style');
             spotifyFixStyle.textContent = `
@@ -124,7 +123,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 display: block !important;
                 box-sizing: content-box !important;
               }
-              
+
               /* Specific fixes for song title and artist */
               .spotify-track-title {
                 line-height: 1.4 !important;
@@ -134,7 +133,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 height: auto !important;
                 min-height: 28px !important;
               }
-              
+
               .spotify-artist-name {
                 line-height: 1.4 !important;
                 padding: 1px 0 !important;
@@ -143,7 +142,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 height: auto !important;
                 min-height: 20px !important;
               }
-              
+
               /* Fix any truncated text */
               .truncate {
                 overflow: visible !important;
@@ -157,7 +156,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
       });
 
       console.log('Canvas dimensions:', canvas.width, canvas.height);
-      
+
       if (canvas.width === 0 || canvas.height === 0) {
         throw new Error('Canvas has zero dimensions');
       }
@@ -236,9 +235,12 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <Avatar className="w-16 h-16 ring-4 ring-white/20 shadow-2xl">
-                  <AvatarImage src={senderProfile?.profilePicture || ""} alt={displayName} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-xl">
+                <Avatar className="w-16 h-16 ring-4 ring-white/20 shadow-lg">
+                  <AvatarImage 
+                    src={senderProfile?.profilePicture || ""} 
+                    alt={displayName} 
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold flex items-center justify-center">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -248,7 +250,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                   </div>
                 )}
               </div>
-              
+
               <div>
                 <div className="flex items-center gap-3">
                   <h3 className="font-bold text-white text-2xl">
@@ -269,16 +271,17 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
           {/* Category Badge */}
           <div className="mb-6">
-            <Badge 
-              className="px-4 py-2 text-base font-semibold rounded-full border-0 shadow-lg"
+            <span
+              className="inline-flex items-center justify-center text-sm px-4 py-2 rounded-full font-medium"
               style={{
-                backgroundColor: categories.find(c => c.name === message.category)?.color + '30',
+                backgroundColor: `${categories.find(c => c.name === message.category)?.color}20`,
                 color: categories.find(c => c.name === message.category)?.color,
-                border: `2px solid ${categories.find(c => c.name === message.category)?.color}60`
+                border: `2px solid ${categories.find(c => c.name === message.category)?.color}30`,
+                minHeight: '32px'
               }}
             >
               {message.category}
-            </Badge>
+            </span>
           </div>
 
           {/* Message Content */}
@@ -317,7 +320,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Board Info Footer */}
           <div className="pt-6 border-t-2 border-gray-700/50">
