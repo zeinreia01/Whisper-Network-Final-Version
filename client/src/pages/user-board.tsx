@@ -518,102 +518,72 @@ export default function UserBoard() {
                                           (message.senderAdminId && message.senderAdminId === boardUser.id);
 
                   return (
-                    <div key={message.id} className={`p-4 rounded-lg border bg-background relative group ${message.isPinned ? 'border-yellow-300 bg-yellow-50/20' : ''}`}>
+                    <div key={message.id} className={`bg-gray-900 text-white rounded-xl p-6 relative group ${message.isPinned ? 'border-2 border-yellow-400' : 'border border-gray-700'} hover:border-gray-600 transition-all duration-200`}>
                       {message.isPinned && (
-                        <div className="flex items-center gap-1 text-yellow-600 text-xs font-medium mb-2">
+                        <div className="flex items-center gap-1 text-yellow-400 text-xs font-medium mb-3">
                           <Pin className="w-3 h-3" />
-                          Pinned
+                          Pinned Message
                         </div>
                       )}
 
-                      <div className="flex items-start justify-between mb-3">
+                      {/* Header with user info and actions */}
+                      <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <Avatar className="w-8 h-8">
+                          <Avatar className="w-10 h-10">
                             {message.senderUserId && (
                               <AvatarImage src={boardUser?.profilePicture || undefined} alt={message.senderName} />
                             )}
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
                               {message.senderName.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
 
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium">{message.senderName}</span>
+                              <span className="font-semibold text-white">{message.senderName}</span>
                               {message.senderAdminId && (
-                                <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-purple-50 border-purple-200 text-purple-700">
+                                <Badge className="text-xs bg-purple-600 text-white border-purple-500">
                                   Admin
                                 </Badge>
                               )}
                               {message.senderUserId && !message.senderAdminId && (
-                                <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-green-50 border-green-200 text-green-700">
+                                <Badge className="text-xs bg-green-600 text-white border-green-500">
                                   User
                                 </Badge>
                               )}
                               {isBoardOwnerPost && (
-                                <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-50 border-blue-200 text-blue-700">
+                                <Badge className="text-xs bg-blue-600 text-white border-blue-500">
                                   Board Owner
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs px-1.5 py-0.5 w-fit" style={{
-                                backgroundColor: `${categories.find(c => c.name === message.category)?.color}15`,
-                                borderColor: `${categories.find(c => c.name === message.category)?.color}35`,
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs border-gray-600 text-gray-300" style={{
+                                backgroundColor: `${categories.find(c => c.name === message.category)?.color}20`,
+                                borderColor: categories.find(c => c.name === message.category)?.color,
                                 color: categories.find(c => c.name === message.category)?.color,
                               }}>
                                 {message.category}
                               </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(message.createdAt).toLocaleDateString()}
+                              <span className="text-xs text-gray-400">
+                                @{boardUser.username} • {new Date(message.createdAt).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        {/* Action buttons - Always visible */}
+                        <div className="flex items-center gap-1">
                           {isOwnBoard && (
                             <Button
                               onClick={() => handlePinMessage(message.id, !message.isPinned)}
                               variant="ghost"
                               size="sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-yellow-600 hover:text-yellow-700"
+                              className="h-8 w-8 p-0 text-yellow-400 hover:text-yellow-300 hover:bg-gray-800"
                               title={message.isPinned ? "Unpin message" : "Pin message"}
                             >
                               {message.isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                             </Button>
-                          )}
-
-                          {(isOwnBoard || admin) && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-destructive hover:text-destructive"
-                                  title="Delete message"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Message</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this message? This action cannot be undone and the message will be permanently removed from your board.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteMessage(message.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete Message
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
                           )}
 
                           <MessageViewer message={{
@@ -666,37 +636,78 @@ export default function UserBoard() {
                               spotifyAlbumCover: null,
                             } : null,
                           }} trigger={
-                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8" title="Download as image">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-800" title="Download as image">
                               <Download className="h-4 w-4" />
                             </Button>
                           } />
+
+                          {(isOwnBoard || admin) && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-gray-800"
+                                  title="Delete message"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this message? This action cannot be undone and the message will be permanently removed from your board.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteMessage(message.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete Message
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                       </div>
 
-                      <p className="text-sm leading-relaxed mb-3">{message.content}</p>
+                      {/* Message content */}
+                      <p className="text-gray-100 leading-relaxed mb-4 text-base">{message.content}</p>
 
+                      {/* Spotify track display */}
                       {message.spotifyTrackId && (
-                        <div className="mt-3">
-                          <SpotifyTrackDisplay
-                            track={{
-                              id: message.spotifyTrackId,
-                              name: message.spotifyTrackName || "",
-                              artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
-                              album: {
-                                id: "stored",
-                                name: "Unknown Album",
-                                images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
-                              },
-                              external_urls: {
-                                spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
-                              },
-                              preview_url: null,
-                              duration_ms: 0,
-                              popularity: 0,
-                            }}
-                            size="sm"
-                            showPreview={true}
-                          />
+                        <div className="mt-4 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                          <div className="flex items-center gap-3">
+                            {message.spotifyAlbumCover && (
+                              <img 
+                                src={message.spotifyAlbumCover} 
+                                alt="Album cover" 
+                                className="w-12 h-12 rounded object-cover"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-white truncate">
+                                {message.spotifyTrackName}
+                              </p>
+                              <p className="text-sm text-gray-400 truncate">
+                                {message.spotifyArtistName}
+                              </p>
+                            </div>
+                            <a 
+                              href={message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-400 hover:text-green-300 transition-colors"
+                            >
+                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.301.421-1.02.599-1.559.3z"/>
+                              </svg>
+                            </a>
+                          </div>
                         </div>
                       )}
                     </div>
