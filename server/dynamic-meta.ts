@@ -11,11 +11,12 @@ export function generateUserProfileOG(user: any) {
 }
 
 export function generateUserBoardOG(user: any) {
-  const imageUrl = user.boardBanner || user.profilePicture || `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(user.displayName || user.username)}&backgroundColor=16a34a&fontSize=40`;
+  // Create a dynamic image URL that will generate a custom board preview
+  const imageUrl = `/api/og-image/board/${user.username}`;
   
   return {
-    title: `${user.displayName || user.username}'s Board - Whisper Network`,
-    description: `Post messages to ${user.displayName || user.username}'s board on Whisper Network. Share your thoughts anonymously.`,
+    title: `${user.boardName || (user.displayName || user.username) + "'s Board"} - Whisper Network`,
+    description: `Post a message to "${user.boardName || (user.displayName || user.username) + "'s Board"}" by @${user.username}. Share your thoughts anonymously.`,
     image: imageUrl,
     url: `/board/${user.username}`
   };
@@ -33,7 +34,8 @@ export function generateMessageOG(message: any) {
 }
 
 export function generateAnonymousLinkOG(username: string) {
-  const imageUrl = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(username)}&backgroundColor=dc2626&fontSize=40`;
+  // Create a dynamic image URL for anonymous message sharing
+  const imageUrl = `/api/og-image/anonymous/${username}`;
   
   return {
     title: `Send Anonymous Message to ${username} - Whisper Network`,
@@ -44,7 +46,7 @@ export function generateAnonymousLinkOG(username: string) {
 }
 
 export function generateLandingPageOG() {
-  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Whisper%20Network&backgroundColor=3b82f6&fontSize=40';
+  const imageUrl = '/api/og-image/landing';
   
   return {
     title: 'Whisper Network - Anonymous Messaging Platform',
@@ -55,7 +57,7 @@ export function generateLandingPageOG() {
 }
 
 export function generateDashboardOG() {
-  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Dashboard&backgroundColor=059669&fontSize=40';
+  const imageUrl = '/api/og-image/dashboard';
   
   return {
     title: 'Community Dashboard - Whisper Network',

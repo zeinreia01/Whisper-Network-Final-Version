@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GuidedWalkthroughLeaderboard } from "@/components/guided-walkthrough-leaderboard";
 import { AdSenseContainer } from "@/components/google-adsense-modal";
 import { Search, Trophy, MessageSquare, Heart, Users, Crown, Medal, Award } from "lucide-react";
 
@@ -186,7 +185,6 @@ export default function LeaderboardPage() {
 
   return (
     <>
-      <GuidedWalkthroughLeaderboard />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Google AdSense Inline */}
       <AdSenseContainer pageType="leaderboard" />

@@ -15,7 +15,6 @@ import { UserBadge } from "@/components/user-badge";
 import { UserMusicList } from "@/components/user-music-list";
 import { UserDashboardPosts } from "@/components/user-dashboard-posts";
 import { ProfileMusicSection } from "@/components/profile-music-section";
-import { GuidedWalkthroughProfile } from "@/components/guided-walkthrough-profile";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -299,7 +298,6 @@ export function UserProfilePage() {
 
   return (
     <>
-      <GuidedWalkthroughProfile />
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">

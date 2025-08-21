@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MessageCard } from "@/components/message-card";
-import { GuidedWalkthrough } from "@/components/guided-walkthrough";
 import { categories } from "@/lib/categories";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -141,7 +140,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background py-6 sm:py-12">
-      <GuidedWalkthrough />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Hero Section - Calming and Minimal */}
