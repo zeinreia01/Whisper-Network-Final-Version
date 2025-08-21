@@ -416,7 +416,7 @@ export class DatabaseStorage implements IStorage {
           followerCount: sql<number>`count(${follows.id})`.as('followerCount'),
         })
         .from(users)
-        .leftJoin(follows, eq(users.id, follows.followedUserId))
+        .leftJoin(follows, eq(users.id, follows.followingId))
         .where(eq(users.isActive, true))
         .groupBy(users.id)
         .orderBy(sql`count(${follows.id}) DESC`)
@@ -473,7 +473,7 @@ export class DatabaseStorage implements IStorage {
       const followerRank = await db
         .select({ rank: sql<number>`ROW_NUMBER() OVER (ORDER BY COUNT(${follows.id}) DESC)`.as('rank') })
         .from(users)
-        .leftJoin(follows, eq(users.id, follows.followedUserId))
+        .leftJoin(follows, eq(users.id, follows.followingId))
         .where(and(eq(users.isActive, true), eq(users.id, userId)))
         .groupBy(users.id);
 
@@ -1372,6 +1372,11 @@ export class DatabaseStorage implements IStorage {
         spotifyTrackName: users.spotifyTrackName,
         spotifyArtistName: users.spotifyArtistName,
         spotifyAlbumCover: users.spotifyAlbumCover,
+        boardName: users.boardName,
+        boardBanner: users.boardBanner,
+        boardProfilePicture: users.boardProfilePicture,
+        boardVisibility: users.boardVisibility,
+        allowBoardCreation: users.allowBoardCreation,
       })
       .from(follows)
       .innerJoin(users, eq(follows.followerId, users.id))
@@ -1399,6 +1404,11 @@ export class DatabaseStorage implements IStorage {
         spotifyTrackName: users.spotifyTrackName,
         spotifyArtistName: users.spotifyArtistName,
         spotifyAlbumCover: users.spotifyAlbumCover,
+        boardName: users.boardName,
+        boardBanner: users.boardBanner,
+        boardProfilePicture: users.boardProfilePicture,
+        boardVisibility: users.boardVisibility,
+        allowBoardCreation: users.allowBoardCreation,
       })
       .from(follows)
       .innerJoin(users, eq(follows.followingId, users.id))
@@ -2225,6 +2235,153 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       likeLeaders: likeLeaders.map((user, index) => ({ ...user, rank: index + 1 })),
       followerLeaders: followerLeaders.map((user, index) => ({ ...user, rank: index + 1 }))
     };
+  }
+
+  // Boards functionality
+  async getAllBoardsWithMessageCounts() {
+    try {
+      // Get all active users with their message counts
+      const usersWithCounts = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          password: users.password,
+          displayName: users.displayName,
+          profilePicture: users.profilePicture,
+          backgroundPhoto: users.backgroundPhoto,
+          bio: users.bio,
+          boardName: users.boardName,
+          boardBanner: users.boardBanner,
+          boardProfilePicture: users.boardProfilePicture,
+          boardVisibility: users.boardVisibility,
+          allowBoardCreation: users.allowBoardCreation,
+          lastDisplayNameChange: users.lastDisplayNameChange,
+          isVerified: users.isVerified,
+          likedMessagesPrivacy: users.likedMessagesPrivacy,
+          isAnonymousLinkPaused: users.isAnonymousLinkPaused,
+          createdAt: users.createdAt,
+          isActive: users.isActive,
+          spotifyTrackId: users.spotifyTrackId,
+          spotifyTrackName: users.spotifyTrackName,
+          spotifyArtistName: users.spotifyArtistName,
+          spotifyAlbumCover: users.spotifyAlbumCover,
+          messageCount: sql<number>`count(${messages.id})`.as('messageCount'),
+        })
+        .from(users)
+        .leftJoin(messages, eq(users.id, messages.userId))
+        .where(and(eq(users.isActive, true), eq(users.boardVisibility, 'public')))
+        .groupBy(users.id)
+        .having(sql`count(${messages.id}) > 0`);
+
+      // Get all active admins with their message counts
+      const adminsWithCounts = await db
+        .select({
+          id: admins.id,
+          username: admins.username,
+          password: admins.password,
+          displayName: admins.displayName,
+          profilePicture: admins.profilePicture,
+          backgroundPhoto: admins.backgroundPhoto,
+          bio: admins.bio,
+          boardName: admins.boardName,
+          boardBanner: admins.boardBanner,
+          boardProfilePicture: admins.boardProfilePicture,
+          boardVisibility: admins.boardVisibility,
+          allowBoardCreation: admins.allowBoardCreation,
+          isVerified: admins.isVerified,
+          createdAt: admins.createdAt,
+          isActive: admins.isActive,
+          role: admins.role,
+          messageCount: sql<number>`count(${messages.id})`.as('messageCount'),
+        })
+        .from(admins)
+        .leftJoin(messages, eq(admins.id, messages.adminId))
+        .where(and(eq(admins.isActive, true), eq(admins.boardVisibility, 'public')))
+        .groupBy(admins.id)
+        .having(sql`count(${messages.id}) > 0`);
+
+      // Combine and return all boards
+      const allBoards = [...usersWithCounts, ...adminsWithCounts];
+      
+      return allBoards;
+    } catch (error) {
+      console.error("Error fetching boards with message counts:", error);
+      throw error;
+    }
+  }
+
+  async createBoardReport(data: {
+    targetUserId: number | null;
+    targetAdminId: number | null;
+    reason: string;
+    reporterId: number;
+    reporterType: 'user' | 'admin';
+  }) {
+    try {
+      const reportData = {
+        targetUserId: data.targetUserId,
+        targetAdminId: data.targetAdminId,
+        reason: data.reason,
+        reporterId: data.reporterId,
+        reporterType: data.reporterType,
+        type: 'board' as const,
+        status: 'pending' as const,
+        createdAt: new Date(),
+      };
+
+      const [report] = await db.insert(reports).values(reportData).returning();
+      
+      // Create notification for admins
+      await this.createNotification({
+        adminId: 1, // ZEKE001
+        message: `New board report submitted: ${data.reason}`,
+        type: 'board_report',
+        createdAt: new Date(),
+      });
+
+      return report;
+    } catch (error) {
+      console.error("Error creating board report:", error);
+      throw error;
+    }
+  }
+
+  async deleteUserBoard(userId: number) {
+    try {
+      // Clear board-specific user data
+      await db
+        .update(users)
+        .set({
+          boardName: null,
+          boardBanner: null,
+          boardProfilePicture: null,
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting user board:", error);
+      throw error;
+    }
+  }
+
+  async deleteAdminBoard(adminId: number) {
+    try {
+      // Clear board-specific admin data
+      await db
+        .update(admins)
+        .set({
+          boardName: null,
+          boardBanner: null,
+          boardProfilePicture: null,
+        })
+        .where(eq(admins.id, adminId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting admin board:", error);
+      throw error;
+    }
   }
 }
 

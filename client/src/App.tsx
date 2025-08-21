@@ -24,6 +24,7 @@ import { PasswordManagementPage } from "@/pages/password-management";
 import { AdminAnnouncementsPage } from "@/pages/admin-announcements";
 import LeaderboardPage from "@/pages/leaderboard";
 import UserBoard from "@/pages/user-board";
+import Boards from "@/pages/boards";
 import { useState, useEffect } from "react";
 
 function Router() {
@@ -65,6 +66,7 @@ function Router() {
           <Route path="/password-management" component={PasswordManagementPage} />
           <Route path="/announcements" component={AdminAnnouncementsPage} />
           <Route path="/leaderboard" component={LeaderboardPage} />
+          <Route path="/boards" component={Boards} />
           <Route path="/board/:username" component={UserBoard} />
           <Route path="/u/:username" component={AnonymousMessaging} />
           <Route component={NotFound} />

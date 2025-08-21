@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff } from "lucide-react";
+import { MessageSquare, Plus, Share2, Users, Settings, Eye, Download, Trash2, Link as LinkIcon, Pin, PinOff, User as UserIcon } from "lucide-react";
 import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { SpotifySearch } from "@/components/spotify-search";
 import { UserBoardMessageViewer } from "@/components/userboard-message-viewer";
@@ -81,16 +81,20 @@ export default function UserBoard() {
         if (profileResponse.ok) {
           profile = await profileResponse.json();
           setBoardUser(profile);
-          setBoardName((profile as any).boardName || `${profile.displayName || profile.username}'s Board`);
-          setBoardBanner((profile as any).boardBanner || "");
+          if (profile) {
+            setBoardName((profile as any).boardName || `${profile.displayName || profile.username}'s Board`);
+            setBoardBanner((profile as any).boardBanner || "");
+          }
         } else {
           // Try admin profile
           const adminResponse = await fetch(`/api/admins/profile/${username}`);
           if (adminResponse.ok) {
             profile = await adminResponse.json();
             setBoardUser(profile);
-            setBoardName((profile as any).boardName || `${profile.displayName || profile.username}'s Board`);
-            setBoardBanner((profile as any).boardBanner || "");
+            if (profile) {
+              setBoardName((profile as any).boardName || `${profile.displayName || profile.username}'s Board`);
+              setBoardBanner((profile as any).boardBanner || "");
+            }
           }
         }
 
@@ -349,7 +353,7 @@ export default function UserBoard() {
         <Card>
           <CardContent className="p-0">
             {/* Banner */}
-            {(boardBanner || boardUser?.boardBanner) && (
+            {(boardBanner || (boardUser as any)?.boardBanner) && (
               <div 
                 className="h-48 bg-cover bg-center rounded-t-lg"
                 style={{ backgroundImage: `url(${boardBanner || (boardUser as any)?.boardBanner})` }}
@@ -385,7 +389,7 @@ export default function UserBoard() {
                     size="sm"
                     className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <UserIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="hidden xs:inline">View Profile</span>
                     <span className="xs:hidden">Profile</span>
                   </Button>

@@ -14,6 +14,9 @@ export const users = pgTable("users", {
   bio: text("bio"), // User's bio/description (200 character limit)
   boardName: text("board_name"), // Custom name for user's message board
   boardBanner: text("board_banner"), // URL or path to board banner image
+  boardProfilePicture: text("board_profile_picture"), // Separate profile picture for the board
+  boardVisibility: text("board_visibility").default("public"), // "public" or "private" - whether board appears in boards page
+  allowBoardCreation: boolean("allow_board_creation").default(true), // Whether user has enabled their board
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown
   isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
   likedMessagesPrivacy: text("liked_messages_privacy").default("private"), // "public" or "private"
@@ -70,6 +73,11 @@ export const admins = pgTable("admins", {
   profilePicture: text("profile_picture"), // URL or path to profile picture
   backgroundPhoto: text("background_photo"), // URL or path to background profile photo
   bio: text("bio"), // Admin's bio/description (200 character limit)
+  boardName: text("board_name"), // Custom name for admin's message board
+  boardBanner: text("board_banner"), // URL or path to board banner image
+  boardProfilePicture: text("board_profile_picture"), // Separate profile picture for the board
+  boardVisibility: text("board_visibility").default("public"), // "public" or "private" - whether board appears in boards page
+  allowBoardCreation: boolean("allow_board_creation").default(true), // Whether admin has enabled their board
   role: text("role").notNull().default("admin"), // admin, moderator, support, community_manager
   isVerified: boolean("is_verified").default(false), // Verified badge (only ZEKE001 can grant)
   lastDisplayNameChange: timestamp("last_display_name_change"), // Track last change for 30-day cooldown

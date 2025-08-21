@@ -9,7 +9,7 @@ import { GlobalSearch } from "@/components/global-search";
 import { NotificationCenter } from "@/components/notification-center";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X, Lock, Sparkles, Star, MessageSquare } from "lucide-react";
+import { User, Shield, LogOut, Settings, Home, BarChart3, Menu, Archive, Search, Bell, X, Lock, Sparkles, Star, MessageSquare, Users } from "lucide-react";
 
 // Mobile notification button component for bottom navigation
 function MobileNotificationButton() {
@@ -85,6 +85,22 @@ export function Navigation() {
                   >
                     <Shield className="h-4 w-4 mr-2" />
                     Admin
+                  </Button>
+                </Link>
+              )}
+
+              {admin && (
+                <Link href="/boards">
+                  <Button
+                    variant={location === "/boards" ? "default" : "ghost"}
+                    size="sm"
+                    className="flex items-center relative"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Boards
+                    <Badge variant="destructive" className="ml-1 text-xs font-bold h-4 px-1">
+                      NEW!
+                    </Badge>
                   </Button>
                 </Link>
               )}
@@ -280,7 +296,25 @@ export function Navigation() {
             </button>
           </Link>
 
-
+          {/* Boards - for all users */}
+          {(user || admin) && (
+            <Link href="/boards">
+              <button
+                className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] transition-all duration-200 relative ${
+                  location === "/boards"
+                    ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+                data-testid="tab-boards"
+              >
+                <Users className={`h-5 w-5 ${location === "/boards" ? "scale-110" : ""} transition-transform`} />
+                <span className="text-xs mt-0.5 font-medium">Boards</span>
+                <Badge variant="destructive" className="absolute -top-1 -right-1 text-[8px] font-bold h-4 px-1 leading-none">
+                  NEW!
+                </Badge>
+              </button>
+            </Link>
+          )}
 
           {/* Notifications - for authenticated users */}
           {(user || admin) && (

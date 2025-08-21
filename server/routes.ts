@@ -2489,6 +2489,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Boards endpoints
+  app.get("/api/boards/all", async (req, res) => {
+    try {
+      const boards = await storage.getAllBoardsWithMessageCounts();
+      res.json(boards);
+    } catch (error) {
+      console.error("Error fetching boards:", error);
+      res.status(500).json({ message: "Failed to fetch boards" });
+    }
+  });
+
+  app.post("/api/reports/board", async (req, res) => {
+    try {
+      const { targetUserId, targetAdminId, reason, reporterId, reporterType } = req.body;
+      
+      const report = await storage.createBoardReport({
+        targetUserId: targetUserId || null,
+        targetAdminId: targetAdminId || null,
+        reason,
+        reporterId,
+        reporterType
+      });
+
+      res.status(201).json(report);
+    } catch (error) {
+      console.error("Error creating board report:", error);
+      res.status(500).json({ message: "Failed to submit report" });
+    }
+  });
+
+  app.delete("/api/users/:id/board", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteUserBoard(parseInt(id));
+      res.json({ success: true, message: "User board deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user board:", error);
+      res.status(500).json({ message: "Failed to delete board" });
+    }
+  });
+
+  app.delete("/api/admins/:id/board", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAdminBoard(parseInt(id));
+      res.json({ success: true, message: "Admin board deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting admin board:", error);
+      res.status(500).json({ message: "Failed to delete board" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
