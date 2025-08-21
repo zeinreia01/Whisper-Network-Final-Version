@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyAPI } from "./spotify";
-import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG, generateLandingPageOG } from "./dynamic-meta";
+import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG, generateLandingPageOG, generateDashboardOG, generateLeaderboardOG, generatePersonalArchiveOG, generateAdminDashboardOG, generateAdminProfileOG, generateHomePageOG, generatePasswordManagementOG } from "./dynamic-meta";
 import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema, insertUserMusicSchema, insertDashboardMessageSchema, insertAdminAnnouncementSchema } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -390,6 +390,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(meta);
     } catch (error) {
       console.error("Error generating landing meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/dashboard", async (req, res) => {
+    try {
+      const meta = generateDashboardOG();
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating dashboard meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/leaderboard", async (req, res) => {
+    try {
+      const meta = generateLeaderboardOG();
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating leaderboard meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/personal", async (req, res) => {
+    try {
+      const meta = generatePersonalArchiveOG();
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating personal archive meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/admin", async (req, res) => {
+    try {
+      const meta = generateAdminDashboardOG();
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating admin dashboard meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/admin/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const admin = await storage.getAdminByUsername(username);
+      
+      if (!admin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+
+      const meta = generateAdminProfileOG(admin);
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating admin profile meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/home", async (req, res) => {
+    try {
+      const meta = generateHomePageOG();
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating home meta:", error);
+      res.status(500).json({ error: "Failed to generate meta tags" });
+    }
+  });
+
+  app.get("/api/meta/password-management", async (req, res) => {
+    try {
+      const meta = generatePasswordManagementOG();
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating password management meta:", error);
       res.status(500).json({ error: "Failed to generate meta tags" });
     }
   });
