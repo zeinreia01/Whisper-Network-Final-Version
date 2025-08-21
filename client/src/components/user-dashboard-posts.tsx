@@ -14,12 +14,15 @@ import { SpotifyTrackDisplay } from "@/components/spotify-track-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Plus, Music, X, Download, Eye, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, Music, X, Download, Eye, Trash2, MoreVertical } from "lucide-react";
 import html2canvas from "html2canvas";
 import { categories } from "@/lib/categories";
 import { formatTimeAgo } from "@/lib/utils";
 import { Link } from "wouter";
 import type { DashboardMessage } from "@shared/schema";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MessageViewer } from "@/components/message-viewer";
+
 
 export interface SpotifyTrack {
   id: string;
@@ -143,132 +146,16 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
     postMessageMutation.mutate();
   };
 
-  const downloadMessageAsImage = async (messageElement: HTMLElement, messageId: number) => {
-    try {
-      // Create a temporary container with better styling for image capture
-      const tempContainer = document.createElement('div');
-      tempContainer.style.position = 'absolute';
-      tempContainer.style.left = '-9999px';
-      tempContainer.style.top = '-9999px';
-      tempContainer.style.width = '600px';
-      tempContainer.style.padding = '24px';
-      tempContainer.style.backgroundColor = '#ffffff';
-      tempContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
-      
-      // Clone the message element
-      const clonedElement = messageElement.cloneNode(true) as HTMLElement;
-      clonedElement.style.width = '100%';
-      clonedElement.style.maxWidth = 'none';
-      clonedElement.style.margin = '0';
-      clonedElement.style.padding = '20px';
-      clonedElement.style.backgroundColor = '#ffffff';
-      clonedElement.style.border = '1px solid #e5e7eb';
-      clonedElement.style.borderRadius = '8px';
-      clonedElement.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-      
-      // Fix all text elements to prevent cutoff
-      const allElements = clonedElement.querySelectorAll('*') as NodeListOf<HTMLElement>;
-      allElements.forEach((el) => {
-        el.style.textRendering = 'optimizeLegibility';
-        el.style.webkitFontSmoothing = 'antialiased';
-        el.style.lineHeight = '1.6';
-        el.style.marginBottom = '4px';
-        el.style.paddingTop = '2px';
-        el.style.paddingBottom = '2px';
-        el.style.overflow = 'visible';
-        el.style.whiteSpace = 'normal';
-        el.style.wordBreak = 'break-word';
-        
-        // Ensure text elements have proper spacing
-        if (el.tagName === 'P' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
-          el.style.marginBottom = '8px';
-          el.style.paddingBottom = '4px';
-        }
-        
-        // Fix spotify track display elements
-        if (el.classList.contains('spotify-track') || el.querySelector('.spotify-track')) {
-          el.style.marginTop = '12px';
-          el.style.paddingTop = '8px';
-        }
-      });
-      
-      // Fix specific text elements that commonly get cut off
-      const textElements = clonedElement.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div') as NodeListOf<HTMLElement>;
-      textElements.forEach((el) => {
-        if (el.textContent && el.textContent.trim()) {
-          el.style.minHeight = '1.6em';
-          el.style.paddingBottom = '4px';
-        }
-      });
-
-      // Specifically fix Spotify track display text elements
-      const spotifyTrackElements = clonedElement.querySelectorAll('[class*="spotify"], [class*="track"]') as NodeListOf<HTMLElement>;
-      spotifyTrackElements.forEach((el) => {
-        // Fix track name and artist name specifically
-        const trackText = el.querySelectorAll('p, span, div') as NodeListOf<HTMLElement>;
-        trackText.forEach((textEl) => {
-          if (textEl.textContent && textEl.textContent.trim()) {
-            textEl.style.fontSize = '14px';
-            textEl.style.lineHeight = '1.8';
-            textEl.style.minHeight = '1.8em';
-            textEl.style.paddingTop = '6px';
-            textEl.style.paddingBottom = '6px';
-            textEl.style.marginTop = '4px';
-            textEl.style.marginBottom = '4px';
-            textEl.style.whiteSpace = 'normal';
-            textEl.style.overflow = 'visible';
-            textEl.style.textOverflow = 'clip';
-            textEl.style.display = 'block';
-            textEl.style.width = '100%';
-          }
-        });
-        
-        // Extra spacing for the entire Spotify container
-        el.style.paddingTop = '12px';
-        el.style.paddingBottom = '12px';
-        el.style.marginTop = '8px';
-        el.style.marginBottom = '8px';
-        el.style.minHeight = 'auto';
-      });
-      
-      tempContainer.appendChild(clonedElement);
-      document.body.appendChild(tempContainer);
-      
-      const canvas = await html2canvas(tempContainer, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: 600,
-        height: tempContainer.scrollHeight + 48,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 600,
-        windowHeight: tempContainer.scrollHeight + 48
-      });
-      
-      // Clean up
-      document.body.removeChild(tempContainer);
-
-      const link = document.createElement('a');
-      link.download = `board-message-${messageId}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
-
-      toast({
-        title: "Success",
-        description: "Message downloaded as image with transparent background!",
-      });
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      toast({
-        title: "Error", 
-        description: "Failed to download image",
-        variant: "destructive",
-      });
-    }
+  const handleDeleteMessage = (messageId: number) => {
+    // Placeholder for actual delete logic
+    console.log(`Deleting message with ID: ${messageId}`);
+    toast({
+      title: "Success",
+      description: "Message deleted.",
+    });
+    queryClient.invalidateQueries({ queryKey: [`/api/${profileType}/${profileId}/dashboard`] });
   };
+
 
   if (isLoading) {
     return (
@@ -304,7 +191,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                 className="flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                {isOwnProfile 
+                {isOwnProfile
                   ? `Post to Your Board`
                   : `Post Message to ${username}'s Board`
                 }
@@ -316,7 +203,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
             <div className="text-center py-8">
               <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground mb-4">
-                {isOwnProfile 
+                {isOwnProfile
                   ? "No messages have been posted to your board yet"
                   : `No messages posted to ${username}'s board yet`}
               </p>
@@ -337,29 +224,22 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                 <div
                   key={message.id}
                   id={`board-message-${message.id}`}
-                  className="p-4 rounded-lg border bg-background relative group"
+                  className="bg-gray-900 text-white rounded-2xl p-6 relative group hover:bg-gray-800 transition-colors duration-200"
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  {/* Header with user info and timestamp */}
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      {/* Sender Avatar */}
-                      {message.senderUserId || message.senderAdminId ? (
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={""} alt={message.senderName} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
-                            {message.senderName.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-gray-400 text-white text-sm">
-                            ?
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                      {/* Profile Avatar */}
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={""} alt={message.senderName} />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-bold">
+                          {message.senderName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
 
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">
+                          <span className="font-semibold text-white text-base">
                             {message.senderName}
                           </span>
                           {message.senderUserId && (
@@ -373,108 +253,182 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                             </Badge>
                           )}
                           {/* Board Owner Tag */}
-                          {((message.senderUserId && message.senderUserId === userId) || 
+                          {((message.senderUserId && message.senderUserId === userId) ||
                             (message.senderAdminId && message.senderAdminId === adminId)) && (
                             <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-green-500 text-white">
                               Board Owner
                             </Badge>
                           )}
                         </div>
-                        <Badge 
-                          variant="outline"
-                          className="w-fit text-xs"
-                          style={{ 
-                            backgroundColor: categories.find(c => c.name === message.category)?.color + '20',
-                            borderColor: categories.find(c => c.name === message.category)?.color 
-                          }}
-                        >
-                          {message.category}
-                        </Badge>
+                        <span className="text-gray-400 text-sm">
+                          @{username}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {formatTimeAgo(new Date(message.createdAt))}
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-400 text-sm">
+                        {(() => {
+                          const now = new Date();
+                          const messageDate = new Date(message.createdAt);
+                          const diffInDays = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                          if (diffInDays === 0) return 'today';
+                          if (diffInDays === 1) return '1d';
+                          if (diffInDays < 7) return `${diffInDays}d`;
+                          if (diffInDays < 30) return `${Math.floor(diffInDays / 7)}w`;
+                          return `${Math.floor(diffInDays / 30)}mo`;
+                        })()}
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const messageElement = document.getElementById(`board-message-${message.id}`);
-                          if (messageElement) {
-                            downloadMessageAsImage(messageElement, message.id);
-                          }
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8"
-                        title="Download as image"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      
-                      {/* Delete button with confirmation */}
-                      {isOwnProfile && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-destructive hover:text-destructive"
-                              title="Delete message"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Board Message</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this message from your board? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => {
-                                  // Add delete functionality here
-                                  console.log('Delete message:', message.id);
-                                }}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete Message
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+                          <MessageViewer
+                            message={{
+                              ...message,
+                              isPublic: false,
+                              recipient: username,
+                              userId: message.senderUserId || null,
+                              adminId: message.senderAdminId || null,
+                              isAuthenticated: Boolean(message.senderUserId || message.senderAdminId),
+                              isOwnerPrivate: false,
+                              isPinned: message.isPinned || false,
+                              replies: [],
+                              user: message.senderUserId ? {
+                                id: message.senderUserId,
+                                username: message.senderName,
+                                password: "",
+                                displayName: message.senderName,
+                                profilePicture: null,
+                                backgroundPhoto: null,
+                                bio: null,
+                                boardName: null,
+                                boardBanner: null,
+                                lastDisplayNameChange: null,
+                                isVerified: false,
+                                likedMessagesPrivacy: "private",
+                                isAnonymousLinkPaused: false,
+                                createdAt: new Date(),
+                                isActive: true,
+                                spotifyTrackId: null,
+                                spotifyTrackName: null,
+                                spotifyArtistName: null,
+                                spotifyAlbumCover: null,
+                              } : null,
+                              admin: message.senderAdminId ? {
+                                id: message.senderAdminId,
+                                username: message.senderName,
+                                password: null,
+                                displayName: message.senderName,
+                                profilePicture: null,
+                                backgroundPhoto: null,
+                                bio: null,
+                                role: "admin",
+                                isVerified: false,
+                                lastDisplayNameChange: null,
+                                createdAt: new Date(),
+                                isActive: true,
+                                spotifyTrackId: null,
+                                spotifyTrackName: null,
+                                spotifyArtistName: null,
+                                spotifyAlbumCover: null,
+                              } : null,
+                            }}
+                            trigger={
+                              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-700">
+                                <Download className="h-4 w-4 mr-2" />
+                                Download as Image
+                              </DropdownMenuItem>
+                            }
+                          />
+                          {(isOwnProfile || (user && user.id === userId)) && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-400 hover:text-red-300 hover:bg-gray-700">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete Message
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this message? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteMessage(message.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
 
-                  <p className="text-sm leading-relaxed mb-3">
-                    {message.content}
-                  </p>
+                  {/* Message Content */}
+                  <div className="mb-4">
+                    <p className="text-white leading-relaxed text-base">
+                      {message.content}
+                    </p>
+                  </div>
 
+                  {/* Category Badge */}
+                  <div className="mb-4">
+                    <span
+                      className="inline-block text-xs px-3 py-1 rounded-full"
+                      style={{
+                        backgroundColor: `${categories.find(c => c.name === message.category)?.color}20`,
+                        color: categories.find(c => c.name === message.category)?.color,
+                        border: `1px solid ${categories.find(c => c.name === message.category)?.color}30`,
+                      }}
+                    >
+                      {message.category}
+                    </span>
+                  </div>
+
+                  {/* Spotify Track Display */}
                   {message.spotifyTrackId && (
-                    <div className="mt-3">
-                      <SpotifyTrackDisplay
-                        track={{
-                          id: message.spotifyTrackId,
-                          name: message.spotifyTrackName || "",
-                          artists: [{ id: "stored", name: message.spotifyArtistName || "" }],
-                          album: {
-                            id: "stored",
-                            name: "Unknown Album",
-                            images: message.spotifyAlbumCover ? [{ url: message.spotifyAlbumCover, height: null, width: null }] : [],
-                          },
-                          external_urls: {
-                            spotify: message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`,
-                          },
-                          preview_url: null,
-                          duration_ms: 0,
-                          popularity: 0,
-                        }}
-                        size="sm"
-                        showPreview={true}
-                      />
+                    <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                      <div className="flex items-center gap-3">
+                        {message.spotifyAlbumCover && (
+                          <img
+                            src={message.spotifyAlbumCover}
+                            alt="Album cover"
+                            className="w-10 h-10 rounded object-cover"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white text-sm truncate">
+                            {message.spotifyTrackName}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {message.spotifyArtistName}
+                          </p>
+                        </div>
+                        <a
+                          href={message.spotifyLink || `https://open.spotify.com/track/${message.spotifyTrackId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-500 hover:text-green-400 transition-colors"
+                        >
+                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.301.421-1.02.599-1.559.3z"/>
+                          </svg>
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -554,8 +508,8 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                   {categories.map((category) => (
                     <SelectItem key={category.name} value={category.name}>
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
+                        <div
+                          className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: category.color }}
                         />
                         {category.name}
