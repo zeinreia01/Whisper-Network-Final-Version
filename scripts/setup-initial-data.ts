@@ -4,35 +4,59 @@ config({ override: true });
 import { db } from '../server/db.js';
 import { admins, honorableMentions } from '../shared/schema.js';
 import { eq } from 'drizzle-orm';
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 async function setupInitialData() {
   console.log('🔄 Setting up initial data for Whisper Network...');
 
   try {
-    // Check if ZEKE001 admin already exists
-    const existingAdmin = await db.select().from(admins).where(eq(admins.username, 'ZEKE001')).limit(1);
-    
+    // Create or update main admin ZEKE001
+    const existingAdmin = await db
+      .select()
+      .from(admins)
+      .where(eq(admins.username, "ZEKE001"))
+      .limit(1);
+
     if (existingAdmin.length === 0) {
-      // Create main admin account (ZEKE001)
+      console.log("🔧 Creating main admin ZEKE001...");
+      // Hash the password for ZEKE001 like other admins
+      const hashedPassword = await hashPassword("122209");
       await db.insert(admins).values({
-        username: 'ZEKE001',
-        password: '122209', // Special password for ZEKE001
-        displayName: 'ZEKE001',
-        profilePicture: null,
-        backgroundPhoto: null,
-        bio: 'Creator and main administrator of Whispering Network. Building a safe space for anonymous emotional expression.',
-        role: 'admin',
-        isVerified: true,
+        username: "ZEKE001",
+        password: hashedPassword,
+        displayName: "ZEKE001",
+        role: "super_admin",
         isActive: true,
+        isVerified: true,
       });
-      console.log('✅ Created main admin account: ZEKE001');
+      console.log("✅ Main admin ZEKE001 created with hashed password");
     } else {
-      console.log('ℹ️ Main admin ZEKE001 already exists');
+      console.log("ℹ️ Main admin ZEKE001 already exists");
+      // Update existing ZEKE001 to use hashed password if it's still plain text
+      const admin = existingAdmin[0];
+      if (admin.password === "122209") {
+        console.log("🔧 Updating ZEKE001 password to hashed version...");
+        const hashedPassword = await hashPassword("122209");
+        await db
+          .update(admins)
+          .set({ password: hashedPassword })
+          .where(eq(admins.username, "ZEKE001"));
+        console.log("✅ ZEKE001 password updated to hashed version");
+      }
     }
 
     // Check if honorable mentions exist
     const existingMentions = await db.select().from(honorableMentions).limit(1);
-    
+
     if (existingMentions.length === 0) {
       // Add some default honorable mentions
       await db.insert(honorableMentions).values([

@@ -162,16 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Account is disabled" });
       }
 
-      // Special handling for ZEKE001 - password should be "122209"
-      if (username === "ZEKE001") {
-        if (password !== "122209") {
-          return res.status(401).json({ message: "Invalid credentials" });
-        }
-        const { password: _, ...adminWithoutPassword } = admin;
-        return res.json(adminWithoutPassword);
-      }
-
-      // For other admins, check hashed password
+      // All admins now use hashed passwords for consistency
       if (!admin.password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
@@ -2025,28 +2016,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Admin not found" });
       }
 
-      // ZEKE001 uses plain text password, others use hashed passwords
-      if (admin.username === "ZEKE001") {
-        // For ZEKE001, store password as plain text (special case)
-        await storage.updateAdminPassword(adminId, validatedData.newPassword);
-      } else {
-        // For other admins, verify current password if provided
-        if (validatedData.currentPassword && admin.password) {
-          const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, admin.password);
-          if (!isCurrentPasswordValid) {
-            return res.status(400).json({ message: "Current password is incorrect" });
-          }
+      // Skip current password verification for ZEKE001
+      if (admin.username !== "ZEKE001" && validatedData.currentPassword) {
+        const isCurrentPasswordValid = await comparePasswords(validatedData.currentPassword, admin.password!);
+        if (!isCurrentPasswordValid) {
+          return res.status(400).json({ message: "Current password is incorrect" });
         }
-        
-        // Hash and update new password for regular admins
-        const hashedNewPassword = await hashPassword(validatedData.newPassword);
-        await storage.updateAdminPassword(adminId, hashedNewPassword);
       }
+
+      // Hash new password and update for all admins (including ZEKE001)
+      const hashedNewPassword = await hashPassword(validatedData.newPassword);
+      await storage.updateAdminPassword(adminId, hashedNewPassword);
 
       res.json({ message: "Password updated successfully" });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ message: "Invalid password data", errors: error.errors });
+        return;
       }
       console.error("Error changing admin password:", error);
       res.status(500).json({ message: "Failed to change password" });
