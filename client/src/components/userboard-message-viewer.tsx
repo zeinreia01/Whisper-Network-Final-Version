@@ -62,7 +62,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(element, {
-        backgroundColor: '#1a1a1a',
+        backgroundColor: 'transparent',
         scale: 2,
         useCORS: true,
         allowTaint: false,
@@ -122,16 +122,19 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
         {/* Capture Container */}
         <div 
           id="userboard-message-capture" 
-          className="relative bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl p-8 mx-auto max-w-2xl"
-          style={{
-            background: `linear-gradient(135deg, 
-              rgba(17, 24, 39, 1) 0%, 
-              rgba(31, 41, 55, 1) 25%,
-              rgba(55, 65, 81, 1) 50%,
-              rgba(31, 41, 55, 1) 75%,
-              rgba(17, 24, 39, 1) 100%)`
-          }}
+          className="p-16 bg-transparent"
         >
+          <div 
+            className="relative bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl p-8 mx-auto max-w-2xl"
+            style={{
+              background: `linear-gradient(135deg, 
+                rgba(17, 24, 39, 1) 0%, 
+                rgba(31, 41, 55, 1) 25%,
+                rgba(55, 65, 81, 1) 50%,
+                rgba(31, 41, 55, 1) 75%,
+                rgba(17, 24, 39, 1) 100%)`
+            }}
+          >
           {/* Pinned Badge */}
           {message.isPinned && (
             <div className="absolute -top-4 left-8 bg-yellow-500 text-black px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-xl">
@@ -247,6 +250,7 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 <p className="text-gray-600 text-xs">Board Message</p>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </DialogContent>
