@@ -1183,6 +1183,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Set default board name if creating board for first time
+      if (updates.allowBoardCreation && !updates.boardName) {
+        const user = await storage.getUserById(parseInt(userId));
+        updates.boardName = `${user?.displayName || user?.username}'s Board`;
+      }
+
       const updatedUser = await storage.updateUserProfile(parseInt(userId), updates);
 
       // Don't return password

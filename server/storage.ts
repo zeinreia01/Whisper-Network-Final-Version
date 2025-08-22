@@ -94,6 +94,7 @@ export interface IStorage {
   createDashboardMessage(message: InsertDashboardMessage): Promise<DashboardMessage>;
   getUserDashboardMessages(userId: number, adminId?: number): Promise<DashboardMessage[]>;
   deleteDashboardMessage(messageId: number): Promise<void>;
+  pinDashboardMessage(messageId: number, isPinned: boolean): Promise<DashboardMessage>;
 
   // Admin announcement operations
   createAdminAnnouncement(announcement: InsertAdminAnnouncement): Promise<AdminAnnouncement>;
@@ -2061,7 +2062,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
 
   async getUserDashboardMessages(userId: number, adminId?: number): Promise<DashboardMessage[]> {
     const conditions = [eq(dashboardMessages.isVisible, true)];
-    
+
     if (userId) {
       conditions.push(eq(dashboardMessages.targetUserId, userId));
     } else if (adminId) {
@@ -2203,7 +2204,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       })
       .from(users)
       .leftJoin(messages, eq(messages.userId, users.id))
-      .leftJoin(reactions, eq(reactions.messageId, messages.id))
+      .leftJoin(reactions, eq(messages.id, reactions.messageId))
       .where(eq(users.isActive, true))
       .groupBy(users.id, users.username, users.displayName, users.profilePicture, users.isVerified)
       .orderBy(desc(sql<number>`count(distinct ${reactions.id})`))
@@ -2273,7 +2274,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         .groupBy(users.id)
         .having(sql`count(${messages.id}) > 0`);
 
-      // Get all active admins with their message counts
+      // Get all active admins with their dashboard message counts
       const adminsWithCounts = await db
         .select({
           id: admins.id,
@@ -2288,21 +2289,29 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
           boardProfilePicture: admins.boardProfilePicture,
           boardVisibility: admins.boardVisibility,
           allowBoardCreation: admins.allowBoardCreation,
+          role: admins.role,
           isVerified: admins.isVerified,
+          lastDisplayNameChange: admins.lastDisplayNameChange,
           createdAt: admins.createdAt,
           isActive: admins.isActive,
-          role: admins.role,
-          messageCount: sql<number>`count(${messages.id})`.as('messageCount'),
+          spotifyTrackId: admins.spotifyTrackId,
+          spotifyTrackName: admins.spotifyTrackName,
+          spotifyArtistName: admins.spotifyArtistName,
+          spotifyAlbumCover: admins.spotifyAlbumCover,
+          messageCount: sql<number>`count(${dashboardMessages.id})`.as('messageCount'),
         })
         .from(admins)
-        .leftJoin(messages, eq(admins.id, messages.adminId))
-        .where(and(eq(admins.isActive, true), eq(admins.boardVisibility, 'public')))
-        .groupBy(admins.id)
-        .having(sql`count(${messages.id}) > 0`);
+        .leftJoin(dashboardMessages, eq(admins.id, dashboardMessages.targetAdminId))
+        .where(and(
+          eq(admins.isActive, true),
+          eq(admins.boardVisibility, 'public'),
+          eq(admins.allowBoardCreation, true)
+        ))
+        .groupBy(admins.id);
 
       // Combine and return all boards
       const allBoards = [...usersWithCounts, ...adminsWithCounts];
-      
+
       return allBoards;
     } catch (error) {
       console.error("Error fetching boards with message counts:", error);
@@ -2330,7 +2339,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
       };
 
       const [report] = await db.insert(notifications).values(reportData as any).returning();
-      
+
       // Create notification for admins
       await this.createNotification({
         adminId: 1, // ZEKE001
@@ -2356,7 +2365,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
           boardProfilePicture: null,
         })
         .where(eq(users.id, userId));
-      
+
       return true;
     } catch (error) {
       console.error("Error deleting user board:", error);
@@ -2375,7 +2384,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
           boardProfilePicture: null,
         })
         .where(eq(admins.id, adminId));
-      
+
       return true;
     } catch (error) {
       console.error("Error deleting admin board:", error);

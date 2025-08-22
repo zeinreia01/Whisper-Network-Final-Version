@@ -346,6 +346,38 @@ export default function UserBoard() {
     );
   }
 
+  // Check if board creation is disabled
+  if (!(boardUser as any).allowBoardCreation) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="text-center py-12">
+            <h1 className="text-2xl font-bold mb-4">Board Not Available</h1>
+            <p className="text-muted-foreground">
+              {boardUser.displayName || boardUser.username} hasn't created a message board yet.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Check if board is private and user is not the owner
+  if ((boardUser as any).boardVisibility === 'private' && !isOwnBoard) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="text-center py-12">
+            <h1 className="text-2xl font-bold mb-4">Board Private</h1>
+            <p className="text-muted-foreground">
+              This board is set to private and can only be viewed by its owner.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -406,14 +438,24 @@ export default function UserBoard() {
                   </Button>
 
                   {isOwnBoard && (
-                    <Dialog open={isEditingBoard} onOpenChange={setIsEditingBoard}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                          <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span className="hidden xs:inline">Customize</span>
-                          <span className="xs:hidden">Edit</span>
-                        </Button>
-                      </DialogTrigger>
+                    <>
+                      <Button
+                        onClick={() => updateProfileField('boardVisibility', (boardUser as any).boardVisibility === 'public' ? 'private' : 'public')}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                      >
+                        {(boardUser as any).boardVisibility === 'public' ? '🔒 Pause Board' : '🔓 Unpause Board'}
+                      </Button>
+
+                      <Dialog open={isEditingBoard} onOpenChange={setIsEditingBoard}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                            <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden xs:inline">Customize</span>
+                            <span className="xs:hidden">Edit</span>
+                          </Button>
+                        </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Customize Your Board</DialogTitle>

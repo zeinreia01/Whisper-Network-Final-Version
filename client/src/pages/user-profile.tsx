@@ -35,6 +35,14 @@ export function UserProfilePage() {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportReason, setReportReason] = useState("");
 
+  // Board configuration states
+  const [showBoardSettings, setShowBoardSettings] = useState(false);
+  const [boardSettings, setBoardSettings] = useState({
+    allowBoardCreation: (profile as any)?.allowBoardCreation || false,
+    boardVisibility: (profile as any)?.boardVisibility || 'public',
+    boardName: (profile as any)?.boardName || '',
+  });
+
   // Board configuration helper
   const updateProfileField = async (field: string, value: any) => {
     if (!currentUserId || !isOwnProfile) return;
@@ -57,6 +65,31 @@ export function UserProfilePage() {
       toast({
         title: "Error",
         description: "Failed to update settings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBoardSettingsUpdate = async () => {
+    try {
+      const endpoint = userId === currentUserId && user ? 
+        `/api/users/${currentUserId}/profile` : 
+        `/api/admins/${currentUserId}/profile`;
+      
+      const response = await apiRequest('PATCH', endpoint, boardSettings);
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/profile`, currentUserId] });
+        setShowBoardSettings(false);
+        toast({
+          title: "Board settings updated",
+          description: "Your board configuration has been saved.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update board settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update board settings",
         variant: "destructive",
       });
     }
@@ -259,12 +292,19 @@ export function UserProfilePage() {
     });
   };
 
-  // Initialize bio text when profile loads
+  // Initialize bio text and board settings when profile loads
   React.useEffect(() => {
     if ((profile as any)?.bio) {
       setBioText((profile as any).bio);
     }
-  }, [(profile as any)?.bio]);
+    if (profile) {
+      setBoardSettings({
+        allowBoardCreation: (profile as any)?.allowBoardCreation || false,
+        boardVisibility: (profile as any)?.boardVisibility || 'public',
+        boardName: (profile as any)?.boardName || '',
+      });
+    }
+  }, [(profile as any)?.bio, profile]);
 
   // Redirect if not authenticated
   if (!user && !admin) {
@@ -384,6 +424,18 @@ export function UserProfilePage() {
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-3" data-tour-follow-system>
+                    {/* Board settings button for own profile */}
+                    {isOwnProfile && (
+                      <Button
+                        onClick={() => setShowBoardSettings(true)}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="h-4 w-4" />
+                        Board Settings
+                      </Button>
+                    )}
+
                     {/* Follow/Unfollow button */}
                     {(user || admin) && targetUserId !== (user?.id || admin?.id) && (
                       <Button
@@ -507,6 +559,26 @@ export function UserProfilePage() {
               />
             </div>
 
+            {/* View Board Button - only show if user has enabled board creation and board is public */}
+            {(profile as any)?.allowBoardCreation && (profile as any)?.boardVisibility === 'public' && (
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    {(profile as any)?.boardName || `${(profile as any)?.displayName || (profile as any)?.username}'s Board`}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Visit {isOwnProfile ? 'your' : `${(profile as any)?.displayName || (profile as any)?.username}'s`} message board
+                  </p>
+                  <Link href={`/board/${(profile as any)?.username}`}>
+                    <Button className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4" />
+                      View Full Board
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Dashboard Posts */}
             <div data-tour-board-posts>
               <UserDashboardPosts 
@@ -597,6 +669,84 @@ export function UserProfilePage() {
               className="bg-primary hover:bg-primary/90 text-white"
             >
               {updateBioMutation.isPending ? "Saving..." : "Save Bio"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Board Settings Dialog */}
+      <Dialog open={showBoardSettings} onOpenChange={setShowBoardSettings}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Board Settings</DialogTitle>
+            <DialogDescription>
+              Configure your personal message board settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="enableBoard" className="text-sm font-medium">
+                Enable Message Board
+              </Label>
+              <input
+                id="enableBoard"
+                type="checkbox"
+                checked={boardSettings.allowBoardCreation}
+                onChange={(e) => setBoardSettings(prev => ({
+                  ...prev,
+                  allowBoardCreation: e.target.checked
+                }))}
+                className="rounded border-gray-300"
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              Allow others to post anonymous messages to your board
+            </p>
+
+            {boardSettings.allowBoardCreation && (
+              <>
+                <div>
+                  <Label htmlFor="boardName" className="text-sm font-medium">
+                    Board Name
+                  </Label>
+                  <Input
+                    id="boardName"
+                    value={boardSettings.boardName}
+                    onChange={(e) => setBoardSettings(prev => ({
+                      ...prev,
+                      boardName: e.target.value
+                    }))}
+                    placeholder="My Message Board"
+                    maxLength={50}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="boardVisibility" className="text-sm font-medium">
+                    Board Visibility
+                  </Label>
+                  <select
+                    id="boardVisibility"
+                    value={boardSettings.boardVisibility}
+                    onChange={(e) => setBoardSettings(prev => ({
+                      ...prev,
+                      boardVisibility: e.target.value
+                    }))}
+                    className="w-full mt-1 p-2 border rounded-md bg-background"
+                  >
+                    <option value="public">Public - Anyone can visit and post</option>
+                    <option value="private">Private - Only you can see your board</option>
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowBoardSettings(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBoardSettingsUpdate}>
+              Save Settings
             </Button>
           </DialogFooter>
         </DialogContent>
