@@ -665,6 +665,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reaction routes (MISSING - CRITICAL FIX)
+  app.post("/api/messages/:messageId/reactions", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      const { userId, adminId, type = "heart" } = req.body;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ message: "User ID or Admin ID required" });
+      }
+
+      // Check if reaction already exists
+      const existingReaction = await storage.getUserReaction(messageId, userId, adminId);
+      if (existingReaction) {
+        return res.status(400).json({ message: "Reaction already exists" });
+      }
+
+      const reaction = await storage.addReaction({
+        messageId,
+        userId,
+        adminId,
+        type,
+      });
+
+      res.status(201).json(reaction);
+    } catch (error) {
+      console.error("Error adding reaction:", error);
+      res.status(500).json({ message: "Failed to add reaction" });
+    }
+  });
+
+  app.delete("/api/messages/:messageId/reactions", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      const { userId, adminId } = req.body;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ message: "User ID or Admin ID required" });
+      }
+
+      await storage.removeReaction(messageId, userId, adminId);
+      res.status(200).json({ message: "Reaction removed" });
+    } catch (error) {
+      console.error("Error removing reaction:", error);
+      res.status(500).json({ message: "Failed to remove reaction" });
+    }
+  });
+
+  app.get("/api/messages/:messageId/reactions", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      const reactions = await storage.getMessageReactions(messageId);
+      res.json(reactions);
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+      res.status(500).json({ message: "Failed to fetch reactions" });
+    }
+  });
+
+  // Like routes for personal archive
+  app.post("/api/messages/:messageId/like", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      const { userId, adminId } = req.body;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ message: "User ID or Admin ID required" });
+      }
+
+      const likedMessage = await storage.likeMessage(userId || 0, adminId, messageId);
+      res.status(201).json(likedMessage);
+    } catch (error) {
+      console.error("Error liking message:", error);
+      res.status(500).json({ message: "Failed to like message" });
+    }
+  });
+
+  app.delete("/api/messages/:messageId/like", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      const { userId, adminId } = req.body;
+
+      if (!userId && !adminId) {
+        return res.status(400).json({ message: "User ID or Admin ID required" });
+      }
+
+      await storage.unlikeMessage(userId || 0, adminId, messageId);
+      res.status(200).json({ message: "Message unliked" });
+    } catch (error) {
+      console.error("Error unliking message:", error);
+      res.status(500).json({ message: "Failed to unlike message" });
+    }
+  });
+
   // Create new reply
   app.post("/api/replies", async (req, res) => {
     try {
@@ -2785,6 +2878,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error generating dashboard OG image:', error);
       res.status(500).send("Error generating image");
+    }
+  });
+
+  // Dynamic HTML routes for social media sharing
+  const generateHTML = (meta: any) => {
+    return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Dynamic SEO -->
+    <title>${meta.title}</title>
+    <meta name="description" content="${meta.description}" />
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="${meta.title}" />
+    <meta property="og:description" content="${meta.description}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${meta.url}" />
+    <meta property="og:image" content="${meta.image}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="${meta.title}" />
+    <meta property="og:site_name" content="Whisper Network" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${meta.title}" />
+    <meta name="twitter:description" content="${meta.description}" />
+    <meta name="twitter:image" content="${meta.image}" />
+    <meta name="twitter:image:alt" content="${meta.title}" />
+    
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="author" content="Whisper Network Team" />
+    
+    <!-- Auto-redirect to client app -->
+    <meta http-equiv="refresh" content="0;url=/" />
+    <script>window.location.href = '/';</script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <p>Redirecting to <a href="/">Whisper Network</a>...</p>
+  </body>
+</html>`;
+  };
+
+  // Dynamic meta routes for social media
+  app.get("/board/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      const meta = generateUserBoardOG(user);
+      const html = generateHTML(meta);
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Error serving board page:', error);
+      res.status(500).send("Error loading page");
+    }
+  });
+
+  app.get("/anonymous/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      const meta = generateAnonymousLinkOG(username);
+      const html = generateHTML(meta);
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Error serving anonymous page:', error);
+      res.status(500).send("Error loading page");
+    }
+  });
+
+  app.get("/user/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      const meta = generateUserProfileOG(user);
+      const html = generateHTML(meta);
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Error serving user page:', error);
+      res.status(500).send("Error loading page");
+    }
+  });
+
+  app.get("/dashboard", async (req, res) => {
+    try {
+      const meta = generateDashboardOG();
+      const html = generateHTML(meta);
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Error serving dashboard page:', error);
+      res.status(500).send("Error loading page");
     }
   });
 
