@@ -38,9 +38,9 @@ export function UserProfilePage() {
   // Board configuration states
   const [showBoardSettings, setShowBoardSettings] = useState(false);
   const [boardSettings, setBoardSettings] = useState({
-    allowBoardCreation: (profile as any)?.allowBoardCreation || false,
-    boardVisibility: (profile as any)?.boardVisibility || 'public',
-    boardName: (profile as any)?.boardName || '',
+    allowBoardCreation: false,
+    boardVisibility: 'public',
+    boardName: '',
   });
 
   // Board configuration helper

@@ -238,7 +238,10 @@ export default function Boards() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
-                    {boards.reduce((sum, board) => sum + (board.messageCount || 0), 0)}
+                    {boards.reduce((sum, board) => {
+                      const count = typeof board.messageCount === 'number' ? board.messageCount : parseInt(board.messageCount?.toString() || '0', 10) || 0;
+                      return sum + count;
+                    }, 0).toLocaleString()}
                   </p>
                   <p className="text-sm text-muted-foreground">Total Messages</p>
                 </div>
@@ -397,7 +400,7 @@ export default function Boards() {
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
                     <div className="flex items-center gap-1">
                       <MessageSquare className="w-3 h-3" />
-                      {board.messageCount} messages
+                      {typeof board.messageCount === 'number' ? board.messageCount : parseInt(board.messageCount?.toString() || '0', 10) || 0} messages
                     </div>
                     {'role' in board && (
                       <Badge variant="secondary" className="text-xs">
