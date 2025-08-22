@@ -2335,7 +2335,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(id);
 
       const messages = await storage.getUserDashboardMessages(userId);
-      res.json(messages);
+      
+      // Enhance messages with user/admin data
+      const enhancedMessages = await Promise.all(
+        messages.map(async (message) => {
+          let user = null;
+          let admin = null;
+
+          if (message.senderUserId) {
+            user = await storage.getUserById(message.senderUserId);
+            if (user) {
+              const { password, ...userWithoutPassword } = user;
+              user = userWithoutPassword;
+            }
+          }
+
+          if (message.senderAdminId) {
+            admin = await storage.getAdminById(message.senderAdminId);
+            if (admin) {
+              const { password, ...adminWithoutPassword } = admin;
+              admin = adminWithoutPassword;
+            }
+          }
+
+          return {
+            ...message,
+            user,
+            admin,
+          };
+        })
+      );
+
+      res.json(enhancedMessages);
     } catch (error) {
       console.error("Get user dashboard messages error:", error);
       res.status(500).json({ message: "Failed to get dashboard messages" });

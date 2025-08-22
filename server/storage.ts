@@ -244,6 +244,9 @@ export class DatabaseStorage implements IStorage {
             .where(eq(users.id, message.userId))
             .limit(1);
           user = userData[0] || null;
+          if (user) {
+            console.log(`User ${user.username} profile picture:`, user.profilePicture?.substring(0, 50) + '...');
+          }
         }
 
         // Get admin if exists
@@ -260,6 +263,9 @@ export class DatabaseStorage implements IStorage {
             .where(eq(admins.id, message.adminId))
             .limit(1);
           admin = adminData[0] || null;
+          if (admin) {
+            console.log(`Admin ${admin.displayName} profile picture:`, admin.profilePicture?.substring(0, 50) + '...');
+          }
         }
 
         // Get replies for this message

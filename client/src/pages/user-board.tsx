@@ -531,7 +531,7 @@ export default function UserBoard() {
                       </DialogContent>
                     </Dialog>
                   )}
-                </div>
+                </>
               </div>
 
               {boardUser.bio && (

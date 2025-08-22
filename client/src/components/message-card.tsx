@@ -513,9 +513,13 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 <AvatarImage 
                   src={message.user.profilePicture || undefined} 
                   alt={message.user.displayName || message.user.username}
+                  onError={(e) => {
+                    console.log('User avatar failed to load:', message.user.profilePicture);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
                 <AvatarFallback className="bg-blue-600 text-white text-sm">
-                  {(message.user.displayName || message.user.username)?.charAt(0)?.toUpperCase() || ''}
+                  {(message.user.displayName || message.user.username)?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
             )}
@@ -525,6 +529,10 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 <AvatarImage 
                   src={message.admin.profilePicture || undefined} 
                   alt={message.admin.displayName}
+                  onError={(e) => {
+                    console.log('Admin avatar failed to load:', message.admin.profilePicture);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
                 <AvatarFallback className="bg-purple-600 text-white text-sm">
                   {message.admin.displayName?.charAt(0)?.toUpperCase() || 'A'}

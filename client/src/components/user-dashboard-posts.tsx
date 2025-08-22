@@ -230,12 +230,28 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       {/* Profile Avatar */}
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={""} alt={message.senderName} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-bold">
-                          {message.senderName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      {message.userId && (
+                        <Avatar className="w-8 h-8 border-2 border-white dark:border-gray-800 shadow-lg">
+                          <AvatarImage 
+                            src={message.user?.profilePicture || undefined} 
+                            alt={message.user?.displayName || message.user?.username || 'User'}
+                          />
+                          <AvatarFallback className="bg-blue-600 text-white text-sm">
+                            {(message.user?.displayName || message.user?.username || 'U').charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      {message.adminId && (
+                        <Avatar className="w-8 h-8 border-2 border-white dark:border-gray-800 shadow-lg">
+                          <AvatarImage 
+                            src={message.admin?.profilePicture || undefined} 
+                            alt={message.admin?.displayName || 'Admin'}
+                          />
+                          <AvatarFallback className="bg-purple-600 text-white text-sm">
+                            {(message.admin?.displayName || 'A').charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
 
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
