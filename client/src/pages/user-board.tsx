@@ -440,7 +440,12 @@ export default function UserBoard() {
                   {isOwnBoard && (
                     <>
                       <Button
-                        onClick={() => updateProfileField('boardVisibility', (boardUser as any).boardVisibility === 'public' ? 'private' : 'public')}
+                        onClick={() => {
+                          // Toggle board visibility
+                          const newVisibility = (boardUser as any).boardVisibility === 'public' ? 'private' : 'public';
+                          // This will be implemented with proper API call
+                          console.log('Toggle board visibility to:', newVisibility);
+                        }}
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3"
@@ -456,7 +461,7 @@ export default function UserBoard() {
                             <span className="xs:hidden">Edit</span>
                           </Button>
                         </DialogTrigger>
-                      <DialogContent>
+                        <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Customize Your Board</DialogTitle>
                         </DialogHeader>
@@ -528,10 +533,11 @@ export default function UserBoard() {
                             Update Board
                           </Button>
                         </div>
-                      </DialogContent>
-                    </Dialog>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   )}
-                </>
+                </div>
               </div>
 
               {boardUser.bio && (

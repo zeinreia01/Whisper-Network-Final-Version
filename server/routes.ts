@@ -154,7 +154,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password } = req.body;
 
       const admin = await storage.getAdminByUsername(username);
-      if (!admin || !await comparePasswords(password, admin.password)) {
+      
+      // Debug admin authentication
+      console.log(`Admin login attempt for: ${username}`);
+      console.log(`Admin found:`, !!admin);
+      console.log(`Admin password exists:`, !!admin?.password);
+      
+      if (!admin) {
+        console.log(`Admin not found: ${username}`);
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      if (!admin.password) {
+        console.log(`Admin ${username} has no password set`);
+        return res.status(401).json({ message: "Account password not configured. Please contact ZEKE001." });
+      }
+      
+      const passwordValid = await comparePasswords(password, admin.password);
+      console.log(`Password valid for ${username}:`, passwordValid);
+      
+      if (!passwordValid) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
@@ -196,6 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: role || "admin",
         isActive: true,
       });
+
+      console.log(`Created admin ${username} with hashed password: ${hashedPassword}`);
 
       // Store original password for ZEKE001 viewing
       if (password) {

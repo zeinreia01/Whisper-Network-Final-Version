@@ -511,10 +511,10 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
             {message.userId && message.user && (
               <Avatar className="w-8 h-8">
                 <AvatarImage 
-                  src={message.user.profilePicture || undefined} 
-                  alt={message.user.displayName || message.user.username}
+                  src={message.user?.profilePicture && message.user.profilePicture.trim() ? message.user.profilePicture : undefined} 
+                  alt={message.user?.displayName || message.user?.username}
                   onError={(e) => {
-                    console.log('User avatar failed to load:', message.user.profilePicture);
+                    console.log('User avatar failed to load:', message.user?.profilePicture);
                     e.currentTarget.style.display = 'none';
                   }}
                 />
@@ -527,10 +527,10 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
             {message.adminId && message.admin && (
               <Avatar className="w-8 h-8">
                 <AvatarImage 
-                  src={message.admin.profilePicture || undefined} 
-                  alt={message.admin.displayName}
+                  src={message.admin?.profilePicture && message.admin.profilePicture.trim() ? message.admin.profilePicture : undefined} 
+                  alt={message.admin?.displayName}
                   onError={(e) => {
-                    console.log('Admin avatar failed to load:', message.admin.profilePicture);
+                    console.log('Admin avatar failed to load:', message.admin?.profilePicture);
                     e.currentTarget.style.display = 'none';
                   }}
                 />
@@ -769,7 +769,7 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
                 )}
 
                 {/* Board owner deletion option - for public messages and dashboard posts */}
-                {user && (message.recipient === user.username || message.targetUserId === user.id) && !admin && (
+                {user && (message.recipient === user.username) && !admin && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem 
@@ -862,7 +862,11 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
               <div key={reply.id} className="flex items-start space-x-3 py-2">
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage 
-                    src={reply.user?.profilePicture || reply.admin?.profilePicture || ''} 
+                    src={
+                      (reply.user?.profilePicture && reply.user.profilePicture.trim()) ||
+                      (reply.admin?.profilePicture && reply.admin.profilePicture.trim()) ||
+                      undefined
+                    } 
                     alt={reply.nickname} 
                   />
                   <AvatarFallback className="text-xs">
