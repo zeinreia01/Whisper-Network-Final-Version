@@ -11,7 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageCard } from "@/components/message-card";
 import { UserBadge } from "@/components/user-badge";
-import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar, Flag, MoreVertical } from "lucide-react";
+import { ProfileMusicSection } from "@/components/profile-music-section";
+import { UserMusicList } from "@/components/user-music-list";
+import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar, Flag, MoreVertical, Copy, Link as LinkIcon, Eye, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,6 +58,15 @@ export default function AdminProfile() {
     enabled: !!targetAdminId && (!!user || !!admin),
   });
 
+  const { data: adminMusicList, isLoading: musicLoading } = useQuery({
+    queryKey: [`/api/admins/${targetAdminId}/music`],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/admins/${targetAdminId}/music`);
+      return await response.json();
+    },
+    enabled: !!targetAdminId && (!!user || !!admin),
+  });
+
   // Follow/Unfollow mutation for admin
   const followMutation = useMutation({
     mutationFn: async ({ targetId, action }: { targetId: number; action: 'follow' | 'unfollow' }) => {
@@ -93,6 +104,14 @@ export default function AdminProfile() {
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  
+  // Board configuration states
+  const [showBoardSettings, setShowBoardSettings] = useState(false);
+  const [boardSettings, setBoardSettings] = useState({
+    allowBoardCreation: false,
+    boardVisibility: 'public',
+    boardName: '',
+  });
 
   const unfollowMutation = useMutation({
     mutationFn: async () => {
@@ -172,6 +191,15 @@ export default function AdminProfile() {
       reason: reportReason,
       reporterId: user?.id || admin?.id || 0,
       reporterType: user ? "user" : "admin",
+    });
+  };
+
+  const handleCopyAnonymousLink = () => {
+    const anonymousLink = `${window.location.origin}/anonymous/${profile?.username}`;
+    navigator.clipboard.writeText(anonymousLink);
+    toast({
+      title: "Link copied!",
+      description: "Anonymous messaging link has been copied to your clipboard.",
     });
   };
 
@@ -340,6 +368,60 @@ export default function AdminProfile() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Anonymous Link Section - Only show for own profile */}
+            {isOwnProfile && (
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+                    <LinkIcon className="w-5 h-5" />
+                    Anonymous Messages Link
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                        Share this link to receive anonymous messages
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        {window.location.origin}/anonymous/{profile?.username}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleCopyAnonymousLink}
+                      size="sm"
+                      className="ml-3 flex items-center gap-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copy Link
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Profile Song Section */}
+            <div className="mb-6">
+              <ProfileMusicSection 
+                admin={profile} 
+                isOwnProfile={isOwnProfile}
+                title="Profile Song"
+              />
+            </div>
+
+            {/* Music List Section */}
+            {adminMusicList && adminMusicList.length > 0 && (
+              <div className="mb-6">
+                <UserMusicList 
+                  musicList={adminMusicList}
+                  isOwnProfile={isOwnProfile}
+                  isLoading={musicLoading}
+                  userType="admin"
+                  userId={targetAdminId}
+                />
+              </div>
+            )}
 
             {/* Messages */}
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">

@@ -7,8 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Shield, MessageSquare, MessageCircle, Calendar, User, Heart } from "lucide-react";
+import { ArrowLeft, Shield, MessageSquare, MessageCircle, Calendar, User, Heart, Copy, Link as LinkIcon } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
+import { ProfileMusicSection } from "@/components/profile-music-section";
+import { UserMusicList } from "@/components/user-music-list";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Admin {
   id: number;
@@ -43,6 +47,9 @@ interface Reply {
 export function AdminProfileViewPage() {
   const { id } = useParams();
   const adminId = parseInt(id || "");
+  const { admin } = useAuth();
+  const { toast } = useToast();
+  const isOwnProfile = adminId === admin?.id;
 
   const { data: admin, isLoading: adminLoading } = useQuery<Admin>({
     queryKey: ["admin", adminId],
@@ -80,6 +87,18 @@ export function AdminProfileViewPage() {
     enabled: !!adminId,
   });
 
+  const { data: adminMusicList, isLoading: musicLoading } = useQuery({
+    queryKey: ["admin-music", adminId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admins/${adminId}/music`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch music");
+      }
+      return response.json();
+    },
+    enabled: !!adminId,
+  });
+
   if (adminLoading) {
     return (
       <div className="min-h-screen bg-background py-6">
@@ -92,6 +111,15 @@ export function AdminProfileViewPage() {
       </div>
     );
   }
+
+  const handleCopyAnonymousLink = () => {
+    const anonymousLink = `${window.location.origin}/anonymous/${admin?.username}`;
+    navigator.clipboard.writeText(anonymousLink);
+    toast({
+      title: "Link copied!",
+      description: "Anonymous messaging link has been copied to your clipboard.",
+    });
+  };
 
   if (!admin) {
     return (
@@ -181,6 +209,60 @@ export function AdminProfileViewPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Anonymous Link Section - Only show for own profile */}
+        {isOwnProfile && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LinkIcon className="w-5 h-5" />
+                Anonymous Messages Link
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium mb-1">
+                    Share this link to receive anonymous messages
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                    {window.location.origin}/anonymous/{admin?.username}
+                  </p>
+                </div>
+                <Button
+                  onClick={handleCopyAnonymousLink}
+                  size="sm"
+                  className="ml-3 flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Profile Song Section */}
+        <div className="mb-6">
+          <ProfileMusicSection 
+            admin={admin} 
+            isOwnProfile={isOwnProfile}
+            title="Profile Song"
+          />
+        </div>
+
+        {/* Music List Section */}
+        {adminMusicList && adminMusicList.length > 0 && (
+          <div className="mb-6">
+            <UserMusicList 
+              musicList={adminMusicList}
+              isOwnProfile={isOwnProfile}
+              isLoading={musicLoading}
+              userType="admin"
+              userId={adminId}
+            />
+          </div>
+        )}
 
         {/* Content Tabs */}
         <Tabs defaultValue="messages" className="space-y-6">
