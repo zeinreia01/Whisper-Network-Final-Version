@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, MessageCircle, Heart } from "lucide-react";
 import { HonorableMentionsModal } from "@/components/honorable-mentions-modal";
+import developerImage from "@assets/received_775974028233851_1756013195054.jpeg";
 
 interface LandingProps {
   onEnter: () => void;
@@ -132,7 +133,7 @@ export default function Landing({ onEnter }: LandingProps) {
                   <div className="relative inline-block mb-6">
                     <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-gradient-to-r from-indigo-500 to-purple-500 shadow-xl">
                       <img 
-                        src="/attached_assets/received_775974028233851_1756013195054.jpeg" 
+                        src={developerImage} 
                         alt="ZEKE - Developer"
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -156,8 +157,8 @@ export default function Landing({ onEnter }: LandingProps) {
                   <div className="max-w-3xl mx-auto mb-8">
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
                       A 16-year-old visionary creator born in 2009, passionate about inspiring others through technology and art. 
-                      With an insatiable curiosity for innovation and a drive to push creative boundaries, I transform ideas into 
-                      digital experiences that connect hearts and minds across the world.
+                      Starting my creative journey at age 9, I've developed an insatiable curiosity for innovation and a drive to push creative boundaries, 
+                      transforming ideas into digital experiences that connect hearts and minds across the world.
                     </p>
                   </div>
                 </div>
