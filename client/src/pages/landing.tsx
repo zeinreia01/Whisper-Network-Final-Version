@@ -132,7 +132,7 @@ export default function Landing({ onEnter }: LandingProps) {
                   <div className="relative inline-block mb-6">
                     <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-gradient-to-r from-indigo-500 to-purple-500 shadow-xl">
                       <img 
-                        src="/attached_assets/received_775974028233851_1756012952572.jpeg" 
+                        src="/attached_assets/received_775974028233851_1756013195054.jpeg" 
                         alt="ZEKE - Developer"
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -179,7 +179,9 @@ export default function Landing({ onEnter }: LandingProps) {
                         <li>• Photography & Cinematography</li>
                         <li>• Digital & Traditional Art</li>
                         <li>• Graphic Design</li>
-                        <li>• Motion Graphics & Animation</li>
+                        <li>• Adobe Illustrator & Canva</li>
+                        <li>• Ibis Paint X & Pixellab</li>
+                        <li>• Hypic & Motion Graphics</li>
                       </ul>
                     </div>
 
@@ -216,12 +218,12 @@ export default function Landing({ onEnter }: LandingProps) {
                       <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4">
                         <span className="text-white text-xl">🎬</span>
                       </div>
-                      <h5 className="font-bold text-lg mb-3 text-orange-700 dark:text-orange-300">Animation Tools</h5>
+                      <h5 className="font-bold text-lg mb-3 text-orange-700 dark:text-orange-300">Animation & Editing</h5>
                       <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                         <li>• Flipaclip & Sticknodes</li>
-                        <li>• Adobe Flash</li>
-                        <li>• RoughAnimator</li>
-                        <li>• Motion Graphics</li>
+                        <li>• Adobe Flash & After Effects</li>
+                        <li>• Alight Motion & Capcut</li>
+                        <li>• Blurr & RoughAnimator</li>
                       </ul>
                     </div>
 
