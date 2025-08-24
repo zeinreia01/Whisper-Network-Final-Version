@@ -13,7 +13,7 @@ import { MessageCard } from "@/components/message-card";
 import { UserBadge } from "@/components/user-badge";
 import { ProfileMusicSection } from "@/components/profile-music-section";
 import { UserMusicList } from "@/components/user-music-list";
-import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar, Flag, MoreVertical, Copy, Link as LinkIcon, Eye, Download } from "lucide-react";
+import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar, Flag, MoreVertical, Copy, Link as LinkIcon, Eye, Download, MessageSquare, Inbox } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,9 @@ interface AdminProfile extends Admin {
   totalReactions: number;
   followersCount: number;
   isFollowing?: boolean;
+  allowBoardCreation?: boolean;
+  boardVisibility?: 'public' | 'private';
+  boardName?: string;
 }
 
 export default function AdminProfile() {
@@ -82,8 +85,8 @@ export default function AdminProfile() {
     },
     onSuccess: (_, { action }) => {
       // Invalidate all related queries to ensure UI updates
-      queryClient.invalidateQueries({ queryKey: [`/api/admins/${adminId}/profile`] });
-      queryClient.refetchQueries({ queryKey: [`/api/admins/${adminId}/profile`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admins/${targetAdminId}/profile`] });
+      queryClient.refetchQueries({ queryKey: [`/api/admins/${targetAdminId}/profile`] });
       toast({
         title: action === 'unfollow' ? "Unfollowed" : "Now Following",
         description: action === 'unfollow'
@@ -104,7 +107,7 @@ export default function AdminProfile() {
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportReason, setReportReason] = useState("");
-  
+
   // Board configuration states
   const [showBoardSettings, setShowBoardSettings] = useState(false);
   const [boardSettings, setBoardSettings] = useState({
@@ -163,7 +166,7 @@ export default function AdminProfile() {
     if (isFollowing) {
       unfollowMutation.mutate();
     } else {
-      followMutation.mutate();
+      followMutation.mutate({ targetId: targetAdminId!, action: 'follow' });
     }
   };
 
@@ -195,6 +198,7 @@ export default function AdminProfile() {
   };
 
   const handleCopyAnonymousLink = () => {
+    if (!profile?.username) return;
     const anonymousLink = `${window.location.origin}/anonymous/${profile?.username}`;
     navigator.clipboard.writeText(anonymousLink);
     toast({
@@ -296,38 +300,54 @@ export default function AdminProfile() {
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-3">
-              {/* Follow button for logged-in users only */}
-              {user && targetAdminId !== admin?.id && (
-                <Button
-                  onClick={handleFollow}
-                  disabled={followMutation.isPending || unfollowMutation.isPending}
-                  variant={isFollowing ? "outline" : "default"}
-                  className="flex items-center gap-2"
-                >
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </Button>
-              )}
+                    {/* Anonymous messaging button for all profiles */}
+                    <Link href={`/anonymous/${profile?.username}`}>
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        {isOwnProfile ? "My Anonymous Link" : "Send Anonymous Message"}
+                      </Button>
+                    </Link>
 
-              {/* Report admin option */}
-              {(user || admin) && targetAdminId !== admin?.id && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => setShowReportDialog(true)}
-                      className="text-orange-600"
-                    >
-                      <Flag className="h-4 w-4 mr-2" />
-                      Report Admin
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-</div>
+                    {/* Inbox button for own profile */}
+                    {isOwnProfile && (
+                      <Link href="/admin/personal">
+                        <Button
+                          variant="outline"
+                          className="flex items-center gap-2"
+                        >
+                          <Inbox className="h-4 w-4" />
+                          My Inbox
+                        </Button>
+                      </Link>
+                    )}
+
+                    {/* Board settings button for own profile */}
+                    {isOwnProfile && (
+                      <Button
+                        onClick={() => setShowBoardSettings(true)}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="h-4 w-4" />
+                        Board Settings
+                      </Button>
+                    )}
+
+                    {/* Follow/Unfollow button */}
+                    {(user || admin) && targetAdminId !== currentAdminId && (
+                      <Button
+                        onClick={handleFollow}
+                        disabled={followMutation.isPending || unfollowMutation.isPending}
+                        variant={isFollowing ? "outline" : "default"}
+                        className="flex items-center gap-2"
+                      >
+                        {isFollowing ? "Unfollow" : "Follow"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Bio */}
@@ -423,28 +443,50 @@ export default function AdminProfile() {
               </div>
             )}
 
-            {/* Messages */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-gray-900 dark:text-white">Recent Messages</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {!adminMessages || adminMessages.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600 dark:text-gray-400">No public messages yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {adminMessages.map((message) => (
-                      <MessageCard
-                        key={message.id}
-                        message={message}
-                      />
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* View Board Button - only show if admin has enabled board creation and board is public */}
+            {profile?.allowBoardCreation && profile?.boardVisibility === 'public' && (
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    {profile?.boardName || `${profile?.displayName || profile?.username}'s Board`}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Visit {isOwnProfile ? 'your' : `${profile?.displayName || profile?.username}'s`} message board
+                  </p>
+                  <Link href={`/board/${profile?.username}`}>
+                    <Button className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4" />
+                      View Full Board
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Admin's messages */}
+            <div data-tour-public-messages>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 dark:text-white">Recent Messages</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!adminMessages || adminMessages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600 dark:text-gray-400">No public messages yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {adminMessages.map((message) => (
+                        <MessageCard
+                          key={message.id}
+                          message={message}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
@@ -466,7 +508,7 @@ export default function AdminProfile() {
               rows={3}
             />
           </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex flex-col sm:flex-col gap-2">
             <Button variant="outline" onClick={() => setShowReportDialog(false)}>
               Cancel
             </Button>

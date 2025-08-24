@@ -7,12 +7,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Shield, MessageSquare, MessageCircle, Calendar, User, Heart, Copy, Link as LinkIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Shield, MessageSquare, MessageCircle, Calendar, User, Heart, Copy, Link as LinkIcon, Settings, Inbox } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { ProfileMusicSection } from "@/components/profile-music-section";
 import { UserMusicList } from "@/components/user-music-list";
+import { UserBoardMessageViewer } from "@/components/userboard-message-viewer";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
 
 interface Admin {
   id: number;
@@ -50,6 +55,12 @@ export function AdminProfileViewPage() {
   const { admin } = useAuth();
   const { toast } = useToast();
   const isOwnProfile = adminId === admin?.id;
+  const [showBoardSettings, setShowBoardSettings] = useState(false);
+  const [boardSettings, setBoardSettings] = useState({
+    allowBoardCreation: false,
+    boardVisibility: 'public',
+    boardName: '',
+  });
 
   const { data: adminProfile, isLoading: adminLoading } = useQuery<Admin>({
     queryKey: ["admin", adminId],
@@ -119,6 +130,31 @@ export function AdminProfileViewPage() {
       title: "Link copied!",
       description: "Anonymous messaging link has been copied to your clipboard.",
     });
+  };
+
+  const handleBoardSettingsUpdate = async () => {
+    try {
+      const response = await fetch(`/api/admins/${adminId}/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(boardSettings),
+      });
+      
+      if (response.ok) {
+        setShowBoardSettings(false);
+        toast({
+          title: "Board settings updated",
+          description: "Your board configuration has been saved.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update board settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update board settings",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!adminProfile) {
@@ -205,6 +241,44 @@ export function AdminProfileViewPage() {
                     </div>
                   </div>
                 </div>
+              {/* Action buttons */}
+                <div className="flex items-center gap-3 mt-4">
+                  {/* Anonymous messaging button for all profiles */}
+                  <Link href={`/anonymous/${adminProfile?.username}`}>
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {isOwnProfile ? "My Anonymous Link" : "Send Anonymous Message"}
+                    </Button>
+                  </Link>
+
+                  {/* Inbox button for own profile */}
+                  {isOwnProfile && (
+                    <Link href="/admin/personal">
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Inbox className="h-4 w-4" />
+                        My Inbox
+                      </Button>
+                    </Link>
+                  )}
+
+                  {/* Board settings button for own profile */}
+                  {isOwnProfile && (
+                    <Button
+                      onClick={() => setShowBoardSettings(true)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Board Settings
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -252,16 +326,32 @@ export function AdminProfileViewPage() {
         </div>
 
         {/* Music List Section */}
-        {adminMusicList && adminMusicList.length > 0 && (
-          <div className="mb-6">
-            <UserMusicList 
-              musicList={adminMusicList}
-              isOwnProfile={isOwnProfile}
-              isLoading={musicLoading}
-              userType="admin"
-              userId={adminId}
-            />
-          </div>
+        <div className="mb-6">
+          <UserMusicList 
+            adminId={adminId}
+            isOwnProfile={isOwnProfile}
+            title="Music Collection"
+          />
+        </div>
+
+        {/* View Board Button - only show if admin has enabled board creation and board is public */}
+        {adminProfile?.allowBoardCreation && adminProfile?.boardVisibility === 'public' && (
+          <Card className="mb-6">
+            <CardContent className="p-6 text-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {adminProfile?.boardName || `${adminProfile?.displayName || adminProfile?.username}'s Board`}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Visit {isOwnProfile ? 'your' : `${adminProfile?.displayName || adminProfile?.username}'s`} message board
+              </p>
+              <Link href={`/board/${adminProfile?.username}`}>
+                <Button className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  View Full Board
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
 
         {/* Content Tabs */}
@@ -377,6 +467,84 @@ export function AdminProfileViewPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Board Settings Dialog */}
+      <Dialog open={showBoardSettings} onOpenChange={setShowBoardSettings}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Board Settings</DialogTitle>
+            <DialogDescription>
+              Configure your personal message board settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="enableBoard" className="text-sm font-medium">
+                Enable Message Board
+              </Label>
+              <input
+                id="enableBoard"
+                type="checkbox"
+                checked={boardSettings.allowBoardCreation}
+                onChange={(e) => setBoardSettings(prev => ({
+                  ...prev,
+                  allowBoardCreation: e.target.checked
+                }))}
+                className="rounded border-gray-300"
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              Allow others to post anonymous messages to your board
+            </p>
+
+            {boardSettings.allowBoardCreation && (
+              <>
+                <div>
+                  <Label htmlFor="boardName" className="text-sm font-medium">
+                    Board Name
+                  </Label>
+                  <Input
+                    id="boardName"
+                    value={boardSettings.boardName}
+                    onChange={(e) => setBoardSettings(prev => ({
+                      ...prev,
+                      boardName: e.target.value
+                    }))}
+                    placeholder="My Message Board"
+                    maxLength={50}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="boardVisibility" className="text-sm font-medium">
+                    Board Visibility
+                  </Label>
+                  <select
+                    id="boardVisibility"
+                    value={boardSettings.boardVisibility}
+                    onChange={(e) => setBoardSettings(prev => ({
+                      ...prev,
+                      boardVisibility: e.target.value
+                    }))}
+                    className="w-full mt-1 p-2 border rounded-md bg-background"
+                  >
+                    <option value="public">Public - Anyone can visit and post</option>
+                    <option value="private">Private - Only you can see your board</option>
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowBoardSettings(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBoardSettingsUpdate}>
+              Save Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
