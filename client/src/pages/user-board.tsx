@@ -346,8 +346,8 @@ export default function UserBoard() {
     );
   }
 
-  // Check if board creation is disabled
-  if (!(boardUser as any).allowBoardCreation) {
+  // Check if board creation is disabled or board hasn't been set up
+  if (!(boardUser as any).allowBoardCreation || !(boardUser as any).boardName) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>

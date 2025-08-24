@@ -9,7 +9,7 @@ import {
   type DashboardMessage, type InsertDashboardMessage, type AdminAnnouncement, type InsertAdminAnnouncement
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, or, like, isNull, sql, ilike } from "drizzle-orm";
+import { eq, desc, asc, and, or, like, isNull, sql, ilike, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -2143,7 +2143,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     const [announcement] = await db
       .update(adminAnnouncements)
       .set({ isPinned })
-      .where(eq(adminAnnouncements.id, announcementId))
+      .where(eq(announcementId, announcementId))
       .returning();
     return announcement;
   }
@@ -2309,9 +2309,9 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         .from(admins)
         .leftJoin(dashboardMessages, eq(admins.id, dashboardMessages.targetAdminId))
         .where(and(
-          eq(admins.isActive, true),
-          eq(admins.boardVisibility, 'public'),
-          eq(admins.allowBoardCreation, true)
+          eq(admins.isActive, true), 
+          eq(admins.allowBoardCreation, true),
+          isNotNull(admins.boardName)
         ))
         .groupBy(admins.id);
 
