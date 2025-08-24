@@ -132,7 +132,7 @@ export default function Landing({ onEnter }: LandingProps) {
                   <div className="relative inline-block mb-6">
                     <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-gradient-to-r from-indigo-500 to-purple-500 shadow-xl">
                       <img 
-                        src="/attached_assets/received_775974028233851_1756012090253.jpeg" 
+                        src="/attached_assets/received_775974028233851_1756012952572.jpeg" 
                         alt="ZEKE - Developer"
                         className="w-full h-full object-cover"
                         onError={(e) => {

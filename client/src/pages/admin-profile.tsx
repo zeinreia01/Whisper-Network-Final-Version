@@ -14,7 +14,7 @@ import { UserBadge } from "@/components/user-badge";
 import { ProfileMusicSection } from "@/components/profile-music-section";
 import { UserMusicList } from "@/components/user-music-list";
 import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar, Flag, MoreVertical, Copy, Link as LinkIcon, Eye, Download, MessageSquare, Inbox } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
