@@ -1652,14 +1652,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
 
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
+      // Check users table first
+      let user = await storage.getUserByUsername(username);
+      if (user) {
+        const { password, ...userProfile } = user;
+        return res.json({ ...userProfile, isAdmin: false });
       }
 
-      // Return basic profile info (no password)
-      const { password, ...userProfile } = user;
-      res.json(userProfile);
+      // Check admins table if not found in users
+      const admin = await storage.getAdminByUsername(username);
+      if (admin) {
+        const { password, ...adminProfile } = admin;
+        return res.json({ ...adminProfile, isAdmin: true });
+      }
+
+      return res.status(404).json({ error: "User not found" });
     } catch (error) {
       console.error("Error fetching user profile:", error);
       res.status(500).json({ error: "Failed to fetch user profile" });
@@ -2080,6 +2087,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ isAnonymousLinkPaused: updatedUser.isAnonymousLinkPaused });
     } catch (error) {
       console.error("Error toggling anonymous link:", error);
+      res.status(500).json({ error: "Failed to toggle anonymous link" });
+    }
+  });
+
+  // Toggle anonymous link status for admins
+  app.patch("/api/admins/:adminId/toggle-anonymous-link", async (req, res) => {
+    try {
+      const adminId = parseInt(req.params.adminId);
+      const { isAnonymousLinkPaused } = req.body;
+
+      if (!adminId) {
+        return res.status(400).json({ error: "Invalid admin ID" });
+      }
+
+      const updatedAdmin = await storage.updateAdminProfile(adminId, { 
+        isAnonymousLinkPaused 
+      });
+
+      res.json({ isAnonymousLinkPaused: updatedAdmin.isAnonymousLinkPaused });
+    } catch (error) {
+      console.error("Error toggling admin anonymous link:", error);
       res.status(500).json({ error: "Failed to toggle anonymous link" });
     }
   });

@@ -62,6 +62,7 @@ interface UserProfile {
   profilePicture?: string;
   backgroundPhoto?: string;
   isAnonymousLinkPaused?: boolean;
+  isAdmin?: boolean;
 }
 
 export default function AnonymousMessaging() {
@@ -102,6 +103,17 @@ export default function AnonymousMessaging() {
   // Get anonymous messages for authenticated user viewing their own inbox
   const { data: inboxMessages = [], isLoading: messagesLoading } = useQuery<AnonymousMessage[]>({
     queryKey: ["/api/anonymous-messages", user?.id || admin?.id],
+    queryFn: async () => {
+      const userId = user?.id || 0;
+      const adminId = admin?.id;
+      const url = adminId 
+        ? `/api/anonymous-messages/${userId}?adminId=${adminId}`
+        : `/api/anonymous-messages/${userId}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch messages");
+      return response.json();
+    },
     enabled: !!(user || admin) && showInbox,
   });
 
@@ -129,8 +141,8 @@ export default function AnonymousMessaging() {
           spotifyArtistName: messageData.spotifyArtistName,
           spotifyAlbumCover: messageData.spotifyAlbumCover,
           senderName: messageData.senderName,
-          recipientUserId: recipientProfile?.id,
-          recipientAdminId: null, // For now, only supporting user recipients
+          recipientUserId: recipientProfile?.isAdmin ? null : recipientProfile?.id,
+          recipientAdminId: recipientProfile?.isAdmin ? recipientProfile?.id : null,
         }),
       });
       if (!response.ok) throw new Error("Failed to send message");
@@ -181,7 +193,11 @@ export default function AnonymousMessaging() {
   // Toggle link pause mutation
   const toggleLinkMutation = useMutation({
     mutationFn: async (isPaused: boolean) => {
-      const response = await fetch(`/api/users/${recipientProfile?.id}/toggle-anonymous-link`, {
+      const endpoint = recipientProfile?.isAdmin 
+        ? `/api/admins/${recipientProfile?.id}/toggle-anonymous-link`
+        : `/api/users/${recipientProfile?.id}/toggle-anonymous-link`;
+      
+      const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isAnonymousLinkPaused: isPaused }),
@@ -219,8 +235,8 @@ export default function AnonymousMessaging() {
     deleteMessageMutation.mutate(messageId);
   };
 
-  const isOwnProfile = (user && recipientProfile && user.username === recipientProfile.username) ||
-                      (admin && recipientProfile && admin.username === recipientProfile.username);
+  const isOwnProfile = (user && recipientProfile && !recipientProfile.isAdmin && user.username === recipientProfile.username) ||
+                      (admin && recipientProfile && recipientProfile.isAdmin && admin.username === recipientProfile.username);
 
   if (profileLoading) {
     return (
