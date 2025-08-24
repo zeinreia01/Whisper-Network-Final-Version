@@ -2836,6 +2836,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Landing page OG image
+  app.get("/api/og-image/landing", async (req, res) => {
+    try {
+      const svg = `
+        <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="landingBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          
+          <rect width="1200" height="630" fill="url(#landingBg)"/>
+          
+          <circle cx="150" cy="150" r="80" fill="rgba(255,255,255,0.1)"/>
+          <circle cx="1050" cy="480" r="100" fill="rgba(255,255,255,0.1)"/>
+          
+          <rect x="200" y="180" width="800" height="270" rx="30" fill="rgba(255,255,255,0.95)"/>
+          
+          <circle cx="350" cy="280" r="50" fill="#667eea"/>
+          <text x="350" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="white">💬</text>
+          
+          <text x="450" y="250" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#1f2937">Whisper Network</text>
+          <text x="450" y="290" font-family="Arial, sans-serif" font-size="22" fill="#6b7280">Anonymous Messaging Platform</text>
+          <text x="450" y="320" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">Connect anonymously and share your thoughts</text>
+          <text x="450" y="350" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">A safe space for authentic conversations</text>
+          
+          <text x="600" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">Where voices unite and hearts connect</text>
+        </svg>
+      `;
+      
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.send(svg);
+    } catch (error) {
+      console.error('Error generating landing OG image:', error);
+      res.status(500).send("Error generating image");
+    }
+  });
+
+  // Dashboard OG image
+  app.get("/api/og-image/dashboard", async (req, res) => {
+    try {
+      const svg = `
+        <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dashBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          
+          <rect width="1200" height="630" fill="url(#dashBg)"/>
+          
+          <rect x="150" y="150" width="900" height="330" rx="25" fill="rgba(255,255,255,0.95)"/>
+          
+          <circle cx="300" cy="250" r="40" fill="#4f46e5"/>
+          <text x="300" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white">📊</text>
+          
+          <text x="380" y="230" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#1f2937">Community Dashboard</text>
+          <text x="380" y="270" font-family="Arial, sans-serif" font-size="24" fill="#6b7280">Discover messages from the community</text>
+          <text x="380" y="310" font-family="Arial, sans-serif" font-size="20" fill="#9ca3af">A place where voices unite and hearts connect</text>
+          
+          <rect x="200" y="350" width="120" height="80" rx="10" fill="rgba(79,70,229,0.1)"/>
+          <rect x="340" y="350" width="120" height="80" rx="10" fill="rgba(124,58,237,0.1)"/>
+          <rect x="480" y="350" width="120" height="80" rx="10" fill="rgba(79,70,229,0.1)"/>
+          
+          <text x="600" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">Whisper Network</text>
+        </svg>
+      `;
+      
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.send(svg);
+    } catch (error) {
+      console.error('Error generating dashboard OG image:', error);
+      res.status(500).send("Error generating image");
+    }
+  });
+
+  // Home page OG image
+  app.get("/api/og-image/home", async (req, res) => {
+    try {
+      const svg = `
+        <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="homeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          
+          <rect width="1200" height="630" fill="url(#homeBg)"/>
+          
+          <circle cx="100" cy="100" r="60" fill="rgba(255,255,255,0.1)"/>
+          <circle cx="1100" cy="530" r="80" fill="rgba(255,255,255,0.1)"/>
+          
+          <rect x="150" y="140" width="900" height="350" rx="30" fill="rgba(255,255,255,0.95)"/>
+          
+          <circle cx="400" cy="260" r="45" fill="#10b981"/>
+          <text x="400" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="white">🏠</text>
+          
+          <text x="480" y="240" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#1f2937">Welcome Home</text>
+          <text x="480" y="280" font-family="Arial, sans-serif" font-size="26" fill="#6b7280">Whisper Network Community</text>
+          <text x="480" y="320" font-family="Arial, sans-serif" font-size="20" fill="#9ca3af">Join the community and discover anonymous messages</text>
+          <text x="480" y="350" font-family="Arial, sans-serif" font-size="20" fill="#9ca3af">Connect with voices from around the world</text>
+          
+          <text x="600" y="570" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white">Whisper Network</text>
+        </svg>
+      `;
+      
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.send(svg);
+    } catch (error) {
+      console.error('Error generating home OG image:', error);
+      res.status(500).send("Error generating image");
+    }
+  });
+
   // Dynamic HTML routes for social media sharing
   const generateHTML = (meta: any) => {
     return `<!DOCTYPE html>

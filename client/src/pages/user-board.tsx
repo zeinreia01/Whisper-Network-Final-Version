@@ -346,8 +346,9 @@ export default function UserBoard() {
     );
   }
 
-  // Check if board creation is disabled or board hasn't been set up
-  if (!(boardUser as any).allowBoardCreation || !(boardUser as any).boardName) {
+  // Check if board creation is disabled AND there are no messages (backwards compatibility)
+  // If user has messages, show the board even if allowBoardCreation is false (legacy boards)
+  if (!(boardUser as any).allowBoardCreation && boardMessages.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
