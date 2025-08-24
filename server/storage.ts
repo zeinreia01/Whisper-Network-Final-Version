@@ -923,7 +923,7 @@ export class DatabaseStorage implements IStorage {
     return admin;
   }
 
-  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; backgroundPhoto?: string; lastDisplayNameChange?: Date }): Promise<Admin> {
+  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; backgroundPhoto?: string; lastDisplayNameChange?: Date; allowBoardCreation?: boolean; boardVisibility?: string; boardName?: string; boardBanner?: string; isAnonymousLinkPaused?: boolean }): Promise<Admin> {
     const updateData: any = {};
 
     if (updates.displayName !== undefined) updateData.displayName = updates.displayName;
@@ -931,6 +931,11 @@ export class DatabaseStorage implements IStorage {
     if (updates.bio !== undefined) updateData.bio = updates.bio;
     if (updates.backgroundPhoto !== undefined) updateData.backgroundPhoto = updates.backgroundPhoto;
     if (updates.lastDisplayNameChange !== undefined) updateData.lastDisplayNameChange = updates.lastDisplayNameChange;
+    if (updates.allowBoardCreation !== undefined) updateData.allowBoardCreation = updates.allowBoardCreation;
+    if (updates.boardVisibility !== undefined) updateData.boardVisibility = updates.boardVisibility;
+    if (updates.boardName !== undefined) updateData.boardName = updates.boardName;
+    if (updates.boardBanner !== undefined) updateData.boardBanner = updates.boardBanner;
+    if (updates.isAnonymousLinkPaused !== undefined) updateData.isAnonymousLinkPaused = updates.isAnonymousLinkPaused;
 
     const [updatedAdmin] = await db
       .update(admins)
@@ -2311,6 +2316,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
         .where(and(
           eq(admins.isActive, true), 
           eq(admins.allowBoardCreation, true),
+          eq(admins.boardVisibility, 'public'),
           isNotNull(admins.boardName)
         ))
         .groupBy(admins.id);

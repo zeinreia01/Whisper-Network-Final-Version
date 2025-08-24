@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password and create user
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({ username, password: hashedPassword });
-      
+
       // Store original password for ZEKE001 viewing
       await storage.storeOriginalPassword(user.id, null, password);
 
@@ -154,25 +154,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password } = req.body;
 
       const admin = await storage.getAdminByUsername(username);
-      
+
       // Debug admin authentication
       console.log(`Admin login attempt for: ${username}`);
       console.log(`Admin found:`, !!admin);
       console.log(`Admin password exists:`, !!admin?.password);
-      
+
       if (!admin) {
         console.log(`Admin not found: ${username}`);
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       if (!admin.password) {
         console.log(`Admin ${username} has no password set`);
         return res.status(401).json({ message: "Account password not configured. Please contact ZEKE001." });
       }
-      
+
       const passwordValid = await comparePasswords(password, admin.password);
       console.log(`Password valid for ${username}:`, passwordValid);
-      
+
       if (!passwordValid) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
@@ -331,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -348,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       let user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         // Try admin
         const admin = await storage.getAdminByUsername(username);
@@ -370,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const messageId = parseInt(req.params.id);
       const message = await storage.getMessageById(messageId);
-      
+
       if (!message) {
         return res.status(404).json({ error: "Message not found" });
       }
@@ -453,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const admin = await storage.getAdminByUsername(username);
-      
+
       if (!admin) {
         return res.status(404).json({ error: "Admin not found" });
       }
@@ -490,9 +490,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/meta/generate", async (req, res) => {
     try {
       const { path, title, description } = req.query;
-      
+
       let meta;
-      
+
       if (typeof path === 'string') {
         if (path.startsWith('/user/')) {
           const username = path.split('/')[2];
@@ -1673,17 +1673,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get admin profile by username specifically
+  app.get("/api/admins/profile/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const admin = await storage.getAdminByUsername(username);
+
+      if (!admin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+
+      const { password, ...adminProfile } = admin;
+      res.json(adminProfile);
+    } catch (error) {
+      console.error("Error fetching admin profile by username:", error);
+      res.status(500).json({ error: "Failed to fetch admin profile" });
+    }
+  });
+
   // Update user profile
   app.patch("/api/users/:id/profile", async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const { id } = req.params;
       const { bio, displayName, profilePicture } = req.body;
 
       // Security check: Verify user is updating their own profile
       // This would need proper authentication middleware in a production app
       // For now, we'll rely on frontend checks and session validation
 
-      const updatedUser = await storage.updateUserProfile(userId, { bio, displayName, profilePicture });
+      const updatedUser = await storage.updateUserProfile(parseInt(id), { bio, displayName, profilePicture });
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user profile:", error);
@@ -2319,7 +2337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/spotify/proxy/:url", async (req, res) => {
     try {
       const audioUrl = decodeURIComponent(req.params.url);
-      
+
       // Validate it's a Spotify preview URL
       if (!audioUrl.includes('p.scdn.co')) {
         return res.status(400).json({ message: "Invalid audio URL" });
@@ -2477,7 +2495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(id);
 
       const messages = await storage.getUserDashboardMessages(userId);
-      
+
       // Enhance messages with user/admin data
       const enhancedMessages = await Promise.all(
         messages.map(async (message) => {
@@ -2672,7 +2690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reports/board", async (req, res) => {
     try {
       const { targetUserId, targetAdminId, reason, reporterId, reporterType } = req.body;
-      
+
       const report = await storage.createBoardReport({
         targetUserId: targetUserId || null,
         targetAdminId: targetAdminId || null,
@@ -2715,17 +2733,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(404).send("User not found");
       }
-      
+
       // Generate SVG image for board sharing
       const boardName = user.boardName || `${user.displayName || user.username}'s Board`;
       const displayName = user.displayName || user.username;
       const boardBanner = user.boardBanner || user.backgroundPhoto;
       const profilePic = user.boardProfilePicture || user.profilePicture;
-      
+
       const svg = `
         <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -2734,23 +2752,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
             </linearGradient>
           </defs>
-          
+
           ${boardBanner ? `<image href="${boardBanner}" width="1200" height="630" style="object-fit:cover;opacity:0.3"/>` : ''}
           <rect width="1200" height="630" fill="${boardBanner ? 'rgba(0,0,0,0.4)' : 'url(#bg)'}"/>
-          
+
           <rect x="60" y="180" width="1080" height="270" rx="20" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.1)"/>
-          
+
           ${profilePic ? `<circle cx="180" cy="240" r="40" fill="white"/><image href="${profilePic}" x="140" y="200" width="80" height="80" style="border-radius:50%;object-fit:cover;clip-path:circle(40px)"/>` : `<circle cx="180" cy="240" r="40" fill="#667eea"/><text x="180" y="250" text-anchor="middle" fill="white" font-size="24" font-weight="bold">${displayName.charAt(0).toUpperCase()}</text>`}
-          
+
           <text x="250" y="220" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#1f2937">Post a message to</text>
           <text x="250" y="260" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#4f46e5">"${boardName}"</text>
           <text x="250" y="300" font-family="Arial, sans-serif" font-size="24" fill="#6b7280">by @${username}</text>
-          
+
           <text x="60" y="510" font-family="Arial, sans-serif" font-size="20" fill="#9ca3af">Share your thoughts anonymously</text>
           <text x="60" y="540" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#667eea">Whisper Network</text>
         </svg>
       `;
-      
+
       res.setHeader('Content-Type', 'image/svg+xml');
       res.send(svg);
     } catch (error) {
@@ -2763,14 +2781,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(404).send("User not found");
       }
-      
+
       const displayName = user.displayName || user.username;
       const profilePic = user.profilePicture;
-      
+
       const svg = `
         <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -2786,125 +2804,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
               </feMerge>
             </filter>
           </defs>
-          
+
           <rect width="1200" height="630" fill="url(#anonBg)"/>
-          
+
           <!-- Decorative elements -->
           <circle cx="100" cy="100" r="60" fill="rgba(255,255,255,0.1)"/>
           <circle cx="1100" cy="530" r="80" fill="rgba(255,255,255,0.1)"/>
           <rect x="200" y="400" width="40" height="40" rx="8" fill="rgba(255,255,255,0.1)" transform="rotate(45 220 420)"/>
-          
+
           <rect x="150" y="140" width="900" height="350" rx="30" fill="rgba(255,255,255,0.95)" filter="url(#glow)"/>
-          
-          <text x="600" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#dc2626">📤 Send Anonymous Message</text>
-          
+
+          <text x="600" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#dc2626">Send Anonymous Message</text>
+
           ${profilePic ? `<circle cx="450" cy="280" r="35" fill="white"/><image href="${profilePic}" x="415" y="245" width="70" height="70" style="border-radius:50%;object-fit:cover;clip-path:circle(35px)"/>` : `<circle cx="450" cy="280" r="35" fill="#dc2626"/><text x="450" y="290" text-anchor="middle" fill="white" font-size="20" font-weight="bold">${displayName.charAt(0).toUpperCase()}</text>`}
-          
+
           <text x="520" y="270" font-family="Arial, sans-serif" font-size="28" fill="#1f2937">to</text>
           <text x="520" y="300" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#dc2626">${displayName}</text>
-          
+
           <text x="600" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#6b7280">Your identity will remain completely hidden</text>
           <text x="600" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#dc2626">🤫 Anonymous • Safe • Private</text>
-          
+
           <text x="600" y="570" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">Whisper Network</text>
         </svg>
       `;
-      
+
       res.setHeader('Content-Type', 'image/svg+xml');
       res.send(svg);
     } catch (error) {
       console.error('Error generating anonymous OG image:', error);
-      res.status(500).send("Error generating image");
-    }
-  });
-
-  // Additional OG Image endpoints for other pages
-  app.get("/api/og-image/landing", async (req, res) => {
-    try {
-      const svg = `
-        <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="landingBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
-            </linearGradient>
-          </defs>
-          
-          <rect width="1200" height="630" fill="url(#landingBg)"/>
-          
-          <!-- Decorative elements -->
-          <circle cx="150" cy="120" r="80" fill="rgba(255,255,255,0.1)"/>
-          <circle cx="1050" cy="510" r="100" fill="rgba(255,255,255,0.1)"/>
-          
-          <rect x="200" y="150" width="800" height="330" rx="40" fill="rgba(255,255,255,0.95)"/>
-          
-          <text x="600" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#1e40af">Whisper Network</text>
-          <text x="600" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#6b7280">Anonymous Messaging Platform</text>
-          <text x="600" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#374151">Connect anonymously and share your thoughts</text>
-          <text x="600" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#374151">A safe space for authentic conversations</text>
-          
-          <text x="600" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#3b82f6">🤫 Anonymous • 💬 Safe • 🌟 Authentic</text>
-          
-          <text x="600" y="570" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">Join the conversation today</text>
-        </svg>
-      `;
-      
-      res.setHeader('Content-Type', 'image/svg+xml');
-      res.send(svg);
-    } catch (error) {
-      console.error('Error generating landing OG image:', error);
-      res.status(500).send("Error generating image");
-    }
-  });
-
-  app.get("/api/og-image/dashboard", async (req, res) => {
-    try {
-      const svg = `
-        <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="dashBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
-            </linearGradient>
-          </defs>
-          
-          <rect width="1200" height="630" fill="url(#dashBg)"/>
-          
-          <!-- Message cards illustration -->
-          <rect x="100" y="100" width="300" height="120" rx="15" fill="rgba(255,255,255,0.9)"/>
-          <rect x="120" y="120" width="260" height="8" rx="4" fill="#d1d5db"/>
-          <rect x="120" y="140" width="200" height="8" rx="4" fill="#d1d5db"/>
-          <rect x="120" y="160" width="180" height="8" rx="4" fill="#d1d5db"/>
-          <circle cx="380" cy="140" r="15" fill="#ef4444"/>
-          
-          <rect x="450" y="120" width="300" height="120" rx="15" fill="rgba(255,255,255,0.9)"/>
-          <rect x="470" y="140" width="260" height="8" rx="4" fill="#d1d5db"/>
-          <rect x="470" y="160" width="220" height="8" rx="4" fill="#d1d5db"/>
-          <rect x="470" y="180" width="160" height="8" rx="4" fill="#d1d5db"/>
-          <circle cx="730" cy="160" r="15" fill="#ef4444"/>
-          
-          <rect x="800" y="100" width="300" height="120" rx="15" fill="rgba(255,255,255,0.9)"/>
-          <rect x="820" y="120" width="260" height="8" rx="4" fill="#d1d5db"/>
-          <rect x="820" y="140" width="240" height="8" rx="4" fill="#d1d5db"/>
-          <rect x="820" y="160" width="140" height="8" rx="4" fill="#d1d5db"/>
-          <circle cx="1080" cy="140" r="15" fill="#ef4444"/>
-          
-          <rect x="200" y="300" width="800" height="200" rx="30" fill="rgba(255,255,255,0.95)"/>
-          
-          <text x="600" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#047857">Community Dashboard</text>
-          <text x="600" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#6b7280">Discover messages from the community</text>
-          <text x="600" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#6b7280">A place where voices unite and hearts connect</text>
-          
-          <text x="600" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#059669">💬 Share • ❤️ Connect • 🌟 Discover</text>
-          
-          <text x="600" y="570" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">Whisper Network</text>
-        </svg>
-      `;
-      
-      res.setHeader('Content-Type', 'image/svg+xml');
-      res.send(svg);
-    } catch (error) {
-      console.error('Error generating dashboard OG image:', error);
       res.status(500).send("Error generating image");
     }
   });
@@ -2917,11 +2844,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
     <!-- Dynamic SEO -->
     <title>${meta.title}</title>
     <meta name="description" content="${meta.description}" />
-    
+
     <!-- Open Graph Tags -->
     <meta property="og:title" content="${meta.title}" />
     <meta property="og:description" content="${meta.description}" />
@@ -2932,18 +2859,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="${meta.title}" />
     <meta property="og:site_name" content="Whisper Network" />
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${meta.title}" />
     <meta name="twitter:description" content="${meta.description}" />
     <meta name="twitter:image" content="${meta.image}" />
     <meta name="twitter:image:alt" content="${meta.title}" />
-    
+
     <!-- Additional Meta Tags -->
     <meta name="theme-color" content="#4f46e5" />
     <meta name="author" content="Whisper Network Team" />
-    
+
     <!-- Auto-redirect to client app -->
     <meta http-equiv="refresh" content="0;url=/" />
     <script>window.location.href = '/';</script>
@@ -2960,14 +2887,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(404).send("User not found");
       }
 
       const meta = generateUserBoardOG(user);
       const html = generateHTML(meta);
-      
+
       res.setHeader('Content-Type', 'text/html');
       res.send(html);
     } catch (error) {
@@ -2980,14 +2907,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(404).send("User not found");
       }
 
       const meta = generateAnonymousLinkOG(username);
       const html = generateHTML(meta);
-      
+
       res.setHeader('Content-Type', 'text/html');
       res.send(html);
     } catch (error) {
@@ -3000,14 +2927,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(404).send("User not found");
       }
 
       const meta = generateUserProfileOG(user);
       const html = generateHTML(meta);
-      
+
       res.setHeader('Content-Type', 'text/html');
       res.send(html);
     } catch (error) {
@@ -3020,7 +2947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const meta = generateDashboardOG();
       const html = generateHTML(meta);
-      
+
       res.setHeader('Content-Type', 'text/html');
       res.send(html);
     } catch (error) {
