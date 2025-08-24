@@ -56,7 +56,6 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
   const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null);
   const [showSpotifySearch, setShowSpotifySearch] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
-  const [showAllMessages, setShowAllMessages] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, admin } = useAuth();
@@ -220,7 +219,7 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
             </div>
           ) : (
             <div className="space-y-4">
-              {(showAllMessages ? dashboardMessages : dashboardMessages.slice(0, 2)).map((message) => (
+              {dashboardMessages.slice(0, 2).map((message) => (
                 <div
                   key={message.id}
                   id={`board-message-${message.id}`}
@@ -457,19 +456,6 @@ export function UserDashboardPosts({ userId, adminId, username, isOwnProfile = f
                     View Full Board ({dashboardMessages.length} messages)
                   </Button>
                 </Link>
-                {dashboardMessages.length > 2 && (
-                  <div>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowAllMessages(!showAllMessages)}
-                      className="flex items-center gap-2"
-                      size="sm"
-                    >
-                      <Eye className="w-4 h-4" />
-                      {showAllMessages ? `Show Less (2)` : `Show All ${dashboardMessages.length} Here`}
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
           )}

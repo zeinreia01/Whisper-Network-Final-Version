@@ -2272,13 +2272,13 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
           spotifyTrackName: users.spotifyTrackName,
           spotifyArtistName: users.spotifyArtistName,
           spotifyAlbumCover: users.spotifyAlbumCover,
-          messageCount: sql<number>`count(${messages.id})`.as('messageCount'),
+          messageCount: sql<number>`count(${dashboardMessages.id})`.as('messageCount'),
         })
         .from(users)
-        .leftJoin(messages, eq(users.id, messages.userId))
+        .leftJoin(dashboardMessages, eq(users.id, dashboardMessages.targetUserId))
         .where(and(eq(users.isActive, true), eq(users.boardVisibility, 'public')))
         .groupBy(users.id)
-        .having(sql`count(${messages.id}) > 0`);
+        .having(sql`count(${dashboardMessages.id}) > 0`);
 
       // Get all active admins with their dashboard message counts
       const adminsWithCounts = await db

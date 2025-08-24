@@ -425,6 +425,17 @@ export function UserProfilePage() {
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-3" data-tour-follow-system>
+                    {/* Anonymous messaging button for all profiles */}
+                    <Link href={`/u/${(profile as any)?.username}`}>
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        {isOwnProfile ? "My Anonymous Link" : "Send Anonymous Message"}
+                      </Button>
+                    </Link>
+
                     {/* Board settings button for own profile */}
                     {isOwnProfile && (
                       <Button
