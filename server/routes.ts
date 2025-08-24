@@ -2988,13 +2988,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <meta name="theme-color" content="#4f46e5" />
     <meta name="author" content="Whisper Network Team" />
 
-    <!-- Auto-redirect to client app -->
-    <meta http-equiv="refresh" content="0;url=/" />
-    <script>window.location.href = '/';</script>
+    <!-- Auto-redirect to correct client app page -->
+    <meta http-equiv="refresh" content="0;url=${meta.url}" />
+    <script>window.location.href = '${meta.url}';</script>
   </head>
   <body>
     <div id="root"></div>
-    <p>Redirecting to <a href="/">Whisper Network</a>...</p>
+    <p>Redirecting to <a href="${meta.url}">Whisper Network</a>...</p>
   </body>
 </html>`;
   };
