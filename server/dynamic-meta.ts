@@ -112,13 +112,13 @@ export function generateAdminProfileOG(admin: any) {
 }
 
 export function generateHomePageOG() {
-  const imageUrl = 'https://api.dicebear.com/7.x/initials/png?seed=Home&backgroundColor=3b82f6&fontSize=40';
+  const imageUrl = '/api/og-image/home';
   
   return {
-    title: 'Home - Whisper Network',
-    description: 'Your personal hub on Whisper Network. Check notifications, messages, and updates.',
+    title: 'Whisper Network - Anonymous Messaging Community',
+    description: 'Join the community and discover anonymous messages. Connect with voices from around the world.',
     image: imageUrl,
-    url: '/home'
+    url: '/'
   };
 }
 
