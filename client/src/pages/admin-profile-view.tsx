@@ -124,7 +124,7 @@ export function AdminProfileViewPage() {
   }
 
   const handleCopyAnonymousLink = () => {
-    const anonymousLink = `${window.location.origin}/anonymous/${adminProfile?.username}`;
+    const anonymousLink = `${window.location.origin}/u/${adminProfile?.username}`;
     navigator.clipboard.writeText(anonymousLink);
     toast({
       title: "Link copied!",
@@ -244,7 +244,7 @@ export function AdminProfileViewPage() {
               {/* Action buttons */}
                 <div className="flex items-center gap-3 mt-4">
                   {/* Anonymous messaging button for all profiles */}
-                  <Link href={`/anonymous/${adminProfile?.username}`}>
+                  <Link href={`/u/${adminProfile?.username}`}>
                     <Button
                       variant="outline"
                       className="flex items-center gap-2"
@@ -253,19 +253,6 @@ export function AdminProfileViewPage() {
                       {isOwnProfile ? "My Anonymous Link" : "Send Anonymous Message"}
                     </Button>
                   </Link>
-
-                  {/* Inbox button for own profile */}
-                  {isOwnProfile && (
-                    <Link href="/admin/personal">
-                      <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                      >
-                        <Inbox className="h-4 w-4" />
-                        My Inbox
-                      </Button>
-                    </Link>
-                  )}
 
                   {/* Board settings button for own profile */}
                   {isOwnProfile && (
@@ -300,7 +287,7 @@ export function AdminProfileViewPage() {
                     Share this link to receive anonymous messages
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                    {window.location.origin}/anonymous/{adminProfile?.username}
+                    {window.location.origin}/u/{adminProfile?.username}
                   </p>
                 </div>
                 <Button

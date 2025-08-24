@@ -61,6 +61,7 @@ function Router() {
           <Route path="/admin/announcements" component={AdminAnnouncementsPage} />
           <Route path="/admin-profile" component={AdminProfilePage} />
           <Route path="/admin-personal" component={AdminPersonalPage} />
+          <Route path="/admin/personal" component={AdminPersonalPage} />
           <Route path="/personal" component={PersonalPage} />
           <Route path="/personal-archive" component={PersonalArchivePage} />
           <Route path="/password-management" component={PasswordManagementPage} />

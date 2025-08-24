@@ -199,7 +199,7 @@ export default function AdminProfile() {
 
   const handleCopyAnonymousLink = () => {
     if (!profile?.username) return;
-    const anonymousLink = `${window.location.origin}/anonymous/${profile?.username}`;
+    const anonymousLink = `${window.location.origin}/u/${profile?.username}`;
     navigator.clipboard.writeText(anonymousLink);
     toast({
       title: "Link copied!",
@@ -301,7 +301,7 @@ export default function AdminProfile() {
                   {/* Action buttons */}
                   <div className="flex items-center gap-3">
                     {/* Anonymous messaging button for all profiles */}
-                    <Link href={`/anonymous/${profile?.username}`}>
+                    <Link href={`/u/${profile?.username}`}>
                       <Button
                         variant="outline"
                         className="flex items-center gap-2"
@@ -310,19 +310,6 @@ export default function AdminProfile() {
                         {isOwnProfile ? "My Anonymous Link" : "Send Anonymous Message"}
                       </Button>
                     </Link>
-
-                    {/* Inbox button for own profile */}
-                    {isOwnProfile && (
-                      <Link href="/admin/personal">
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                        >
-                          <Inbox className="h-4 w-4" />
-                          My Inbox
-                        </Button>
-                      </Link>
-                    )}
 
                     {/* Board settings button for own profile */}
                     {isOwnProfile && (
@@ -405,7 +392,7 @@ export default function AdminProfile() {
                         Share this link to receive anonymous messages
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        {window.location.origin}/anonymous/{profile?.username}
+                        {window.location.origin}/u/{profile?.username}
                       </p>
                     </div>
                     <Button
