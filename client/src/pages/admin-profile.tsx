@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { formatTimeAgo } from "@/lib/utils";
@@ -14,9 +14,11 @@ import { UserBadge } from "@/components/user-badge";
 import { ProfileMusicSection } from "@/components/profile-music-section";
 import { UserMusicList } from "@/components/user-music-list";
 import { ArrowLeft, Settings, UserPlus, UserMinus, Calendar, Flag, MoreVertical, Copy, Link as LinkIcon, Eye, Download, MessageSquare, Inbox } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import type { Admin, MessageWithReplies } from "@shared/schema";
 
 interface AdminProfile extends Admin {
@@ -30,7 +32,7 @@ interface AdminProfile extends Admin {
   boardName?: string;
 }
 
-export default function AdminProfile() {
+export default function AdminProfilePage() {
   const params = useParams();
   // If no id in params, use current admin's id (for /admin-profile route)
   const adminId = params.id ? parseInt(params.id as string) : undefined;
@@ -116,6 +118,17 @@ export default function AdminProfile() {
     boardName: '',
   });
 
+  useEffect(() => {
+    if (profile) {
+      setIsFollowing(profile.isFollowing || false);
+      setBoardSettings({
+        allowBoardCreation: profile.allowBoardCreation || false,
+        boardVisibility: profile.boardVisibility || 'public',
+        boardName: profile.boardName || '',
+      });
+    }
+  }, [profile]);
+
   const unfollowMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", `/api/admins/${targetAdminId}/unfollow`, {
@@ -162,6 +175,36 @@ export default function AdminProfile() {
     },
   });
 
+  const updateBoardSettingsMutation = useMutation({
+    mutationFn: async (settings: typeof boardSettings) => {
+      const response = await apiRequest("PUT", `/api/admins/${targetAdminId}/profile`, {
+        allowBoardCreation: settings.allowBoardCreation,
+        boardVisibility: settings.boardVisibility,
+        boardName: settings.boardName,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update board settings");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admins/${targetAdminId}/profile`] });
+      toast({
+        title: "Board Settings Updated",
+        description: "Your board configuration has been saved successfully.",
+      });
+      setShowBoardSettings(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update board settings",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFollow = () => {
     if (isFollowing) {
       unfollowMutation.mutate();
@@ -195,6 +238,10 @@ export default function AdminProfile() {
       reporterId: user?.id || admin?.id || 0,
       reporterType: user ? "user" : "admin",
     });
+  };
+
+  const handleBoardSettingsUpdate = () => {
+    updateBoardSettingsMutation.mutate(boardSettings);
   };
 
   const handleCopyAnonymousLink = () => {
@@ -256,7 +303,7 @@ export default function AdminProfile() {
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6 overflow-hidden">
               {/* Background Photo */}
               {profile.backgroundPhoto && (
-                <div 
+                <div
                   className="h-48 bg-cover bg-center relative"
                   style={{ backgroundImage: `url(${profile.backgroundPhoto})` }}
                 >
@@ -268,8 +315,8 @@ export default function AdminProfile() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                   <div className="flex items-center space-x-4">
                     <Avatar className="w-16 h-16 border-4 border-white dark:border-gray-800 shadow-lg">
-                      <AvatarImage 
-                        src={profile.profilePicture || undefined} 
+                      <AvatarImage
+                        src={profile.profilePicture || undefined}
                         alt={profile.displayName || profile.username}
                       />
                       <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-600 text-white text-2xl font-bold">
@@ -410,8 +457,8 @@ export default function AdminProfile() {
 
             {/* Profile Song Section */}
             <div className="mb-6">
-              <ProfileMusicSection 
-                admin={profile} 
+              <ProfileMusicSection
+                admin={profile}
                 isOwnProfile={isOwnProfile}
                 title="Profile Song"
               />
@@ -420,7 +467,7 @@ export default function AdminProfile() {
             {/* Music List Section */}
             {adminMusicList && adminMusicList.length > 0 && (
               <div className="mb-6">
-                <UserMusicList 
+                <UserMusicList
                   musicList={adminMusicList}
                   isOwnProfile={isOwnProfile}
                   isLoading={musicLoading}
@@ -499,12 +546,84 @@ export default function AdminProfile() {
             <Button variant="outline" onClick={() => setShowReportDialog(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleReportAdmin}
               disabled={!reportReason.trim() || reportAdminMutation.isPending}
               className="bg-orange-600 hover:bg-orange-700"
             >
               {reportAdminMutation.isPending ? "Submitting..." : "Submit Report"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Board Settings Modal */}
+      <Dialog open={showBoardSettings} onOpenChange={setShowBoardSettings}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Board Configuration</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="allowBoardCreation"
+                checked={boardSettings.allowBoardCreation}
+                onChange={(e) => setBoardSettings(prev => ({
+                  ...prev,
+                  allowBoardCreation: e.target.checked
+                }))}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="allowBoardCreation" className="text-sm font-medium">
+                Enable Message Board
+              </Label>
+            </div>
+
+            {boardSettings.allowBoardCreation && (
+              <>
+                <div>
+                  <Label htmlFor="boardName" className="text-sm font-medium">
+                    Board Name
+                  </Label>
+                  <Input
+                    id="boardName"
+                    value={boardSettings.boardName}
+                    onChange={(e) => setBoardSettings(prev => ({
+                      ...prev,
+                      boardName: e.target.value
+                    }))}
+                    placeholder="My Message Board"
+                    maxLength={50}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="boardVisibility" className="text-sm font-medium">
+                    Board Visibility
+                  </Label>
+                  <select
+                    id="boardVisibility"
+                    value={boardSettings.boardVisibility}
+                    onChange={(e) => setBoardSettings(prev => ({
+                      ...prev,
+                      boardVisibility: e.target.value as 'public' | 'private'
+                    }))}
+                    className="w-full mt-1 p-2 border rounded-md bg-background"
+                  >
+                    <option value="public">Public - Anyone can visit and post</option>
+                    <option value="private">Private - Only you can see your board</option>
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowBoardSettings(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBoardSettingsUpdate}>
+              Save Settings
             </Button>
           </DialogFooter>
         </DialogContent>
