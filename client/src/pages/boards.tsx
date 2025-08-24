@@ -292,7 +292,7 @@ export default function Boards() {
             {filteredBoards.map((board) => (
               <Card 
                 key={`${board.id}-${'role' in board ? 'admin' : 'user'}`}
-                className="group hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer overflow-hidden border-2 hover:border-primary/20"
+                className="group hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden border-2 hover:border-primary/20"
               >
                 {/* Background Banner */}
                 {(board as any).boardBanner && (
@@ -413,7 +413,6 @@ export default function Boards() {
                   <Link href={getBoardUrl(board)}>
                     <Button 
                       className="w-full text-xs h-8"
-                      onClick={(e) => e.stopPropagation()}
                     >
                       Visit Board
                     </Button>
