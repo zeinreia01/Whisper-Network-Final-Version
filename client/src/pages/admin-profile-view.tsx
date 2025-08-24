@@ -51,7 +51,7 @@ export function AdminProfileViewPage() {
   const { toast } = useToast();
   const isOwnProfile = adminId === admin?.id;
 
-  const { data: admin, isLoading: adminLoading } = useQuery<Admin>({
+  const { data: adminProfile, isLoading: adminLoading } = useQuery<Admin>({
     queryKey: ["admin", adminId],
     queryFn: async () => {
       const response = await fetch(`/api/admins/${adminId}/profile`);
@@ -113,7 +113,7 @@ export function AdminProfileViewPage() {
   }
 
   const handleCopyAnonymousLink = () => {
-    const anonymousLink = `${window.location.origin}/anonymous/${admin?.username}`;
+    const anonymousLink = `${window.location.origin}/anonymous/${adminProfile?.username}`;
     navigator.clipboard.writeText(anonymousLink);
     toast({
       title: "Link copied!",
@@ -121,7 +121,7 @@ export function AdminProfileViewPage() {
     });
   };
 
-  if (!admin) {
+  if (!adminProfile) {
     return (
       <div className="min-h-screen bg-background py-6">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -161,20 +161,20 @@ export function AdminProfileViewPage() {
         <Card className="mb-6">
           <CardContent className="p-0">
             {/* Background Photo */}
-            {admin.backgroundPhoto && (
+            {adminProfile.backgroundPhoto && (
               <div
                 className="h-48 bg-cover bg-center rounded-t-lg"
-                style={{ backgroundImage: `url(${admin.backgroundPhoto})` }}
+                style={{ backgroundImage: `url(${adminProfile.backgroundPhoto})` }}
               />
             )}
             
             <div className="p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                <div className={`relative ${admin.backgroundPhoto ? '-mt-16' : ''}`}>
+                <div className={`relative ${adminProfile.backgroundPhoto ? '-mt-16' : ''}`}>
                   <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                    <AvatarImage src={admin.profilePicture || undefined} alt={admin.displayName} />
+                    <AvatarImage src={adminProfile.profilePicture || undefined} alt={adminProfile.displayName} />
                     <AvatarFallback className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white text-xl font-semibold">
-                      {admin.displayName.charAt(0).toUpperCase()}
+                      {adminProfile.displayName.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -182,26 +182,26 @@ export function AdminProfileViewPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-2">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {admin.displayName}
+                      {adminProfile.displayName}
                     </h1>
                     <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
                       <Shield className="h-3 w-3 mr-1" />
                       Whisper Listener
                     </Badge>
-                    {admin.isVerified && (
+                    {adminProfile.isVerified && (
                       <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
                         Verified
                       </Badge>
                     )}
                   </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">@{admin.username}</p>
-                  {admin.bio && (
-                    <p className="text-gray-700 dark:text-gray-300 mb-3">{admin.bio}</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">@{adminProfile.username}</p>
+                  {adminProfile.bio && (
+                    <p className="text-gray-700 dark:text-gray-300 mb-3">{adminProfile.bio}</p>
                   )}
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-1" />
-                      Joined {formatTimeAgo(admin.createdAt)}
+                      Joined {formatTimeAgo(adminProfile.createdAt)}
                     </div>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export function AdminProfileViewPage() {
                     Share this link to receive anonymous messages
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                    {window.location.origin}/anonymous/{admin?.username}
+                    {window.location.origin}/anonymous/{adminProfile?.username}
                   </p>
                 </div>
                 <Button
@@ -245,7 +245,7 @@ export function AdminProfileViewPage() {
         {/* Profile Song Section */}
         <div className="mb-6">
           <ProfileMusicSection 
-            admin={admin} 
+            admin={adminProfile} 
             isOwnProfile={isOwnProfile}
             title="Profile Song"
           />
@@ -282,7 +282,7 @@ export function AdminProfileViewPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" />
-                  Messages by {admin.displayName}
+                  Messages by {adminProfile.displayName}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -337,7 +337,7 @@ export function AdminProfileViewPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
-                  Replies by {admin.displayName}
+                  Replies by {adminProfile.displayName}
                 </CardTitle>
               </CardHeader>
               <CardContent>
