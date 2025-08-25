@@ -231,6 +231,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin creation route from admin management component
+  app.post("/api/admins", async (req, res) => {
+    try {
+      const { username, password, displayName, role } = req.body;
+
+      if (!username || !password || !displayName) {
+        return res.status(400).json({ message: "Username, password, and display name are required" });
+      }
+
+      // Check if admin already exists
+      const existingAdmin = await storage.getAdminByUsername(username);
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Admin username already exists" });
+      }
+
+      // Hash password for new admin accounts
+      const hashedPassword = await hashPassword(password);
+
+      const admin = await storage.createAdmin({
+        username,
+        password: hashedPassword,
+        displayName,
+        role: role || "admin",
+        isActive: true,
+      });
+
+      console.log(`Created admin ${username} with hashed password: ${hashedPassword}`);
+
+      // Store original password for ZEKE001 viewing
+      if (password) {
+        await storage.storeOriginalPassword(0, admin.id, password);
+      }
+
+      const { password: _, ...adminWithoutPassword } = admin;
+      res.status(201).json(adminWithoutPassword);
+    } catch (error) {
+      console.error("Error creating admin:", error);
+      res.status(500).json({ message: "Failed to create admin" });
+    }
+  });
+
   // Get all admins
   app.get("/api/admin/list", async (req, res) => {
     try {
@@ -2770,6 +2811,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
 
       res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(svg);
     } catch (error) {
       console.error('Error generating board OG image:', error);
@@ -2954,7 +2997,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dynamic HTML routes for social media sharing
-  const generateHTML = (meta: any) => {
+  const generateHTML = (meta: any, fullUrl: string) => {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://your-app-domain.com' 
+      : `http://localhost:5000`;
+    
+    const imageUrl = meta.image.startsWith('http') 
+      ? meta.image 
+      : `${baseUrl}${meta.image}`;
+    
     return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -2970,8 +3021,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <meta property="og:title" content="${meta.title}" />
     <meta property="og:description" content="${meta.description}" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="${meta.url}" />
-    <meta property="og:image" content="${meta.image}" />
+    <meta property="og:url" content="${fullUrl}" />
+    <meta property="og:image" content="${imageUrl}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="${meta.title}" />
@@ -2981,20 +3032,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${meta.title}" />
     <meta name="twitter:description" content="${meta.description}" />
-    <meta name="twitter:image" content="${meta.image}" />
+    <meta name="twitter:image" content="${imageUrl}" />
     <meta name="twitter:image:alt" content="${meta.title}" />
 
     <!-- Additional Meta Tags -->
     <meta name="theme-color" content="#4f46e5" />
     <meta name="author" content="Whisper Network Team" />
 
+    <!-- Facebook/Messenger specific -->
+    <meta property="fb:app_id" content="YOUR_FB_APP_ID" />
+    
     <!-- Auto-redirect to correct client app page -->
-    <meta http-equiv="refresh" content="0;url=${meta.url}" />
-    <script>window.location.href = '${meta.url}';</script>
+    <meta http-equiv="refresh" content="2;url=/#${meta.url}" />
+    <script>
+      setTimeout(() => {
+        window.location.href = '/#${meta.url}';
+      }, 2000);
+    </script>
   </head>
-  <body>
-    <div id="root"></div>
-    <p>Redirecting to <a href="${meta.url}">Whisper Network</a>...</p>
+  <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div style="background: white; padding: 40px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+      <h1 style="color: #4f46e5; margin-bottom: 20px;">${meta.title}</h1>
+      <p style="color: #666; margin-bottom: 30px;">${meta.description}</p>
+      <div style="margin: 20px 0;">
+        <img src="${imageUrl}" alt="${meta.title}" style="max-width: 100%; height: auto; border-radius: 8px;" />
+      </div>
+      <p style="color: #999; font-size: 14px;">Redirecting to Whisper Network...</p>
+      <a href="/#${meta.url}" style="color: #4f46e5; text-decoration: none; font-weight: bold;">Click here if you're not redirected</a>
+    </div>
   </body>
 </html>`;
   };
@@ -3010,9 +3075,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const meta = generateUserBoardOG(user);
-      const html = generateHTML(meta);
+      const fullUrl = `${req.protocol}://${req.get('host')}/board/${username}`;
+      const html = generateHTML(meta, fullUrl);
 
       res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Cache-Control', 'public, max-age=300');
       res.send(html);
     } catch (error) {
       console.error('Error serving board page:', error);
@@ -3030,9 +3097,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const meta = generateAnonymousLinkOG(username);
-      const html = generateHTML(meta);
+      const fullUrl = `${req.protocol}://${req.get('host')}/anonymous/${username}`;
+      const html = generateHTML(meta, fullUrl);
 
       res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Cache-Control', 'public, max-age=300');
       res.send(html);
     } catch (error) {
       console.error('Error serving anonymous page:', error);
@@ -3050,9 +3119,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const meta = generateUserProfileOG(user);
-      const html = generateHTML(meta);
+      const fullUrl = `${req.protocol}://${req.get('host')}/user/${username}`;
+      const html = generateHTML(meta, fullUrl);
 
       res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Cache-Control', 'public, max-age=300');
       res.send(html);
     } catch (error) {
       console.error('Error serving user page:', error);
@@ -3063,9 +3134,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/dashboard", async (req, res) => {
     try {
       const meta = generateDashboardOG();
-      const html = generateHTML(meta);
+      const fullUrl = `${req.protocol}://${req.get('host')}/dashboard`;
+      const html = generateHTML(meta, fullUrl);
 
       res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Cache-Control', 'public, max-age=300');
       res.send(html);
     } catch (error) {
       console.error('Error serving dashboard page:', error);
