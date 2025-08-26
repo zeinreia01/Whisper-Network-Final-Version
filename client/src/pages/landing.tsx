@@ -11,7 +11,7 @@ interface LandingProps {
 export default function Landing({ onEnter }: LandingProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted pink:from-pink-50 pink:to-pink-100 flex items-center justify-center pt-16">
-      <div className="max-w-3xl mx-auto px-6 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center w-full">
         <div className="space-y-10">
           {/* Logo/Icon */}
           <div className="flex justify-center">
@@ -22,14 +22,14 @@ export default function Landing({ onEnter }: LandingProps) {
           
           {/* Main Title */}
           <div className="space-y-4">
-            <h1 className="text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight lowercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight lowercase break-words" style={{ fontFamily: 'Montserrat, sans-serif' }}>
               whisper network
             </h1>
             <div className="w-16 h-px bg-border mx-auto"></div>
           </div>
           
           {/* Subtitle */}
-          <p className="text-lg text-muted-foreground font-light max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground font-light max-w-xl mx-auto leading-relaxed px-2">
             Where Silent Messengers share thoughts and Whisper Listeners provide guidance in a space of understanding
           </p>
           
@@ -47,7 +47,7 @@ export default function Landing({ onEnter }: LandingProps) {
           
           {/* Simple feature list */}
           <div className="pt-8">
-            <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground font-medium">
+            <div className="flex items-center justify-center space-x-4 sm:space-x-6 text-sm text-muted-foreground font-medium">
               <span>Anonymous</span>
               <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
               <span>Safe</span>
@@ -58,18 +58,18 @@ export default function Landing({ onEnter }: LandingProps) {
         </div>
 
         {/* About Section */}
-        <div className="mt-20 max-w-6xl mx-auto">
+        <div className="mt-20 max-w-6xl mx-auto px-2 sm:px-0">
           <Card className="border-none shadow-2xl bg-card/50 pink:romantic-card backdrop-blur-sm pink:pink-glow">
-            <CardContent className="p-8 lg:p-12">
-              <div className="text-center mb-12">
-                <h2 className="text-4xl font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 page-title">
+            <CardContent className="p-4 sm:p-6 md:p-8 lg:p-12">
+              <div className="text-center mb-8 sm:mb-12">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4 sm:mb-6 page-title">
                   About Whispering Network
                 </h2>
                 <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-blue-500 mx-auto rounded-full"></div>
               </div>
 
               <div className="max-w-4xl mx-auto">
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 mb-8 border border-purple-100 dark:border-gray-700">
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 border border-purple-100 dark:border-gray-700">
                   <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Creator's Vision</h3>
                   <blockquote className="text-lg italic leading-relaxed text-gray-700 dark:text-gray-300 border-l-4 border-purple-400 pl-6 message-text">
                     "I wanted to create a space where connection transcends visibility—where voices unite not through faces, but through the raw authenticity of shared experience. In a world that demands we be seen to be heard, I envisioned a sanctuary where anonymity becomes strength, where vulnerability finds safety, and where the whispers of the heart can echo without judgment.
@@ -83,7 +83,7 @@ export default function Landing({ onEnter }: LandingProps) {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8">
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
                     <h4 className="text-lg font-semibold mb-3 text-purple-600 dark:text-purple-400">The Philosophy</h4>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -118,16 +118,16 @@ export default function Landing({ onEnter }: LandingProps) {
         </div>
 
         {/* About The Developer Section */}
-        <div className="mt-20 max-w-4xl mx-auto">
+        <div className="mt-20 max-w-4xl mx-auto px-2 sm:px-0">
           <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0">
               {/* Header with gradient */}
-              <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 text-center text-white">
-                <h2 className="text-4xl font-bold mb-2">About The Developer</h2>
+              <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 sm:p-6 md:p-8 text-center text-white">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">About The Developer</h2>
                 <div className="w-24 h-1 bg-white/30 mx-auto rounded-full"></div>
               </div>
 
-              <div className="p-8 lg:p-12">
+              <div className="p-4 sm:p-6 md:p-8 lg:p-12">
                 {/* Profile Section */}
                 <div className="text-center mb-12">
                   <div className="relative inline-block mb-6">
@@ -147,10 +147,10 @@ export default function Landing({ onEnter }: LandingProps) {
                     </div>
                   </div>
                   
-                  <h3 className="text-5xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2 tracking-tight">
+                  <h3 className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2 tracking-tight">
                     ZEKE
                   </h3>
-                  <p className="text-lg text-gray-600 dark:text-gray-400 font-medium tracking-wider mb-6">
+                  <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 font-medium tracking-wider mb-4 sm:mb-6">
                     EZEKIEL D. CUNANAN
                   </p>
                   
@@ -169,7 +169,7 @@ export default function Landing({ onEnter }: LandingProps) {
                     Creative Arsenal & Expertise
                   </h4>
                   
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {/* Visual Arts */}
                     <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-6 rounded-xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300">
                       <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
