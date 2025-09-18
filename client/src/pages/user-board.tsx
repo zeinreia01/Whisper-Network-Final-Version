@@ -729,7 +729,17 @@ export default function UserBoard() {
 
                       {/* Message Content */}
                       <div className="mb-6">
-                        <p className="text-gray-100 text-lg leading-relaxed font-light tracking-wide">
+                        <p 
+                          className="text-gray-100 text-lg leading-relaxed font-light tracking-wide message-text"
+                          style={{
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'clip'
+                          }}
+                        >
                           {message.content}
                         </p>
                       </div>

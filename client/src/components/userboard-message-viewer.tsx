@@ -306,7 +306,17 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
 
           {/* Message Content */}
           <div className="mb-8">
-            <p className="text-gray-100 text-xl leading-relaxed font-light tracking-wide">
+            <p 
+              className="text-gray-100 text-xl leading-relaxed font-light tracking-wide message-text"
+              style={{
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'clip'
+              }}
+            >
               {message.content}
             </p>
           </div>
