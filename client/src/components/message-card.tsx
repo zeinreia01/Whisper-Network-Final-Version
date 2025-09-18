@@ -585,7 +585,19 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
         </div>
       )}
 
-      <p className="text-foreground mb-4 leading-relaxed message-text">{message.content}</p>
+      <p 
+        className="text-foreground mb-4 leading-relaxed message-text"
+        style={{
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          overflowWrap: 'break-word',
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'clip'
+        }}
+      >
+        {message.content}
+      </p>
 
       {/* Enhanced Spotify Integration */}
       {(message.spotifyLink || message.spotifyTrackId) && (

@@ -150,6 +150,19 @@ export function UserBoardMessageViewer({ message, boardUser, boardName, trigger 
                 text-overflow: clip !important;
                 white-space: normal !important;
               }
+
+              /* Fix message content text overflow */
+              .message-text {
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                white-space: pre-wrap !important;
+                max-width: 100% !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                line-height: 1.4 !important;
+                padding: 2px 0 !important;
+                margin: 2px 0 !important;
+              }
             `;
             clonedDoc.head.appendChild(spotifyFixStyle);
           }
