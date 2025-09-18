@@ -1429,19 +1429,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFollowStats(userId: number): Promise<{ followersCount: number; followingCount: number }> {
-    const [followersResult] = await db
-      .select({ count: follows.id })
+    // Get followers count (people following this user)
+    const followersQuery = await db
+      .select()
       .from(follows)
       .where(eq(follows.followingId, userId));
 
-    const [followingResult] = await db
-      .select({ count: follows.id })
+    // Get following count (people this user is following)  
+    const followingQuery = await db
+      .select()
       .from(follows)
       .where(eq(follows.followerId, userId));
 
     return {
-      followersCount: followersResult?.count || 0,
-      followingCount: followingResult?.count || 0,
+      followersCount: followersQuery.length,
+      followingCount: followingQuery.length,
     };
   }
 
