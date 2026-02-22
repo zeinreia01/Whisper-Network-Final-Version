@@ -416,7 +416,7 @@ export default function AdminProfilePage() {
                           <DialogHeader>
                             <DialogTitle>Edit Profile</DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-4 py-4">
+                          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
                             <div className="space-y-2">
                               <Label htmlFor="displayName">Display Name</Label>
                               <Input
@@ -432,22 +432,32 @@ export default function AdminProfilePage() {
                                 value={profileForm.bio}
                                 onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
                                 maxLength={200}
+                                className="h-24"
                               />
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="profilePicture">Profile Picture</Label>
-                              <Input
-                                id="profilePicture"
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) setProfileForm({ ...profileForm, profilePicture: file });
-                                }}
-                              />
+                              <div className="flex items-center gap-4">
+                                <Avatar className="w-12 h-12">
+                                  <AvatarImage src={profileForm.profilePicture instanceof File ? URL.createObjectURL(profileForm.profilePicture) : (profileForm.profilePicture || "")} />
+                                  <AvatarFallback>{(profileForm.displayName || "A").charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <Input
+                                  id="profilePicture"
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) setProfileForm({ ...profileForm, profilePicture: file });
+                                  }}
+                                />
+                              </div>
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="backgroundPhoto">Background Photo</Label>
+                              {profileForm.backgroundPhoto && (
+                                <div className="h-20 w-full bg-cover bg-center rounded-md mb-2" style={{ backgroundImage: `url(${profileForm.backgroundPhoto instanceof File ? URL.createObjectURL(profileForm.backgroundPhoto) : profileForm.backgroundPhoto})` }} />
+                              )}
                               <Input
                                 id="backgroundPhoto"
                                 type="file"
