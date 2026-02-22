@@ -177,7 +177,7 @@ export default function AdminProfilePage() {
 
   const updateBoardSettingsMutation = useMutation({
     mutationFn: async (settings: typeof boardSettings) => {
-      const response = await apiRequest("PUT", `/api/admins/${targetAdminId}/profile`, {
+      const response = await apiRequest("PATCH", `/api/admins/${targetAdminId}/profile`, {
         allowBoardCreation: settings.allowBoardCreation,
         boardVisibility: settings.boardVisibility,
         boardName: settings.boardName,

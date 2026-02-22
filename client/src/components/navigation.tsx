@@ -189,7 +189,13 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2">
-                    <Link href="/admin-profile">
+                    <Link href="/admin/profile">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <User className="h-4 w-4 mr-2" />
+                        View My Profile
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/admin-personal">
                       <DropdownMenuItem className="cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />
                         Profile Settings

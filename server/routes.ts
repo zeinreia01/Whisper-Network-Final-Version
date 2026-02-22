@@ -311,18 +311,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update admin status
-  app.patch("/api/admin/:id/status", async (req, res) => {
+  // Update admin profile
+  app.patch("/api/admins/:id/profile", async (req, res) => {
     try {
-      const { id } = req.params;
-      const { isActive } = req.body;
+      const adminId = parseInt(req.params.id);
+      const validatedData = updateUserProfileSchema.partial().parse(req.body);
 
-      const admin = await storage.updateAdminStatus(parseInt(id), isActive);
-      const { password: _, ...adminWithoutPassword } = admin;
+      const updatedAdmin = await storage.updateAdminProfile(adminId, {
+        displayName: validatedData.displayName,
+        profilePicture: validatedData.profilePicture,
+        bio: validatedData.bio,
+        backgroundPhoto: validatedData.backgroundPhoto,
+        boardName: validatedData.boardName,
+        boardBanner: validatedData.boardBanner,
+      } as any);
+
+      const { password: _, ...adminWithoutPassword } = updatedAdmin;
       res.json(adminWithoutPassword);
     } catch (error) {
-      console.error("Error updating admin status:", error);
-      res.status(500).json({ message: "Failed to update admin status" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating admin profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Admin search route
+  app.get("/api/admins/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      const query = typeof q === 'string' ? q : '';
+      const admins = await storage.searchAdmins(query);
+      res.json(admins);
+    } catch (error) {
+      console.error("Error searching admins:", error);
+      res.status(500).json({ message: "Failed to search admins" });
     }
   });
 

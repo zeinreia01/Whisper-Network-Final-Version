@@ -127,6 +127,8 @@ export function AdminPersonalPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       queryClient.invalidateQueries({ queryKey: [`/api/admins/${admin?.id}/profile`] });
+      // Also invalidate for the general list if it's used somewhere
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/list"] });
       setIsEditing(false);
       toast({
         title: "Profile updated",
@@ -183,7 +185,7 @@ export function AdminPersonalPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <Link href="/admin-profile">
+              <Link href="/admin/profile">
                 <Button variant="ghost" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Profile
