@@ -5,7 +5,7 @@ import { spotifyAPI } from "./spotify";
 import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG, generateLandingPageOG, generateDashboardOG, generateLeaderboardOG, generatePersonalArchiveOG, generateAdminDashboardOG, generateAdminProfileOG, generateHomePageOG, generatePasswordManagementOG } from "./dynamic-meta";
 import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema, insertUserMusicSchema, insertDashboardMessageSchema, insertAdminAnnouncementSchema } from "@shared/schema";
 import { z } from "zod";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import multer from "multer";
@@ -324,6 +324,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         backgroundPhoto: validatedData.backgroundPhoto,
         boardName: validatedData.boardName,
         boardBanner: validatedData.boardBanner,
+        allowBoardCreation: (req.body as any).allowBoardCreation,
+        boardVisibility: (req.body as any).boardVisibility,
+        isAnonymousLinkPaused: validatedData.isAnonymousLinkPaused,
       } as any);
 
       const { password: _, ...adminWithoutPassword } = updatedAdmin;

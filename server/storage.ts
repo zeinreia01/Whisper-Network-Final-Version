@@ -923,7 +923,18 @@ export class DatabaseStorage implements IStorage {
     return admin;
   }
 
-  async updateAdminProfile(adminId: number, updates: { displayName?: string; profilePicture?: string; bio?: string; backgroundPhoto?: string; lastDisplayNameChange?: Date; allowBoardCreation?: boolean; boardVisibility?: string; boardName?: string; boardBanner?: string; isAnonymousLinkPaused?: boolean }): Promise<Admin> {
+  async updateAdminProfile(adminId: number, updates: { 
+    displayName?: string; 
+    profilePicture?: string; 
+    bio?: string; 
+    backgroundPhoto?: string; 
+    lastDisplayNameChange?: Date; 
+    allowBoardCreation?: boolean; 
+    boardVisibility?: string; 
+    boardName?: string; 
+    boardBanner?: string; 
+    isAnonymousLinkPaused?: boolean 
+  }): Promise<Admin> {
     const updateData: any = {};
 
     if (updates.displayName !== undefined) updateData.displayName = updates.displayName;
