@@ -166,11 +166,10 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
       // Stop current audio if playing
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current = null;
       }
 
-      // Create new audio instance with proper CORS handling
-      const audio = new Audio();
+      // Create new audio instance
+      const audio = new Audio(trackData.preview_url);
       
       // Set up event listeners before setting src
       audio.addEventListener('ended', () => {
@@ -181,16 +180,10 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
         console.error("Audio error:", e);
         toast({
           title: "Playback error 🎵", 
-          description: "Could not load this track preview. Trying alternative method...",
+          description: "Could not load this track preview.",
         });
         setPlayingTrack(null);
       });
-
-      // Use proxied URL for better compatibility
-      const proxyUrl = `/api/spotify/proxy/${encodeURIComponent(trackData.preview_url)}`;
-      audio.src = proxyUrl;
-      audio.crossOrigin = "anonymous";
-      audio.preload = "auto";
 
       await audio.play();
       audioRef.current = audio;
@@ -200,7 +193,7 @@ export function UserMusicList({ userId, adminId, isOwnProfile = false, title = "
       console.error("Error playing track:", error);
       toast({
         title: "Error playing preview",
-        description: "Failed to load track preview. The song might not have a preview available.",
+        description: "Failed to load track preview.",
         variant: "destructive",
       });
     }

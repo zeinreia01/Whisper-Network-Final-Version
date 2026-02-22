@@ -118,6 +118,14 @@ export default function AdminProfilePage() {
     boardName: '',
   });
 
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    displayName: "",
+    bio: "",
+    profilePicture: null as File | string | null,
+    backgroundPhoto: null as File | string | null,
+  });
+
   useEffect(() => {
     if (profile) {
       setIsFollowing(profile.isFollowing || false);
@@ -126,8 +134,56 @@ export default function AdminProfilePage() {
         boardVisibility: profile.boardVisibility || 'public',
         boardName: profile.boardName || '',
       });
+      setProfileForm({
+        displayName: profile.displayName || "",
+        bio: profile.bio || "",
+        profilePicture: profile.profilePicture || null,
+        backgroundPhoto: profile.backgroundPhoto || null,
+      });
     }
   }, [profile]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch(`/api/admins/${targetAdminId}/profile`, {
+        method: "PATCH",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admins/${targetAdminId}/profile`] });
+      toast({
+        title: "Profile Updated",
+        description: "Your profile changes have been saved.",
+      });
+      setIsEditingProfile(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleProfileSubmit = () => {
+    const formData = new FormData();
+    formData.append("displayName", profileForm.displayName);
+    formData.append("bio", profileForm.bio);
+    if (profileForm.profilePicture instanceof File) {
+      formData.append("profilePicture", profileForm.profilePicture);
+    }
+    if (profileForm.backgroundPhoto instanceof File) {
+      formData.append("backgroundPhoto", profileForm.backgroundPhoto);
+    }
+    updateProfileMutation.mutate(formData);
+  };
 
   const unfollowMutation = useMutation({
     mutationFn: async () => {
@@ -347,6 +403,72 @@ export default function AdminProfilePage() {
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-3">
+                    {/* Edit Profile Button */}
+                    {isOwnProfile && (
+                      <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <Settings className="h-4 w-4" />
+                            Edit Profile
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Edit Profile</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="displayName">Display Name</Label>
+                              <Input
+                                id="displayName"
+                                value={profileForm.displayName}
+                                onChange={(e) => setProfileForm({ ...profileForm, displayName: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="bio">Bio</Label>
+                              <Textarea
+                                id="bio"
+                                value={profileForm.bio}
+                                onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                                maxLength={200}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="profilePicture">Profile Picture</Label>
+                              <Input
+                                id="profilePicture"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) setProfileForm({ ...profileForm, profilePicture: file });
+                                }}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="backgroundPhoto">Background Photo</Label>
+                              <Input
+                                id="backgroundPhoto"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) setProfileForm({ ...profileForm, backgroundPhoto: file });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsEditingProfile(false)}>Cancel</Button>
+                            <Button onClick={handleProfileSubmit} disabled={updateProfileMutation.isPending}>
+                              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+
                     {/* Anonymous messaging button for all profiles */}
                     <Link href={`/u/${profile?.username}`}>
                       <Button

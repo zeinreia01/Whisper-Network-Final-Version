@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music, Plus, Edit2, X } from "lucide-react";
+import { Music, Plus, Edit2, X, Play, Pause } from "lucide-react";
 import { SpotifySearch } from "./spotify-search";
 import { SpotifyTrackDisplay } from "./spotify-track-display";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -57,6 +57,8 @@ interface ProfileMusicSectionProps {
 export function ProfileMusicSection({ user, admin, isOwnProfile = false, title }: ProfileMusicSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null);
+  const [playingTrack, setPlayingTrack] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -80,6 +82,49 @@ export function ProfileMusicSection({ user, admin, isOwnProfile = false, title }
     duration_ms: 0,
     popularity: 0,
   } : null;
+
+  const togglePlayPreview = async (trackId: string) => {
+    if (playingTrack === trackId) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setPlayingTrack(null);
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/spotify/track/${trackId}`);
+      if (!response.ok) throw new Error("Failed to fetch track details");
+      
+      const trackData = await response.json();
+
+      if (!trackData.preview_url) {
+        window.open(`https://open.spotify.com/track/${trackId}`, '_blank');
+        toast({
+          title: "Opening in Spotify 🎵",
+          description: "No preview available, opening in Spotify...",
+        });
+        return;
+      }
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      const audio = new Audio(trackData.preview_url);
+      audio.addEventListener('ended', () => setPlayingTrack(null));
+      await audio.play();
+      audioRef.current = audio;
+      setPlayingTrack(trackId);
+    } catch (error) {
+      console.error("Error playing track:", error);
+      toast({
+        title: "Error",
+        description: "Failed to play preview",
+        variant: "destructive",
+      });
+    }
+  };
 
   const updateMusicMutation = useMutation({
     mutationFn: async (trackData: SpotifyTrack | null) => {
@@ -127,7 +172,7 @@ export function ProfileMusicSection({ user, admin, isOwnProfile = false, title }
       setIsEditing(false);
       setSelectedTrack(null);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update profile song",
@@ -192,7 +237,17 @@ export function ProfileMusicSection({ user, admin, isOwnProfile = false, title }
           <div>
             {currentTrack ? (
               <div className="space-y-3">
-                <SpotifyTrackDisplay track={currentTrack} size="md" />
+                <div className="flex items-center justify-between">
+                  <SpotifyTrackDisplay track={currentTrack} size="md" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => togglePlayPreview(currentTrack.id)}
+                    className="w-10 h-10 p-0 rounded-full"
+                  >
+                    {playingTrack === currentTrack.id ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                  </Button>
+                </div>
                 {isOwnProfile && (
                   <div className="flex gap-2">
                     <Button

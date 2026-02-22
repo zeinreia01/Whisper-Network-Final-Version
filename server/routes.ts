@@ -1,15 +1,22 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyAPI } from "./spotify";
 import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG, generateLandingPageOG, generateDashboardOG, generateLeaderboardOG, generatePersonalArchiveOG, generateAdminDashboardOG, generateAdminProfileOG, generateHomePageOG, generatePasswordManagementOG } from "./dynamic-meta";
-import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema, insertUserMusicSchema, insertDashboardMessageSchema, insertAdminAnnouncementSchema } from "@shared/schema";
+import { insertMessageSchema, insertReplySchema, insertAdminSchema, insertUserSchema, insertReactionSchema, insertNotificationSchema, insertFollowSchema, follows, changePasswordSchema, adminChangePasswordSchema, viewAllPasswordsSchema, insertUserMusicSchema, insertDashboardMessageSchema, insertAdminAnnouncementSchema, updateUserProfileSchema } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
+
+// Extend Request type to include multer files
+interface MulterRequest extends Request {
+  files: {
+    [fieldname: string]: Express.Multer.File[];
+  };
+}
 
 async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, 10);
@@ -312,29 +319,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update admin profile
-  app.patch("/api/admins/:id/profile", async (req, res) => {
+  app.patch("/api/admins/:id/profile", upload.fields([
+    { name: 'profilePicture', maxCount: 1 },
+    { name: 'backgroundPhoto', maxCount: 1 },
+    { name: 'boardBanner', maxCount: 1 }
+  ]), async (req, res) => {
     try {
       const adminId = parseInt(req.params.id);
-      const validatedData = updateUserProfileSchema.partial().parse(req.body);
+      const body = req.body;
+      const files = (req as unknown as MulterRequest).files;
 
-      const updatedAdmin = await storage.updateAdminProfile(adminId, {
-        displayName: validatedData.displayName,
-        profilePicture: validatedData.profilePicture,
-        bio: validatedData.bio,
-        backgroundPhoto: validatedData.backgroundPhoto,
-        boardName: validatedData.boardName,
-        boardBanner: validatedData.boardBanner,
-        allowBoardCreation: (req.body as any).allowBoardCreation,
-        boardVisibility: (req.body as any).boardVisibility,
-        isAnonymousLinkPaused: validatedData.isAnonymousLinkPaused,
-      } as any);
+      // Process file uploads if present
+      const updates: any = {
+        displayName: body.displayName,
+        bio: body.bio,
+        boardName: body.boardName,
+        allowBoardCreation: body.allowBoardCreation === 'true' || body.allowBoardCreation === true,
+        boardVisibility: body.boardVisibility,
+        isAnonymousLinkPaused: body.isAnonymousLinkPaused === 'true' || body.isAnonymousLinkPaused === true,
+      };
+
+      if (files?.profilePicture?.[0]) {
+        updates.profilePicture = `data:${files.profilePicture[0].mimetype};base64,${files.profilePicture[0].buffer.toString('base64')}`;
+      }
+      if (files?.backgroundPhoto?.[0]) {
+        updates.backgroundPhoto = `data:${files.backgroundPhoto[0].mimetype};base64,${files.backgroundPhoto[0].buffer.toString('base64')}`;
+      }
+      if (files?.boardBanner?.[0]) {
+        updates.boardBanner = `data:${files.boardBanner[0].mimetype};base64,${files.boardBanner[0].buffer.toString('base64')}`;
+      }
+
+      // Handle cases where URLs are passed directly (not files)
+      if (!updates.profilePicture && body.profilePicture && typeof body.profilePicture === 'string') {
+        updates.profilePicture = body.profilePicture;
+      }
+      if (!updates.backgroundPhoto && body.backgroundPhoto && typeof body.backgroundPhoto === 'string') {
+        updates.backgroundPhoto = body.backgroundPhoto;
+      }
+      if (!updates.boardBanner && body.boardBanner && typeof body.boardBanner === 'string') {
+        updates.boardBanner = body.boardBanner;
+      }
+
+      const updatedAdmin = await storage.updateAdminProfile(adminId, updates);
 
       const { password: _, ...adminWithoutPassword } = updatedAdmin;
       res.json(adminWithoutPassword);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
       console.error("Error updating admin profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
     }
