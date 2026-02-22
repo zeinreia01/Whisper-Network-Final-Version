@@ -310,45 +310,22 @@
   border-radius: 1rem !important;
   box-shadow: var(--pink-shadow) !important;
   transition: all 0.3s ease !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
 }
 
-.pink button:hover {
-  background: var(--pink-gradient-hover) !important;
-  color: white !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 25px hsla(340, 45%, 75%, 0.35) !important;
-}
-
-.pink button:active {
-  background: var(--peach-gradient) !important;
-  color: white !important;
-  transform: translateY(0px) !important;
-  box-shadow: var(--pink-shadow) !important;
-}
-
-/* Category buttons specific styling */
-.pink .bg-secondary {
-  background: var(--secondary-solid) !important;
-  color: var(--secondary-foreground) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 1rem !important;
-  box-shadow: 0 2px 8px hsla(345, 25%, 85%, 0.3) !important;
-}
-
-.pink .bg-secondary:hover {
-  background: var(--pink-gradient-cool) !important;
-  color: var(--primary-foreground) !important;
-  border-color: transparent !important;
-  transform: translateY(-1px) !important;
-}
-
-/* Primary buttons in pink mode - special styling */
 .pink .bg-primary {
   background: var(--pink-gradient-button) !important;
   color: white !important;
   border: none !important;
   box-shadow: var(--pink-shadow) !important;
+}
+
+.pink .text-muted-foreground {
+  color: hsl(340, 45%, 35%) !important;
+}
+
+.dark .text-muted-foreground {
+  color: hsl(220, 20%, 85%) !important;
 }
 
 .pink .bg-primary:hover {
