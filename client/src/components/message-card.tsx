@@ -601,16 +601,17 @@ export function MessageCard({ message, showReplies = true, showThreaded = false 
 
       {/* Enhanced Spotify Integration */}
       {(message.spotifyLink || message.spotifyTrackId) && (
-            <MessageSpotifyIntegration
-              spotifyTrackId={message.spotifyTrackId}
-              spotifyTrackName={message.spotifyTrackName}
-              spotifyArtistName={message.spotifyArtistName}
-              spotifyAlbumCover={message.spotifyAlbumCover}
-              spotifyLink={message.spotifyLink}
-              size="sm"
-              className="mt-3"
-            />
-          )}
+        <div className="mt-4 rounded-xl overflow-hidden border border-border shadow-sm">
+          <iframe
+            src={`https://open.spotify.com/embed/track/${message.spotifyTrackId || (message.spotifyLink ? message.spotifyLink.split('/track/')[1]?.split('?')[0] : '')}`}
+            width="100%"
+            height="152"
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          ></iframe>
+        </div>
+      )}
 
       {/* Mobile-optimized action bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 mb-4 gap-2 sm:gap-3">
