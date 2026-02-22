@@ -2150,7 +2150,7 @@ async likeMessage(userId: number, adminId: number | undefined, messageId: number
     const [announcement] = await db
       .update(adminAnnouncements)
       .set({ isPinned })
-      .where(eq(announcementId, announcementId))
+      .where(eq(adminAnnouncements.id, announcementId))
       .returning();
     return announcement;
   }
