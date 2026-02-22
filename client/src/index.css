@@ -117,41 +117,41 @@
 .dark {
   --background: hsl(240, 25%, 12%);
   --background-solid: hsl(240, 25%, 12%);
-  --foreground: hsl(220, 14%, 96%);
+  --foreground: hsl(220, 14%, 98%); /* Brighter for contrast */
   --muted: hsl(245, 20%, 18%);
   --muted-solid: hsl(245, 20%, 18%);
-  --muted-foreground: hsl(220, 9%, 65%);
+  --muted-foreground: hsl(220, 15%, 80%); /* Brighter for contrast */
   --popover: hsl(245, 25%, 15%);
   --popover-solid: hsl(245, 25%, 15%);
-  --popover-foreground: hsl(220, 14%, 96%);
+  --popover-foreground: hsl(220, 14%, 98%);
   --card: hsl(245, 25%, 15%);
   --card-solid: hsl(245, 25%, 15%);
-  --card-foreground: hsl(220, 14%, 96%);
-  --border: hsl(250, 20%, 25%);
+  --card-foreground: hsl(220, 14%, 98%);
+  --border: hsl(250, 20%, 35%); /* Slightly brighter */
   --input: hsl(245, 20%, 18%);
   --input-solid: hsl(245, 20%, 18%);
-  --primary: hsl(263, 70%, 72%);
-  --primary-solid: hsl(263, 70%, 72%);
+  --primary: hsl(263, 75%, 75%); /* Brighter */
+  --primary-solid: hsl(263, 75%, 75%);
   --primary-foreground: hsl(240, 25%, 12%);
-  --secondary: hsl(245, 20%, 18%);
-  --secondary-solid: hsl(245, 20%, 18%);
-  --secondary-foreground: hsl(220, 14%, 96%);
-  --accent: hsl(220, 70%, 65%);
-  --accent-solid: hsl(220, 70%, 65%);
+  --secondary: hsl(245, 20%, 25%); /* Brighter */
+  --secondary-solid: hsl(245, 20%, 25%);
+  --secondary-foreground: hsl(220, 14%, 98%);
+  --accent: hsl(220, 75%, 75%); /* Brighter */
+  --accent-solid: hsl(220, 75%, 75%);
   --accent-foreground: hsl(240, 25%, 12%);
-  --destructive: hsl(0, 62%, 65%);
-  --destructive-foreground: hsl(220, 14%, 96%);
-  --ring: hsl(263, 70%, 72%);
+  --destructive: hsl(0, 70%, 70%);
+  --destructive-foreground: hsl(220, 14%, 98%);
+  --ring: hsl(263, 75%, 75%);
   --radius: 0.5rem;
 
   /* Dark mode category colors - blue to purple theme */
-  --hope: hsl(220, 70%, 65%);
-  --reflection: hsl(263, 70%, 72%);
-  --gratitude: hsl(45, 70%, 65%);
-  --support: hsl(0, 62%, 65%);
-  --dreams: hsl(280, 70%, 75%);
-  --text-primary: hsl(220, 14%, 96%);
-  --text-secondary: hsl(220, 9%, 65%);
+  --hope: hsl(220, 75%, 75%);
+  --reflection: hsl(263, 75%, 75%);
+  --gratitude: hsl(45, 80%, 75%);
+  --support: hsl(0, 75%, 75%);
+  --dreams: hsl(280, 75%, 80%);
+  --text-primary: hsl(220, 14%, 98%);
+  --text-secondary: hsl(220, 15%, 80%);
   --surface: hsl(245, 25%, 15%);
   --bg-main: hsl(240, 25%, 12%);
 
@@ -164,47 +164,47 @@
   /* Soft Pink to Pastel Background */
   --background: hsl(345, 25%, 97%);
   --background-solid: hsl(345, 25%, 97%);
-  --foreground: hsl(340, 40%, 35%);
+  --foreground: hsl(340, 40%, 25%); /* Darkened for better contrast */
   --muted: hsl(345, 20%, 93%);
   --muted-solid: hsl(345, 20%, 93%);
-  --muted-foreground: hsl(340, 30%, 55%);
+  --muted-foreground: hsl(340, 35%, 45%); /* Darkened for better contrast */
   --popover: hsl(345, 20%, 98%);
   --popover-solid: hsl(345, 20%, 98%);
-  --popover-foreground: hsl(340, 40%, 35%);
+  --popover-foreground: hsl(340, 40%, 25%); /* Darkened */
   --card: hsl(345, 20%, 98%);
   --card-solid: hsl(345, 20%, 98%);
-  --card-foreground: hsl(340, 40%, 35%);
+  --card-foreground: hsl(340, 40%, 25%); /* Darkened */
   --border: hsl(345, 25%, 85%);
   --input: hsl(345, 15%, 95%);
   --input-solid: hsl(345, 15%, 95%);
   
   /* Soft Pink Primary Colors */
-  --primary: hsl(340, 50%, 75%);
-  --primary-solid: hsl(340, 50%, 75%);
+  --primary: hsl(340, 50%, 65%); /* Slightly darker for better contrast */
+  --primary-solid: hsl(340, 50%, 65%);
   --primary-foreground: hsl(0, 0%, 100%);
   
-  --secondary: hsl(345, 25%, 90%);
-  --secondary-solid: hsl(345, 25%, 90%);
-  --secondary-foreground: hsl(340, 40%, 35%);
+  --secondary: hsl(345, 25%, 85%); /* Slightly darker */
+  --secondary-solid: hsl(345, 25%, 85%);
+  --secondary-foreground: hsl(340, 45%, 30%); /* Darkened */
   
   /* Soft Pink Accent */
-  --accent: hsl(335, 45%, 80%);
-  --accent-solid: hsl(335, 45%, 80%);
-  --accent-foreground: hsl(340, 40%, 35%);
+  --accent: hsl(335, 45%, 75%); /* Slightly darker */
+  --accent-solid: hsl(335, 45%, 75%);
+  --accent-foreground: hsl(340, 45%, 30%); /* Darkened */
   
-  --destructive: hsl(0, 60%, 70%);
+  --destructive: hsl(0, 70%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(340, 50%, 75%);
+  --ring: hsl(340, 50%, 65%);
   --radius: 1rem;
 
   /* Soft Pastel Category Colors */
-  --hope: hsl(140, 50%, 65%);
-  --reflection: hsl(320, 60%, 75%);
-  --gratitude: hsl(35, 70%, 75%);
-  --support: hsl(0, 60%, 75%);
-  --dreams: hsl(280, 60%, 80%);
-  --text-primary: hsl(340, 40%, 35%);
-  --text-secondary: hsl(340, 30%, 55%);
+  --hope: hsl(140, 50%, 45%); /* Darkened */
+  --reflection: hsl(320, 60%, 55%); /* Darkened */
+  --gratitude: hsl(35, 70%, 50%); /* Darkened */
+  --support: hsl(0, 60%, 55%); /* Darkened */
+  --dreams: hsl(280, 60%, 60%); /* Darkened */
+  --text-primary: hsl(340, 45%, 20%); /* High contrast */
+  --text-secondary: hsl(340, 35%, 40%); /* High contrast */
   --surface: hsl(345, 20%, 98%);
   --bg-main: hsl(345, 25%, 97%);
   
