@@ -167,6 +167,10 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
         const proxyUrl = `/api/spotify/proxy/${encodeURIComponent(currentTrack.preview_url)}`;
         newAudio.src = currentTrack.preview_url;
         
+        // Use the actual preview URL but with anonymous crossOrigin
+        newAudio.crossOrigin = "anonymous";
+        newAudio.src = currentTrack.preview_url;
+        
         audioRef.current = newAudio;
       }
       
