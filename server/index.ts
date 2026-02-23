@@ -117,7 +117,14 @@ import { storage } from "./storage";
             .replace(/<meta property="og:description".*?>/, `<meta property="og:description" content="${meta.description}">`)
             .replace(/<meta property="og:image".*?>/, `<meta property="og:image" content="${meta.image}">`)
             .replace(/<meta property="og:url".*?>/, `<meta property="og:url" content="${req.protocol}://${req.get('host')}${meta.url}">`)
-            .replace(/<meta name="twitter:card".*?>/, `<meta name="twitter:card" content="summary_large_image">`);
+            .replace(/<meta property="og:type".*?>/, `<meta property="og:type" content="website">`)
+            .replace(/<meta name="twitter:card".*?>/, `<meta name="twitter:card" content="summary_large_image">`)
+            .replace(/<meta name="twitter:title".*?>/, `<meta name="twitter:title" content="${meta.title}">`)
+            .replace(/<meta name="twitter:description".*?>/, `<meta name="twitter:description" content="${meta.description}">`)
+            .replace(/<meta name="twitter:image".*?>/, `<meta name="twitter:image" content="${meta.image}">`)
+            .replace(/<link rel="canonical".*?>/, `<link rel="canonical" href="${req.protocol}://${req.get('host')}${meta.url}">`);
+          
+          res.setHeader("Content-Type", "text/html");
           return res.send(rendered);
         }
       } catch (err) {
