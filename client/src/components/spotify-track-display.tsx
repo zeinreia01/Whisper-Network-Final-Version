@@ -231,25 +231,25 @@ export function SpotifyTrackDisplay({ track, size = "md", showPreview = true, cl
 
   const sizeClasses = {
     sm: {
-      container: "p-3",
-      image: "w-10 h-10",
-      title: "text-sm",
-      artist: "text-xs",
-      icon: "w-4 h-4",
+      container: "p-2",
+      image: "w-8 h-8",
+      title: "text-xs",
+      artist: "text-[10px]",
+      icon: "w-3 h-3",
     },
     md: {
-      container: "p-4",
-      image: "w-12 h-12",
-      title: "text-sm",
-      artist: "text-sm",
-      icon: "w-4 h-4",
+      container: "p-3 md:p-4",
+      image: "w-10 h-10 md:w-12 md:h-12",
+      title: "text-xs md:text-sm",
+      artist: "text-[10px] md:text-sm",
+      icon: "w-3 h-3 md:w-4 h-4",
     },
     lg: {
-      container: "p-6",
-      image: "w-16 h-16",
-      title: "text-base",
-      artist: "text-sm",
-      icon: "w-5 h-5",
+      container: "p-4 md:p-6",
+      image: "w-12 h-12 md:w-16 md:h-16",
+      title: "text-sm md:text-base",
+      artist: "text-xs md:text-sm",
+      icon: "w-4 h-4 md:w-5 h-5",
     },
   };
 

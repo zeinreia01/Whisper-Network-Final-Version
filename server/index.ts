@@ -39,8 +39,94 @@ app.use((req, res, next) => {
   next();
 });
 
+import { generateUserProfileOG, generateUserBoardOG, generateMessageOG, generateAnonymousLinkOG, generateLandingPageOG, generateDashboardOG, generateLeaderboardOG, generatePersonalArchiveOG, generateAdminDashboardOG, generateAdminProfileOG, generateHomePageOG, generatePasswordManagementOG } from "./dynamic-meta";
+import { storage } from "./storage";
+
 (async () => {
   const server = await registerRoutes(app);
+
+  // Dynamic Link Previews Middleware
+  app.get("*", async (req, res, next) => {
+    // Skip API, static files, and common asset extensions
+    if (req.path.startsWith("/api") || 
+        req.path.includes(".") || 
+        req.headers.accept?.includes("application/json")) {
+      return next();
+    }
+
+    let meta: any = null;
+    const path = req.path;
+
+    try {
+      if (path === "/" || path === "/home") {
+        meta = generateHomePageOG();
+      } else if (path === "/dashboard") {
+        meta = generateDashboardOG();
+      } else if (path === "/leaderboard") {
+        meta = generateLeaderboardOG();
+      } else if (path === "/personal") {
+        meta = generatePersonalArchiveOG();
+      } else if (path === "/admin") {
+        meta = generateAdminDashboardOG();
+      } else if (path === "/password-management") {
+        meta = generatePasswordManagementOG();
+      } else if (path.startsWith("/user/")) {
+        const username = path.split("/")[2];
+        if (username) {
+          const user = await storage.getUserByUsername(username);
+          if (user) meta = generateUserProfileOG(user);
+        }
+      } else if (path.startsWith("/board/")) {
+        const username = path.split("/")[2];
+        if (username) {
+          let user = await storage.getUserByUsername(username);
+          if (!user) user = await storage.getAdminByUsername(username);
+          if (user) meta = generateUserBoardOG(user);
+        }
+      } else if (path.startsWith("/admin/")) {
+        const username = path.split("/")[2];
+        if (username) {
+          const admin = await storage.getAdminByUsername(username);
+          if (admin) meta = generateAdminProfileOG(admin);
+        }
+      } else if (path.startsWith("/u/")) {
+        const username = path.split("/")[2];
+        if (username) meta = generateAnonymousLinkOG(username);
+      } else if (path.startsWith("/message/")) {
+        const id = parseInt(path.split("/")[2]);
+        if (!isNaN(id)) {
+          const message = await storage.getMessageById(id);
+          if (message) meta = generateMessageOG(message);
+        }
+      }
+    } catch (e) {
+      console.error("Error generating dynamic meta:", e);
+    }
+
+    if (meta) {
+      try {
+        const indexFilePath = require("path").resolve(process.cwd(), "dist", "public", "index.html");
+        const exists = require("fs").existsSync(indexFilePath);
+        
+        if (exists) {
+          const indexFile = require("fs").readFileSync(indexFilePath, "utf8");
+          const rendered = indexFile
+            .replace(/<title>.*?<\/title>/, `<title>${meta.title}</title>`)
+            .replace(/<meta name="description".*?>/, `<meta name="description" content="${meta.description}">`)
+            .replace(/<meta property="og:title".*?>/, `<meta property="og:title" content="${meta.title}">`)
+            .replace(/<meta property="og:description".*?>/, `<meta property="og:description" content="${meta.description}">`)
+            .replace(/<meta property="og:image".*?>/, `<meta property="og:image" content="${meta.image}">`)
+            .replace(/<meta property="og:url".*?>/, `<meta property="og:url" content="${req.protocol}://${req.get('host')}${meta.url}">`)
+            .replace(/<meta name="twitter:card".*?>/, `<meta name="twitter:card" content="summary_large_image">`);
+          return res.send(rendered);
+        }
+      } catch (err) {
+        console.error("Error reading index.html for meta tags:", err);
+      }
+    }
+
+    next();
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
